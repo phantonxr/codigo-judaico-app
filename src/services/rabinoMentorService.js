@@ -1,4 +1,4 @@
-import { systemPrompt } from '../constants/systemPrompt.js'
+import { systemPrompt, buildSystemPromptWithContext } from '../constants/systemPrompt.js'
 
 function safeTrim(text) {
   return String(text ?? '').trim()
@@ -74,7 +74,7 @@ export async function sendMessageToRabino(payload) {
   const requestBody = {
     ...payload,
     message,
-    systemPrompt,
+    systemPrompt: payload.contextualPrompt || systemPrompt,
   }
 
   // TODO: integrar Supabase memory
@@ -120,7 +120,14 @@ export function buildRabinoPayload({
   score,
   currentChallenge,
   recentMessages,
+  diagnosis,
+  assignedTrack,
+  currentDay,
 }) {
+  const contextualPrompt = (diagnosis || assignedTrack)
+    ? buildSystemPromptWithContext(diagnosis, assignedTrack, currentDay)
+    : systemPrompt
+
   return {
     message,
     userId: userProfile?.id,
@@ -130,6 +137,7 @@ export function buildRabinoPayload({
     currentChallenge: currentChallenge ?? userProfile?.currentChallengeId,
     currentPlan: userProfile?.planName,
     recentHistory: toRecentHistory(recentMessages),
+    contextualPrompt,
   }
 }
 

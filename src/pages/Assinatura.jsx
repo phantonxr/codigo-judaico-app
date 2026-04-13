@@ -1,6 +1,6 @@
 import SectionCard from '../components/SectionCard.jsx'
 import { KIRVANO_URL } from '../data/offers.js'
-import { userProfile } from '../mock/userProfile.js'
+import useCurrentUser from '../hooks/useCurrentUser.js'
 
 const annualBenefits = [
   'Comunidade Premium (grupo fechado)',
@@ -15,6 +15,11 @@ const annualBenefits = [
 ]
 
 export default function Assinatura() {
+  const currentUser = useCurrentUser()
+  const planName = currentUser?.plan || '—'
+  const planStatus = planName && planName !== '—' ? 'Ativo' : '—'
+  const nextChargeDate = '—'
+
   return (
     <div className="container dashboard-grid">
       <SectionCard
@@ -30,9 +35,9 @@ export default function Assinatura() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ display: 'grid', gap: 4 }}>
                   <div style={{ fontWeight: 900, fontSize: 16 }}>Plano atual</div>
-                  <div className="muted">{userProfile.planName}</div>
+                  <div className="muted">{planName}</div>
                 </div>
-                <span className="badge">{userProfile.planStatus}</span>
+                <span className="badge">{planStatus}</span>
               </div>
 
               <div className="grid grid-2">
@@ -45,7 +50,7 @@ export default function Assinatura() {
                 <div className="card" style={{ boxShadow: 'none' }}>
                   <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
                     <div className="muted">Próxima cobrança</div>
-                    <div style={{ fontWeight: 900 }}>{userProfile.nextChargeDate}</div>
+                    <div style={{ fontWeight: 900 }}>{nextChargeDate}</div>
                   </div>
                 </div>
               </div>

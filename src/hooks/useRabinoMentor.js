@@ -5,6 +5,8 @@ import {
   sendMessageToRabino,
 } from '../services/rabinoMentorService.js'
 import { readJson, mergeJson, remove } from '../utils/storage.js'
+import { readDiagnosis, readAssignedTrack } from './useFinancialDiagnosis.js'
+import { getCurrentDayIndex } from './useJourneyProgress.js'
 
 function chatKey(userId) {
   return `mentor_chat:${userId ?? 'anon'}`
@@ -27,12 +29,18 @@ export function useRabinoMentor(userProfile) {
   const initial = useMemo(() => {
     const saved = readJson(storageKey, null)
     if (saved?.messages?.length) return saved.messages
+
+    const diag = readDiagnosis()
+    const track = readAssignedTrack()
+    const greeting = diag && track
+      ? `Shalom. Vejo que sua trilha é "${diag.trackLabel}". Estou aqui para te orientar nessa jornada. Como posso te ajudar hoje?`
+      : 'Shalom. Vamos começar com clareza: qual é o seu objetivo financeiro para os próximos 30 dias?'
+
     return [
       {
         id: makeId('a'),
         role: 'assistant',
-        content:
-          'Shalom. Vamos começar com clareza: qual é o seu objetivo financeiro para os próximos 30 dias?',
+        content: greeting,
         timestamp: 'agora',
       },
     ]
@@ -135,6 +143,9 @@ export function useRabinoMentor(userProfile) {
           message: trimmed,
           userProfile,
           recentMessages: historyForPayload,
+          diagnosis: readDiagnosis(),
+          assignedTrack: readAssignedTrack(),
+          currentDay: getCurrentDayIndex(),
         })
 
         let answer = ''

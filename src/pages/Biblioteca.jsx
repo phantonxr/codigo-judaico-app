@@ -2,28 +2,53 @@ import LessonCard from '../components/LessonCard.jsx'
 import SectionCard from '../components/SectionCard.jsx'
 import { lessons } from '../data/lessons.js'
 import { useEffect, useMemo, useState } from 'react'
+import useCurrentUser from '../hooks/useCurrentUser.js'
 import {
-  loadLessonsProgress,
+  loadLessonProgressList,
   toggleLessonCompleted,
-} from '../utils/lessonProgress.js'
+} from '../utils/progress.js'
 
 export default function Biblioteca() {
+  const currentUser = useCurrentUser()
+  const userEmail = currentUser?.email
   const [loading, setLoading] = useState(true)
-  const [progress, setProgress] = useState(() => loadLessonsProgress())
+  const [list, setList] = useState(() => loadLessonProgressList(userEmail))
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 420)
     return () => clearTimeout(t)
   }, [])
 
+  useEffect(() => {
+    const sync = () => setList(loadLessonProgressList(userEmail))
+    sync()
+    window.addEventListener('lesson_progress_updated', sync)
+    window.addEventListener('auth_user_updated', sync)
+    return () => {
+      window.removeEventListener('lesson_progress_updated', sync)
+      window.removeEventListener('auth_user_updated', sync)
+    }
+  }, [userEmail])
+
+  const completedById = useMemo(() => {
+    const map = new Map()
+    for (const item of Array.isArray(list) ? list : []) {
+      if (!item?.lessonId) continue
+      map.set(String(item.lessonId), Boolean(item.completed))
+    }
+    return map
+  }, [list])
+
   const completedCount = useMemo(() => {
-    const completed = progress.completed ?? {}
-    return Object.values(completed).filter(Boolean).length
-  }, [progress])
+    let count = 0
+    for (const l of lessons) {
+      if (completedById.get(String(l.id))) count += 1
+    }
+    return count
+  }, [completedById])
 
   function onToggle(lessonId) {
-    const next = toggleLessonCompleted(lessonId)
-    setProgress(next)
+    toggleLessonCompleted(userEmail, lessonId)
   }
 
   return (
@@ -50,7 +75,7 @@ export default function Biblioteca() {
               <LessonCard
                 key={l.id}
                 {...l}
-                completed={Boolean(progress.completed?.[l.id])}
+                completed={Boolean(completedById.get(String(l.id)))}
                 onToggleComplete={() => onToggle(l.id)}
               />
             ))}

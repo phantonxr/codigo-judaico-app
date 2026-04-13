@@ -1,182 +1,647 @@
-import { useMemo, useState } from 'react'
-import ChallengeCard from '../components/ChallengeCard.jsx'
-import SectionCard from '../components/SectionCard.jsx'
-import { challenges } from '../data/challenges.js'
+import { useState, useCallback, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  computeProgressPct,
-  currentDayIndex,
-  loadChallengeProgress,
-  saveChallengeProgress,
-} from '../utils/challengeProgress.js'
+  Check, Lock, Loader, Star, AlertTriangle,
+  BookOpen, Target, ChevronRight, Flame, Shield, Circle, CircleDot, Sparkles,
+} from 'lucide-react'
+import SectionCard from '../components/SectionCard.jsx'
+import MonthMilestoneCard from '../components/MonthMilestoneCard.jsx'
+import MacroMonthCalendarModal from '../components/MacroMonthCalendarModal.jsx'
+import useFinancialDiagnosis, { readDiagnosis } from '../hooks/useFinancialDiagnosis.js'
+import {
+  buildDayChecklist,
+  saveDayReflections,
+  getDayData,
+  isDayFullyCompleted,
+  hasAIFeedback,
+  saveDayAIFeedback,
+  completeDayFull,
+  getNextUnlockedDay,
+  get21DayProgress,
+  get6MonthProgress,
+  getPhase,
+  getCurrentDayIndex,
+  getFullPhase,
+  TASK_STATUSES,
+  CHECKLIST_IDS,
+  getDayTaskStatuses,
+  saveTaskStatus,
+  getDayStatusSummary,
+} from '../hooks/useJourneyProgress.js'
+import { challenges21Days, TRACK_LABELS, TRACK_DESCRIPTIONS } from '../data/challenges21Days.js'
+import { generateDailyFeedback, generateFallbackFeedback } from '../services/rabbiMentorAI.js'
 
-function computeStreak(checkedDays) {
-  let streak = 0
-  for (let i = 0; i < checkedDays.length; i += 1) {
-    if (!checkedDays[i]) break
-    streak += 1
-  }
-  return streak
+var STATUS_CYCLE = ['none', 'executed', 'partial', 'skipped']
+
+function nextStatus(current) {
+  var idx = STATUS_CYCLE.indexOf(current)
+  if (idx < 0) idx = 0
+  return STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length]
+}
+
+var STATUS_ICONS = {
+  none: Circle,
+  executed: Check,
+  partial: CircleDot,
+  skipped: Circle,
+  sent_ai: Sparkles,
 }
 
 export default function Desafios() {
-  const [openId, setOpenId] = useState(null)
-  const [selectedDay, setSelectedDay] = useState(null)
-  const [drawerProgress, setDrawerProgress] = useState(null)
-  const selectedChallenge = useMemo(
-    () => challenges.find((c) => c.id === openId) ?? null,
-    [openId],
-  )
+  var { assignedTrack } = useFinancialDiagnosis()
 
-  const progress = drawerProgress
+  var stateRefresh = useState(0)
+  var setRefresh = stateRefresh[1]
 
-  const dayIdx = progress ? currentDayIndex(progress) : 0
-  const activeDay = selectedDay ?? dayIdx
+  useEffect(function () {
+    var sync = function () { setRefresh(function (r) { return r + 1 }) }
+    window.addEventListener('journey_progress_updated', sync)
+    window.addEventListener('diagnosis_updated', sync)
+    return function () {
+      window.removeEventListener('journey_progress_updated', sync)
+      window.removeEventListener('diagnosis_updated', sync)
+    }
+  }, [])
 
-  function openChallenge(challengeId) {
-    setOpenId(challengeId)
-    setSelectedDay(null)
-    const ch = challenges.find((c) => c.id === challengeId)
-    if (ch) setDrawerProgress(loadChallengeProgress(ch))
+  var phase = getPhase()
+
+  if (!assignedTrack) {
+    return (
+      <div className="container" style={{ display: 'grid', gap: 16, paddingTop: 12 }}>
+        <SectionCard
+          title="Desafios"
+          description="Faca sua avaliacao financeira para desbloquear sua trilha personalizada."
+        >
+          <Link to="/avaliacao" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+            <Target size={16} /> Iniciar Avaliacao
+          </Link>
+        </SectionCard>
+      </div>
+    )
   }
 
-  function closeDrawer() {
-    setOpenId(null)
-    setSelectedDay(null)
-    setDrawerProgress(null)
+  if (phase === '6months' || phase === 'completed') {
+    return <MacroPhaseView assignedTrack={assignedTrack} phase={phase} />
   }
 
-  function toggleDay(i) {
-    if (!selectedChallenge || !progress) return
-    const checkedDays = [...progress.checkedDays]
-    checkedDays[i] = !checkedDays[i]
-    const next = { ...progress, checkedDays }
-    saveChallengeProgress(selectedChallenge.id, next)
-    setDrawerProgress(next)
-    setSelectedDay(i)
+  return <TwentyOneDayView assignedTrack={assignedTrack} />
+}
+
+/* ════════════════════════════════════════════════════
+   21-DAY PHASE — 4-STATE TASK CARDS
+   ════════════════════════════════════════════════════ */
+
+function TwentyOneDayView({ assignedTrack }) {
+  var track = challenges21Days[assignedTrack] || challenges21Days.trilha1
+  var trackLabel = TRACK_LABELS[assignedTrack] || assignedTrack
+
+  var p21 = get21DayProgress()
+  var nextDay = getNextUnlockedDay()
+  var initialDay = Math.min(nextDay, 20)
+  var currentPhase = getFullPhase()
+
+  var stateDay = useState(initialDay)
+  var selectedDay = stateDay[0]
+  var setSelectedDay = stateDay[1]
+
+  var stateAI = useState(false)
+  var isAILoading = stateAI[0]
+  var setIsAILoading = stateAI[1]
+
+  var stateErr = useState('')
+  var aiError = stateErr[0]
+  var setAiError = stateErr[1]
+
+  var stateRefresh = useState(0)
+  var setRefresh = stateRefresh[1]
+
+  var dayContent = track[selectedDay]
+  var saved = getDayData(selectedDay)
+  var completed = isDayFullyCompleted(selectedDay)
+  var taskStatuses = getDayTaskStatuses(selectedDay)
+  var daySummary = getDayStatusSummary(selectedDay)
+
+  var stateWI = useState(saved?.whatIDid || '')
+  var whatIDid = stateWI[0]
+  var setWhatIDid = stateWI[1]
+
+  var stateHF = useState(saved?.howIFelt || '')
+  var howIFelt = stateHF[0]
+  var setHowIFelt = stateHF[1]
+
+  var stateTr = useState(saved?.trigger || '')
+  var trigger = stateTr[0]
+  var setTrigger = stateTr[1]
+
+  function selectDay(idx) {
+    if (idx > 0 && !isDayFullyCompleted(idx - 1)) return
+    setSelectedDay(idx)
+    setAiError('')
+    var s = getDayData(idx)
+    setWhatIDid(s?.whatIDid || '')
+    setHowIFelt(s?.howIFelt || '')
+    setTrigger(s?.trigger || '')
   }
 
-  function updateReflection(text) {
-    if (!selectedChallenge || !progress) return
-    const reflections = [...progress.reflections]
-    reflections[activeDay] = text
-    const next = { ...progress, reflections }
-    saveChallengeProgress(selectedChallenge.id, next)
-    setDrawerProgress(next)
+  function handleCycleStatus(taskId) {
+    var current = taskStatuses[taskId] || 'none'
+    var next = nextStatus(current)
+    saveTaskStatus(selectedDay, taskId, next)
+    setRefresh(function (r) { return r + 1 })
   }
+
+  function saveReflections() {
+    saveDayReflections(selectedDay, { whatIDid: whatIDid, howIFelt: howIFelt, trigger: trigger })
+  }
+
+  function handleSendToAI() {
+    setIsAILoading(true)
+    setAiError('')
+    saveReflections()
+
+    var completedTasks = []
+    var labels = {
+      oracao: 'Oracao e intencao financeira',
+      manha: dayContent?.manha || 'Revisar gastos e decisoes',
+      tarde: dayContent?.tarde || 'Acao financeira consciente',
+      noite: dayContent?.noite || 'Separar valor para reserva',
+      reflexao: 'Estudar principio judaico do dia',
+      registro: 'Registrar gatilho emocional de compra',
+      gatilho: 'Identificar decisao financeira sabia',
+    }
+    var statuses = getDayTaskStatuses(selectedDay)
+    for (var id in labels) {
+      var s = statuses[id] || 'none'
+      completedTasks.push(labels[id] + ' (' + (TASK_STATUSES[s]?.label || s) + ')')
+    }
+
+    var diag = readDiagnosis()
+    var payload = {
+      trailType: assignedTrack,
+      currentDay: selectedDay,
+      dayTitle: dayContent?.title || '',
+      completedTasks: completedTasks,
+      reflection: whatIDid,
+      howFelt: howIFelt,
+      emotionalTrigger: trigger,
+      userFinancialProfile: diag
+        ? { diagnosis: diag.diagnostico || '', rootCause: diag.gatilho || '' }
+        : null,
+    }
+
+    generateDailyFeedback(payload)
+      .then(function (feedback) {
+        saveDayAIFeedback(selectedDay, feedback)
+        // Mark all tasks as sent_ai
+        for (var i = 0; i < CHECKLIST_IDS.length; i++) {
+          var ts = getDayTaskStatuses(selectedDay)[CHECKLIST_IDS[i]] || 'none'
+          if (ts !== 'executed') saveTaskStatus(selectedDay, CHECKLIST_IDS[i], 'sent_ai')
+        }
+        setIsAILoading(false)
+        setRefresh(function (r) { return r + 1 })
+      })
+      .catch(function () {
+        setAiError('Modo offline: feedback gerado localmente.')
+        var fallback = generateFallbackFeedback(payload)
+        saveDayAIFeedback(selectedDay, fallback)
+        setIsAILoading(false)
+        setRefresh(function (r) { return r + 1 })
+      })
+  }
+
+  function handleCompleteDay() {
+    completeDayFull(selectedDay)
+    if (selectedDay < 20) {
+      selectDay(selectedDay + 1)
+    }
+    setRefresh(function (r) { return r + 1 })
+  }
+
+  var feedbackNow = getDayData(selectedDay)?.aiFeedback
+  var checklist = buildDayChecklist(dayContent)
+
+  // Count statuses for progress display
+  var executedCount = 0
+  for (var ci = 0; ci < CHECKLIST_IDS.length; ci++) {
+    var ts = taskStatuses[CHECKLIST_IDS[ci]] || 'none'
+    if (ts === 'executed' || ts === 'sent_ai') executedCount++
+  }
+
+  var totalTasks = CHECKLIST_IDS.length
+  var circleRadius = 28
+  var circleCircumference = 2 * Math.PI * circleRadius
+  var circleOffset = circleCircumference - (executedCount / totalTasks) * circleCircumference
 
   return (
-    <div className="container" style={{ display: 'grid', gap: 14 }}>
-      <SectionCard
-        title="Desafios"
-        description="Experiência interativa com progresso, streak e reflexão."
-      >
-        <div className="grid">
-          {challenges.map((c) => {
-            const p = loadChallengeProgress(c)
-            const pct = computeProgressPct(p)
-            const streak = computeStreak(p.checkedDays)
-            return (
-              <ChallengeCard
-                key={c.id}
-                {...c}
-                progressPct={pct}
-                streak={streak}
-                onOpen={() => openChallenge(c.id)}
-              />
-            )
-          })}
+    <div className="container" style={{ display: 'grid', gap: 16, paddingTop: 12, paddingBottom: 100 }}>
+      {/* Header: phase + progress */}
+      <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span className="badge"><Flame size={14} /> {currentPhase.name}</span>
+          <span className="badge" style={{ opacity: 0.8 }}>{trackLabel}</span>
+        </div>
+        <div style={{
+          padding: '10px 14px', borderRadius: 12,
+          background: 'rgba(215,178,74,0.05)',
+          border: '1px solid rgba(215,178,74,0.15)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12,
+        }}>
+          <span style={{ fontWeight: 700 }}>{p21.completed}/21 dias</span>
+          <div className="progress" style={{ flex: 1, margin: '0 12px', height: 5 }}>
+            <div className="progress-fill" style={{ width: p21.percent + '%' }} />
+          </div>
+          <span style={{ color: 'var(--gold-2)', fontWeight: 700 }}>{p21.percent}%</span>
+        </div>
+      </div>
+
+      {/* Day navigation */}
+      <div className="day-nav-scroll">
+        {Array.from({ length: 21 }, function (_, i) {
+          var done = isDayFullyCompleted(i)
+          var unlocked = i === 0 || isDayFullyCompleted(i - 1)
+          var isActive = i === selectedDay
+          var summary = getDayStatusSummary(i)
+          var dotColor = summary === 'executed' ? '#4ad764' : summary === 'partial' ? '#f0d27a' : summary === 'sent_ai' ? '#b388ff' : 'transparent'
+          return (
+            <button
+              key={i}
+              type="button"
+              className={
+                'day-nav-item'
+                + (done ? ' completed' : '')
+                + (isActive ? ' active' : '')
+                + (!unlocked ? ' locked' : '')
+              }
+              onClick={function () { if (unlocked) selectDay(i) }}
+              disabled={!unlocked}
+              style={{ position: 'relative' }}
+            >
+              {done ? <Check size={12} /> : (i + 1)}
+              {dotColor !== 'transparent' && !done && (
+                <span style={{
+                  position: 'absolute', bottom: -3, left: '50%', transform: 'translateX(-50%)',
+                  width: 5, height: 5, borderRadius: '50%', background: dotColor,
+                }} />
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Day content */}
+      {dayContent && (
+        <div className="card glass-card">
+          <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--gold-2)' }}>
+                Dia {selectedDay + 1}: {dayContent.title}
+              </div>
+              {completed && (
+                <span className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764' }}>
+                  <Check size={12} /> Concluido
+                </span>
+              )}
+            </div>
+
+            {/* Activity sections */}
+            <div style={{ display: 'grid', gap: 10 }}>
+              {dayContent.oracao && (
+                <div style={{ display: 'grid', gap: 4 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Oracao</div>
+                  <div style={{ fontStyle: 'italic', fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{dayContent.oracao}</div>
+                </div>
+              )}
+              <div style={{ display: 'grid', gap: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Manha</div>
+                <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{dayContent.manha}</div>
+              </div>
+              <div style={{ display: 'grid', gap: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tarde</div>
+                <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{dayContent.tarde}</div>
+              </div>
+              <div style={{ display: 'grid', gap: 4 }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Noite</div>
+                <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{dayContent.noite}</div>
+              </div>
+            </div>
+
+            {dayContent.proverbio && (
+              <div style={{
+                fontStyle: 'italic', fontSize: 13, color: '#f0d27a', lineHeight: 1.6,
+                padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                {dayContent.proverbio}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 4-STATE TASK CARDS WITH CIRCULAR PROGRESS */}
+      <div className="card glass-card">
+        <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Tarefas do dia</div>
+            {/* Circular progress indicator */}
+            <div className="circular-progress">
+              <svg width="64" height="64">
+                <circle cx="32" cy="32" r={circleRadius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                <circle
+                  cx="32" cy="32" r={circleRadius} fill="none"
+                  stroke="var(--gold-2)" strokeWidth="4" strokeLinecap="round"
+                  strokeDasharray={circleCircumference}
+                  strokeDashoffset={circleOffset}
+                  style={{ transition: 'stroke-dashoffset 400ms cubic-bezier(0.16,1,0.3,1)' }}
+                />
+              </svg>
+              <span className="circular-progress-text">{executedCount}/{totalTasks}</span>
+            </div>
+          </div>
+
+          {executedCount > 0 && executedCount < totalTasks && (
+            <div style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+              Cada tarefa executada fortalece sua estrutura financeira. Continue.
+            </div>
+          )}
+          {executedCount === totalTasks && (
+            <div style={{ fontSize: 12, lineHeight: 1.5, color: '#4ad764', fontWeight: 700 }}>
+              Todas as tarefas executadas. Sua disciplina esta construindo prosperidade.
+            </div>
+          )}
+
+          {/* Status legend */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 11 }}>
+            {['executed', 'partial', 'skipped', 'sent_ai'].map(function (s) {
+              var info = TASK_STATUSES[s]
+              return (
+                <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 4, color: info.color }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: info.color, display: 'inline-block' }} />
+                  {info.label}
+                </span>
+              )
+            })}
+          </div>
+
+          {/* Task cards */}
+          <div style={{ display: 'grid', gap: 8 }}>
+            {checklist.map(function (item) {
+              var status = taskStatuses[item.id] || 'none'
+              var info = TASK_STATUSES[status] || TASK_STATUSES.none
+              var Icon = STATUS_ICONS[status] || Circle
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="task-status-card"
+                  onClick={function () { handleCycleStatus(item.id) }}
+                  style={{
+                    border: '1px solid ' + info.color,
+                    background: info.bg,
+                  }}
+                >
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    border: '2px solid ' + info.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                    background: status === 'executed' ? 'rgba(74,215,100,0.15)' : 'transparent',
+                  }}>
+                    <Icon size={16} style={{ color: info.color }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{item.label}</div>
+                    {item.description && (
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.description}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: info.color, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                    {info.label}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="muted" style={{ fontSize: 11, textAlign: 'center' }}>
+            Toque em cada tarefa para alterar o status
+          </div>
+        </div>
+      </div>
+
+      {/* Reflections */}
+      <div className="card" style={{ boxShadow: 'none' }}>
+        <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
+          <div style={{ fontWeight: 900, fontSize: 14 }}>Reflexoes do dia</div>
+          {dayContent?.reflexao && (
+            <div style={{ fontStyle: 'italic', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>{dayContent.reflexao}</div>
+          )}
+          <div className="field">
+            <label>O que fiz hoje</label>
+            <textarea className="input" rows={2} placeholder="Descreva o que executou..." value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
+          </div>
+          <div className="field">
+            <label>Como me senti</label>
+            <textarea className="input" rows={2} placeholder="Descreva suas emocoes..." value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
+          </div>
+          <div className="field">
+            <label>Maior gatilho do dia</label>
+            <textarea className="input" rows={2} placeholder="Qual foi o maior desafio emocional..." value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
+          </div>
+        </div>
+      </div>
+
+      {/* Error */}
+      {aiError && (
+        <div className="badge" style={{ background: 'rgba(240,156,74,0.12)', borderColor: 'rgba(240,156,74,0.35)', color: '#f09c4a', justifySelf: 'start' }}>
+          <AlertTriangle size={14} /> {aiError}
+        </div>
+      )}
+
+      {/* AI Feedback */}
+      {feedbackNow && (
+        <div className="ai-feedback-wrapper glass-card">
+          <div style={{ display: 'grid', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="ai-avatar"><Star size={20} /></div>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Feedback do Rabino Mentor IA</div>
+                <div className="muted" style={{ fontSize: 12 }}>Dia {selectedDay + 1}</div>
+              </div>
+            </div>
+
+            {feedbackNow.summary && (
+              <div className="ai-feedback-section">
+                <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                  <Target size={14} />
+                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Analise do dia</span>
+                </div>
+                <div className="ai-feedback-section-body">{feedbackNow.summary}</div>
+              </div>
+            )}
+
+            {feedbackNow.correction && (
+              <div className="ai-feedback-section">
+                <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
+                  <AlertTriangle size={14} />
+                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Correcao de rota</span>
+                </div>
+                <div className="ai-feedback-section-body">{feedbackNow.correction}</div>
+              </div>
+            )}
+
+            {feedbackNow.jewishWisdom && (
+              <div className="ai-feedback-section">
+                <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                  <BookOpen size={14} />
+                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
+                </div>
+                <div className="ai-feedback-section-body">{feedbackNow.jewishWisdom}</div>
+              </div>
+            )}
+
+            {feedbackNow.proverb && (
+              <div className="ai-feedback-section" style={{ fontStyle: 'italic', color: '#f0d27a' }}>
+                <div className="ai-feedback-section-body">{feedbackNow.proverb}</div>
+              </div>
+            )}
+
+            {feedbackNow.nextFocus && (
+              <div className="ai-feedback-section">
+                <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
+                  <Target size={14} />
+                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Foco para amanha</span>
+                </div>
+                <div className="ai-feedback-section-body">{feedbackNow.nextFocus}</div>
+              </div>
+            )}
+
+            {feedbackNow.receivedAt && (
+              <div className="muted" style={{ fontSize: 11, textAlign: 'right' }}>
+                Recebido em {new Date(feedbackNow.receivedAt).toLocaleString('pt-BR')}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Retention copy block */}
+      <div className="retention-block">
+        <div className="retention-block-body">
+          Cada dia nao executado e um passo para tras. A consistencia e a chave da prosperidade.
+          Nao existe atalho — existe disciplina diaria.
+        </div>
+      </div>
+
+      {/* Fixed bottom bar with AI + Complete buttons */}
+      <div className="desafios-bottom-bar">
+        {!feedbackNow && (
+          <button
+            className="btn btn-primary btn-mentor-glow"
+            type="button"
+            onClick={handleSendToAI}
+            disabled={isAILoading}
+            style={{ flex: 1, maxWidth: 260, justifyContent: 'center', padding: '13px 18px', fontSize: 13 }}
+          >
+            {isAILoading ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Loader size={14} className="spin" /> Enviando...</span>
+            ) : (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><BookOpen size={14} /> Enviar para Rabino Mentor</span>
+            )}
+          </button>
+        )}
+        {!completed && feedbackNow && (
+          <button
+            className="btn btn-primary btn-mentor-glow"
+            type="button"
+            onClick={handleCompleteDay}
+            style={{ flex: 1, maxWidth: 440, justifyContent: 'center', padding: '13px 18px' }}
+          >
+            <Check size={14} /> Concluir dia {selectedDay + 1}
+          </button>
+        )}
+        {!feedbackNow && !completed && (
+          <button
+            className="btn"
+            type="button"
+            onClick={handleCompleteDay}
+            style={{
+              flex: 0, padding: '12px 16px', justifyContent: 'center',
+              border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)',
+            }}
+          >
+            <Check size={14} /> Concluir
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════════════════
+   6-MONTH MACRO PHASE
+   ════════════════════════════════════════════════════ */
+
+function MacroPhaseView({ assignedTrack, phase }) {
+  var p6m = get6MonthProgress()
+
+  var stateModal = useState(null)
+  var openMonth = stateModal[0]
+  var setOpenMonth = stateModal[1]
+
+  var stateRefresh = useState(0)
+  var setRefresh = stateRefresh[1]
+
+  useEffect(function () {
+    var sync = function () { setRefresh(function (r) { return r + 1 }) }
+    window.addEventListener('journey_progress_updated', sync)
+    return function () { window.removeEventListener('journey_progress_updated', sync) }
+  }, [])
+
+  return (
+    <div className="container" style={{ display: 'grid', gap: 16, paddingTop: 12 }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span className="badge"><Shield size={14} /> Programa 6 Meses</span>
+        {phase === 'completed' && (
+          <span className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764' }}>
+            <Star size={14} /> Jornada completa!
+          </span>
+        )}
+      </div>
+
+      <SectionCard title="Construcao Patrimonial" description="180 dias de transformacao financeira profunda">
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+            <span style={{ fontWeight: 800 }}>{p6m.completed}/180 dias</span>
+            <span className="muted">{p6m.percent}%</span>
+          </div>
+          <div className="progress">
+            <div className="progress-fill" style={{ width: p6m.percent + '%' }} />
+          </div>
         </div>
       </SectionCard>
 
-      {selectedChallenge && progress ? (
-        <div className="drawer-overlay" role="dialog" aria-modal="true">
-          <div className="drawer">
-            <div className="drawer-head">
-              <div style={{ display: 'grid', gap: 4 }}>
-                <div style={{ fontWeight: 900, fontSize: 16 }}>
-                  {selectedChallenge.title}
-                </div>
-                <div className="muted">{selectedChallenge.description}</div>
-              </div>
-              <button className="icon-btn" type="button" onClick={closeDrawer} aria-label="Fechar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M18 6 6 18M6 6l12 12"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
+      <div style={{ fontWeight: 700, letterSpacing: '0.02em' }}>Marcos mensais</div>
+      <div className="dashboard-stack">
+        {[1, 2, 3, 4, 5, 6].map(function (m) {
+          return (
+            <MonthMilestoneCard
+              key={m}
+              monthNum={m}
+              onOpen={function (n) { setOpenMonth(n) }}
+            />
+          )
+        })}
+      </div>
 
-            <div className="drawer-body">
-              <div className="progress" aria-label="Progresso do desafio">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${computeProgressPct(progress)}%` }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <span className="badge">Dia {activeDay + 1} de {selectedChallenge.days}</span>
-                <span className="badge">Streak: {computeStreak(progress.checkedDays)} dias</span>
-                <span className="badge">Recompensa</span>
-              </div>
-
-              <div className="card" style={{ boxShadow: 'none' }}>
-                <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
-                  <div style={{ fontWeight: 900 }}>Ação prática do dia</div>
-                  <div className="muted">
-                    {selectedChallenge.dailyActions[activeDay]}
-                  </div>
-                </div>
-              </div>
-
-              <div className="day-grid" aria-label="Dias do desafio">
-                {Array.from({ length: selectedChallenge.days }).map((_, i) => (
-                  <label key={String(i)} className={`day-item ${i === activeDay ? 'active' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(progress.checkedDays[i])}
-                      onChange={() => toggleDay(i)}
-                    />
-                    <span>Dia {i + 1}</span>
-                  </label>
-                ))}
-              </div>
-
-              <div className="field">
-                <label htmlFor="reflection">Como me senti hoje</label>
-                <textarea
-                  id="reflection"
-                  className="input"
-                  rows={4}
-                  value={progress.reflections[activeDay] ?? ''}
-                  onChange={(e) => updateReflection(e.target.value)}
-                  placeholder="Escreva em 2–3 frases..."
-                />
-              </div>
-
-              <div className="card" style={{ boxShadow: 'none' }}>
-                <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
-                  <div style={{ fontWeight: 900 }}>Mini recompensa</div>
-                  <div className="muted">{selectedChallenge.reward}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="drawer-foot">
-              <button className="btn" type="button" onClick={closeDrawer}>
-                Continuar amanhã
-              </button>
-              <button className="btn btn-primary" type="button" onClick={closeDrawer}>
-                Salvar e fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {openMonth && (
+        <MacroMonthCalendarModal
+          monthNum={openMonth}
+          onClose={function () { setOpenMonth(null) }}
+          assignedTrack={assignedTrack}
+        />
+      )}
     </div>
   )
 }

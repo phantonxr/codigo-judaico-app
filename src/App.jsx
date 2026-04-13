@@ -11,7 +11,8 @@ import Desafios from './pages/Desafios.jsx'
 import Biblioteca from './pages/Biblioteca.jsx'
 import Mais from './pages/Mais.jsx'
 import Assinatura from './pages/Assinatura.jsx'
-import { userProfile } from './mock/userProfile.js'
+import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
+import Calendario from './pages/Calendario.jsx'
 
 function AppLayout() {
   const location = useLocation()
@@ -24,6 +25,8 @@ function AppLayout() {
     '/biblioteca': 'Biblioteca',
     '/mais': 'Mais',
     '/assinatura': 'Assinatura',
+    '/avaliacao': 'Avaliação Financeira',
+    '/calendario': 'Calendário',
   }
   const title = titleMap[pathname] ?? 'Código Judaico da Prosperidade'
 
@@ -31,7 +34,7 @@ function AppLayout() {
     <div className="app-shell">
       <Sidebar />
       <div className="app-main">
-        <Topbar title={title} user={userProfile} />
+        <Topbar title={title} user={null} />
         <main className="app-content" role="main">
           <div key={location.pathname} className="page-transition">
             <Outlet />
@@ -55,6 +58,8 @@ export default function App() {
         <Route path="/biblioteca" element={<Biblioteca />} />
         <Route path="/mais" element={<Mais />} />
         <Route path="/assinatura" element={<Assinatura />} />
+        <Route path="/avaliacao" element={<AvaliacaoFinanceira />} />
+        <Route path="/calendario" element={<Calendario />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

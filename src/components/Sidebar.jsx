@@ -1,16 +1,28 @@
 import { NavLink, Link } from 'react-router-dom'
-import { userProfile } from '../mock/userProfile.js'
+import useCurrentUser from '../hooks/useCurrentUser.js'
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
+  { label: 'Avaliação', to: '/avaliacao' },
   { label: 'Rabino Mentor IA', to: '/mentor' },
   { label: 'Desafios', to: '/desafios' },
+  { label: 'Calendário', to: '/calendario' },
   { label: 'Biblioteca', to: '/biblioteca' },
   { label: 'Mais', to: '/mais' },
   { label: 'Assinatura', to: '/assinatura' },
 ]
 
 export default function Sidebar() {
+  const currentUser = useCurrentUser()
+  const name = currentUser?.name || 'Aluno'
+  const plan = currentUser?.plan || '—'
+  const initials = (name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('') || 'CJ')
+
   return (
     <aside className="sidebar" aria-label="Menu lateral">
       <div className="sidebar-inner">
@@ -52,11 +64,11 @@ export default function Sidebar() {
         <div className="sidebar-footer" aria-label="Perfil do usuário">
           <div className="mini-profile">
             <div className="avatar" aria-hidden="true">
-              {userProfile.initials}
+              {initials}
             </div>
             <div className="mini-profile-text">
-              <div className="mini-name">{userProfile.name}</div>
-              <div className="mini-meta">Plano: {userProfile.planName}</div>
+              <div className="mini-name">{name}</div>
+              <div className="mini-meta">Plano: {plan}</div>
             </div>
           </div>
         </div>

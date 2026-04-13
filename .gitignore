@@ -1,5 +1,28 @@
-# Logs
-logs
+# ═══════════════════════════════════════════════════════
+# .gitignore — React + Vite (Vercel / Supabase / n8n)
+# ═══════════════════════════════════════════════════════
+
+# ── 1. Dependencias ──────────────────────────────────
+# Pacotes instalados pelo npm/yarn/pnpm. Sempre reinstalados via lockfile.
+node_modules/
+
+# ── 2. Build / Output ────────────────────────────────
+# Arquivos gerados pelo Vite (vite build). Recriados no deploy.
+dist/
+dist-ssr/
+build/
+
+# ── 3. Variaveis de ambiente ─────────────────────────
+# Chaves de API, tokens Supabase, segredos n8n — NUNCA commitar.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ── 4. Logs ──────────────────────────────────────────
+# Logs de erro e debug dos package managers.
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,22 +30,55 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Env files (never commit secrets)
-.env
-.env.*
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# ── 5. Arquivos do sistema operacional ───────────────
+# Metadata criados pelo macOS e Windows. Irrelevantes para o projeto.
 .DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── 6. Editor / IDE ─────────────────────────────────
+# Configs locais do VS Code. Cada dev usa as suas.
+.vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ── 7. Arquivos temporarios ─────────────────────────
+# Temp files criados por scripts ou editores.
+*.tmp
+*.temp
+
+# ── 8. Cache ─────────────────────────────────────────
+# Caches internos do Vite, ESLint, TypeScript etc.
+.cache/
+.vite/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# ── 9. Cobertura de testes ───────────────────────────
+# Relatorios de coverage gerados pelo Vitest/Jest.
+coverage/
+
+# ── 10. Runtime ──────────────────────────────────────
+# PIDs e seeds de processos Node.
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ═══════════════════════════════════════════════════════
+# ARQUIVOS QUE NUNCA DEVEM SER IGNORADOS:
+#   - package.json        (manifesto do projeto)
+#   - package-lock.json   (lockfile — garante builds reprodutiveis)
+#   - vite.config.js/ts   (config do bundler)
+#   - index.html          (entry point)
+#   - src/                (todo o codigo-fonte)
+#   - public/             (assets estaticos)
+#   - vercel.json         (config de deploy)
+#   - tailwind.config.*   (config do Tailwind)
+#   - postcss.config.*    (config do PostCSS)
+# ═══════════════════════════════════════════════════════

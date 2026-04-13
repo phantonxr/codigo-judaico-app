@@ -1,15 +1,15 @@
 export const userProfile = {
-  id: 'u_demo',
-  name: 'Daniel',
-  initials: 'DP',
-  planName: 'Premium Mensal',
-  planStatus: 'Ativo',
-  nextChargeDate: '2026-05-09',
-  streakDays: 9,
-  weeklyProgressPct: 58,
-  financialAwarenessScore: 72,
-  netWorthBuilding: 18450,
-  currentChallengeId: 'cj_7d',
+  id: 'anon',
+  name: 'Aluno',
+  initials: 'CJ',
+  planName: '',
+  planStatus: '',
+  nextChargeDate: '',
+  streakDays: 0,
+  weeklyProgressPct: 0,
+  financialAwarenessScore: 0,
+  netWorthBuilding: 0,
+  currentChallengeId: '',
 }
 
 // TODO: integrar Supabase (perfil por usuário)

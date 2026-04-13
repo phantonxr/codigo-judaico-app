@@ -1,9 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import SectionCard from '../components/SectionCard.jsx'
-import { userProfile } from '../mock/userProfile.js'
 import { useRabinoMentor } from '../hooks/useRabinoMentor.js'
+import useCurrentUser from '../hooks/useCurrentUser.js'
+
+function computeInitials(name) {
+  const cleaned = String(name ?? '').trim()
+  if (!cleaned) return 'CJ'
+  const parts = cleaned.split(/\s+/).filter(Boolean)
+  const first = parts[0]?.[0] ?? 'C'
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : 'J'
+  return `${String(first).toUpperCase()}${String(last).toUpperCase()}`
+}
 
 export default function RabinoMentorIA() {
+  const currentUser = useCurrentUser()
+  const mentorProfile = {
+    id: currentUser?.email || 'anon',
+    name: currentUser?.name || 'Aluno',
+    plan: currentUser?.plan || '',
+  }
+
   const {
     messages,
     send,
@@ -13,9 +29,11 @@ export default function RabinoMentorIA() {
     retryLast,
     clear,
     exportHistory,
-  } = useRabinoMentor(userProfile)
+  } = useRabinoMentor(mentorProfile)
   const [text, setText] = useState('')
   const endRef = useRef(null)
+
+  const initials = computeInitials(mentorProfile.name)
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -95,7 +113,7 @@ export default function RabinoMentorIA() {
                     {m.role === 'assistant' ? (
                       <span className="bubble-avatar">R</span>
                     ) : (
-                      <span className="bubble-avatar user">{userProfile.initials}</span>
+                      <span className="bubble-avatar user">{initials}</span>
                     )}
                     <strong>
                       {m.role === 'assistant' ? 'Rabino Mentor' : 'Você'}

@@ -1,13 +1,45 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import useCurrentUser from '../hooks/useCurrentUser.js'
+import { computeDailyStreak, computeWeeklyProgressPct } from '../utils/progress.js'
 
 function clampPct(value) {
   if (Number.isNaN(value)) return 0
   return Math.max(0, Math.min(100, value))
 }
 
-export default function Topbar({ title, user }) {
-  const weeklyPct = clampPct(user?.weeklyProgressPct ?? 0)
-  const greetingName = user?.name ?? 'amigo'
+export default function Topbar({ title }) {
+  const currentUser = useCurrentUser()
+  const greetingName = currentUser?.name || 'Aluno'
+
+  const initials = useMemo(() => {
+    const name = String(currentUser?.name ?? '').trim()
+    if (!name) return 'CJ'
+    const parts = name.split(/\s+/).filter(Boolean)
+    const first = parts[0]?.[0] ?? 'C'
+    const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : 'J'
+    return `${String(first).toUpperCase()}${String(last).toUpperCase()}`
+  }, [currentUser?.name])
+
+  const [streakDays, setStreakDays] = useState(0)
+  const [weeklyPctRaw, setWeeklyPctRaw] = useState(0)
+
+  useEffect(() => {
+    const email = currentUser?.email
+    const recompute = () => {
+      setStreakDays(computeDailyStreak(email))
+      setWeeklyPctRaw(computeWeeklyProgressPct(email))
+    }
+    recompute()
+    window.addEventListener('daily_action_updated', recompute)
+    window.addEventListener('auth_user_updated', recompute)
+    return () => {
+      window.removeEventListener('daily_action_updated', recompute)
+      window.removeEventListener('auth_user_updated', recompute)
+    }
+  }, [currentUser?.email])
+
+  const weeklyPct = clampPct(weeklyPctRaw)
 
   return (
     <header className="topbar" role="banner">
@@ -20,7 +52,7 @@ export default function Topbar({ title, user }) {
           <div className="topbar-stats" aria-label="Indicadores">
             <div className="stat-pill">
               <span className="stat-label">Streak</span>
-              <span className="stat-value">{user?.streakDays ?? 0} dias</span>
+              <span className="stat-value">{streakDays} dias</span>
             </div>
             <div className="stat-pill" aria-label="Progresso semanal">
               <span className="stat-label">Semana</span>
@@ -45,7 +77,7 @@ export default function Topbar({ title, user }) {
           </button>
           <Link className="icon-btn" to="/mais" aria-label="Perfil">
             <span className="avatar avatar-sm" aria-hidden="true">
-              {user?.initials ?? 'CJ'}
+              {initials}
             </span>
           </Link>
           <Link className="btn btn-soft" to="/login">

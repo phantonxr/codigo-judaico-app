@@ -1,10 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { readCurrentUser, saveCurrentUser } from '../hooks/useCurrentUser.js'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [email, setEmail] = useState(() => readCurrentUser().email || '')
 
   function onSubmit(e) {
     e.preventDefault()
+
+    const existing = readCurrentUser()
+    const nextEmail = String(email ?? '').trim() || existing.email || 'auditoria@codigojudaico.com'
+    const nextName = existing.name && existing.name !== 'Aluno' ? existing.name : 'Anderson'
+    const nextPlan = existing.plan || 'Premium Mensal'
+    saveCurrentUser({ name: nextName, email: nextEmail, plan: nextPlan })
+
     navigate('/dashboard')
   }
 
@@ -22,7 +32,14 @@ export default function Login() {
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
             <div className="field">
               <label htmlFor="email">E-mail</label>
-              <input id="email" className="input" type="email" required />
+              <input
+                id="email"
+                className="input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="field">
               <label htmlFor="password">Senha</label>

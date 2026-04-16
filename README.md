@@ -56,7 +56,15 @@ Para Easypanel, deixei dois arquivos principais:
 O frontend foi configurado para usar proxy interno do Nginx:
 
 - tudo que entrar em `/api` vai para `http://api:8080`
-- isso evita depender de `VITE_API_BASE_URL` em producao
+- isso serve como fallback de proxy no container
+
+Neste projeto, o valor esperado para o frontend publicado no Easypanel e:
+
+```env
+VITE_API_BASE_URL=https://erp-saas-codigojudaico.3oyj69.easypanel.host
+```
+
+O [Dockerfile.frontend](Dockerfile.frontend) consome essa variavel no build do Vite.
 
 ### Opcao 1: Compose Service no Easypanel
 
@@ -79,6 +87,7 @@ Se preferir criar servicos separados no Easypanel:
 1. `frontend`
    - Dockerfile: `Dockerfile.frontend`
    - porta/proxy: `80`
+   - build env: `VITE_API_BASE_URL=https://erp-saas-codigojudaico.3oyj69.easypanel.host`
    - env: `API_UPSTREAM=<URL interna ou dominio publico da API>`
 
 2. `api`
@@ -97,6 +106,7 @@ Observacao:
 
 - no `docker-compose.easypanel.yml`, o frontend usa `API_UPSTREAM=http://api:8080` porque `api` e o nome do servico dentro da mesma stack Docker
 - em App Services separados no Easypanel, use a URL privada/publica real da API
+- o Nginx do frontend foi configurado com resolucao dinamica, entao ele nao cai no boot se a API ainda estiver subindo; mas o hostname configurado em `API_UPSTREAM` ainda precisa existir de verdade para as requisicoes funcionarem
 
 ## Rodando backend fora do Docker
 
@@ -116,7 +126,7 @@ Se quiser manter `Host=erp-db`, rode a API dentro do `docker compose`, porque es
 O frontend usa:
 
 - proxy do Vite para `/api -> http://localhost:8080`
-- `VITE_API_BASE_URL` opcional em [`.env.example`](.env.example)
+- `VITE_API_BASE_URL` configurado no build para apontar para a API publicada
 
 Para desenvolvimento:
 

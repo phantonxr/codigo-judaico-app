@@ -10,6 +10,8 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 WORKDIR /usr/share/nginx/html
 
+ENV API_UPSTREAM=http://api:8080
+
 COPY nginx/frontend.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist ./
 

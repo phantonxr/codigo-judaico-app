@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Flame, Star, Crown, Sprout, Target, ChevronRight, Lock, Trophy, BookOpen, TrendingUp, Sparkles, Shield } from 'lucide-react'
 import MetricCard from '../components/MetricCard.jsx'
+import useDailyWisdom from '../hooks/useDailyWisdom.js'
 import useFinancialDiagnosis from '../hooks/useFinancialDiagnosis.js'
 import {
   getCurrentDayIndex,
@@ -17,7 +18,6 @@ import {
   getDisciplineScore,
 } from '../hooks/useJourneyProgress.js'
 import { TRACK_LABELS } from '../data/challenges21Days.js'
-import { pickWisdomForDate } from '../data/wisdom.js'
 
 var PHASE_ICONS = {
   flame: Flame,
@@ -57,7 +57,7 @@ export default function Dashboard() {
   var patrimony = getPatrimonyScore()
   var progress = readJourneyProgress()
   var streak = progress.streak || 0
-  var wisdom = pickWisdomForDate()
+  var wisdom = useDailyWisdom()
   var discipline = getDisciplineScore()
   var lastFeedback = getLastAIFeedback()
 

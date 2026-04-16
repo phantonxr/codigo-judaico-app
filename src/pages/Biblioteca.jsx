@@ -1,8 +1,8 @@
 import LessonCard from '../components/LessonCard.jsx'
 import SectionCard from '../components/SectionCard.jsx'
-import { lessons } from '../data/lessons.js'
 import { useEffect, useMemo, useState } from 'react'
 import useCurrentUser from '../hooks/useCurrentUser.js'
+import useLessonsCatalog from '../hooks/useLessonsCatalog.js'
 import {
   loadLessonProgressList,
   toggleLessonCompleted,
@@ -11,13 +11,13 @@ import {
 export default function Biblioteca() {
   const currentUser = useCurrentUser()
   const userEmail = currentUser?.email
+  const { lessons, loading: catalogLoading } = useLessonsCatalog()
   const [loading, setLoading] = useState(true)
   const [list, setList] = useState(() => loadLessonProgressList(userEmail))
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 420)
-    return () => clearTimeout(t)
-  }, [])
+    setLoading(catalogLoading)
+  }, [catalogLoading])
 
   useEffect(() => {
     const sync = () => setList(loadLessonProgressList(userEmail))
@@ -45,7 +45,7 @@ export default function Biblioteca() {
       if (completedById.get(String(l.id))) count += 1
     }
     return count
-  }, [completedById])
+  }, [completedById, lessons])
 
   function onToggle(lessonId) {
     toggleLessonCompleted(userEmail, lessonId)

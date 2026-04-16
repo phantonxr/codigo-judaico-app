@@ -15,7 +15,7 @@ function computeInitials(name) {
 export default function RabinoMentorIA() {
   const currentUser = useCurrentUser()
   const mentorProfile = {
-    id: currentUser?.email || 'anon',
+    id: currentUser?.id || currentUser?.email || 'anon',
     name: currentUser?.name || 'Aluno',
     plan: currentUser?.plan || '',
   }

@@ -82,3 +82,5 @@ pids/
 #   - tailwind.config.*   (config do Tailwind)
 #   - postcss.config.*    (config do PostCSS)
 # ═══════════════════════════════════════════════════════
+backend/CodigoJudaico.Api/bin
+backend/CodigoJudaico.Api/obj

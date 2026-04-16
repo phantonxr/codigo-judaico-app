@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj" />
+  </Folder>
+</Solution>

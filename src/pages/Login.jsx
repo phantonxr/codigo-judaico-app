@@ -6,14 +6,14 @@ export default function Login() {
   const navigate = useNavigate()
   const [email, setEmail] = useState(() => readCurrentUser().email || '')
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault()
 
     const existing = readCurrentUser()
     const nextEmail = String(email ?? '').trim() || existing.email || 'auditoria@codigojudaico.com'
     const nextName = existing.name && existing.name !== 'Aluno' ? existing.name : 'Anderson'
     const nextPlan = existing.plan || 'Premium Mensal'
-    saveCurrentUser({ name: nextName, email: nextEmail, plan: nextPlan })
+    await saveCurrentUser({ name: nextName, email: nextEmail, plan: nextPlan })
 
     navigate('/dashboard')
   }

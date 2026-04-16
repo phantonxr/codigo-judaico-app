@@ -1,3 +1,5 @@
+import { buildApiUrl } from './apiClient.js'
+
 /**
  * Servico de feedback diario do Rabino Mentor IA.
  * Integracao real com OpenAI via backend.
@@ -12,17 +14,6 @@
 
 function safeTrim(text) {
   return String(text ?? '').trim()
-}
-
-function normalizeBase(base) {
-  var value = safeTrim(base)
-  if (!value) return ''
-  return value.endsWith('/') ? value.slice(0, -1) : value
-}
-
-function buildUrl(path) {
-  var base = normalizeBase(import.meta.env.VITE_API_BASE_URL)
-  return base ? base + path : path
 }
 
 // -- Prompt for 21-day phase --
@@ -165,7 +156,7 @@ function parseAIResponse(text) {
 export async function generateDailyFeedback(payload) {
   var prompt = buildDailyPrompt(payload)
 
-  var url = buildUrl('/api/rabino-daily-feedback')
+  var url = buildApiUrl('/api/rabino-daily-feedback')
   var controller = new AbortController()
   var timeout = setTimeout(function () { controller.abort() }, 25000)
 

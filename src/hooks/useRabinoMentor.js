@@ -7,6 +7,7 @@ import {
 import { readJson, mergeJson, remove } from '../utils/storage.js'
 import { readDiagnosis, readAssignedTrack } from './useFinancialDiagnosis.js'
 import { getCurrentDayIndex } from './useJourneyProgress.js'
+import { deleteMentorMessagesOnServer } from '../services/sessionSync.js'
 
 function chatKey(userId) {
   return `mentor_chat:${userId ?? 'anon'}`
@@ -55,6 +56,9 @@ export function useRabinoMentor(userProfile) {
 
   const clear = useCallback(() => {
     remove(storageKey)
+    deleteMentorMessagesOnServer(userProfile?.id).catch(() => {
+      // Keep local reset even if the backend call fails.
+    })
     const reset = [
       {
         id: makeId('a'),
@@ -67,7 +71,7 @@ export function useRabinoMentor(userProfile) {
     setMessages(reset)
     setLastError('')
     persist(reset)
-  }, [persist, storageKey])
+  }, [persist, storageKey, userProfile?.id])
 
   const exportHistory = useCallback(() => {
     const data = {

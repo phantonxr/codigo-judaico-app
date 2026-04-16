@@ -12,5 +12,3 @@ export const userProfile = {
   currentChallengeId: '',
 }
 
-// TODO: integrar Supabase (perfil por usuário)
-// TODO: persistir progresso por usuário

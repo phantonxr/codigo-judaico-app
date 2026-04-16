@@ -17,8 +17,8 @@ const annualBenefits = [
 export default function Assinatura() {
   const currentUser = useCurrentUser()
   const planName = currentUser?.plan || '—'
-  const planStatus = planName && planName !== '—' ? 'Ativo' : '—'
-  const nextChargeDate = '—'
+  const planStatus = currentUser?.planStatus || (planName && planName !== '—' ? 'Ativo' : '—')
+  const nextChargeDate = currentUser?.nextChargeDate || '—'
 
   return (
     <div className="container dashboard-grid">

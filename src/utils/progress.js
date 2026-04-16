@@ -1,3 +1,5 @@
+import { syncLessonProgress } from '../services/sessionSync.js'
+
 function safeEmailKey(email) {
   const value = String(email ?? '').trim().toLowerCase()
   return value || 'anon'
@@ -69,6 +71,9 @@ export function setLessonCompleted(userEmail, lessonId, completed) {
   else next[idx] = { ...next[idx], lessonId: id, completed: nextCompleted }
 
   saveLessonProgressList(emailKey, next)
+  syncLessonProgress(userEmail, id, nextCompleted).catch(() => {
+    // Keep the local cache if the API is not reachable.
+  })
   return next
 }
 

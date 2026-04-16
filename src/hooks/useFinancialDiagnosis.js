@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { queueJourneyStateSync, syncDiagnosisState } from '../services/sessionSync.js'
 
 const DIAGNOSIS_KEY = 'cj_financial_diagnosis'
 const TRACK_KEY = 'cj_assigned_track'
@@ -47,6 +48,7 @@ export function saveAssignedTrack(trackId) {
     localStorage.setItem(JOURNEY_START_KEY, today)
   }
   window.dispatchEvent(new Event('diagnosis_updated'))
+  queueJourneyStateSync()
 }
 
 export function clearDiagnosis() {
@@ -78,6 +80,9 @@ export default function useFinancialDiagnosis() {
   const save = useCallback((diag, trackId) => {
     saveDiagnosis(diag)
     saveAssignedTrack(trackId)
+    syncDiagnosisState(diag, trackId).catch(() => {
+      // Keep the local cache working if the backend is temporarily unavailable.
+    })
   }, [])
 
   const clear = useCallback(() => {

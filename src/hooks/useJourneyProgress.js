@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { readAssignedTrack, readJourneyStartDate } from './useFinancialDiagnosis.js'
+import { queueJourneyStateSync } from '../services/sessionSync.js'
 
 var PROGRESS_KEY = 'cj_journey_progress'
 var CALENDAR_KEY = 'cj_calendar_data'
@@ -186,6 +187,7 @@ function daysBetween(startStr, endStr) {
 
 function emitUpdate() {
   window.dispatchEvent(new Event('journey_progress_updated'))
+  queueJourneyStateSync()
 }
 
 var DEFAULT_PROGRESS = {

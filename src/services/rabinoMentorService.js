@@ -1,18 +1,8 @@
 import { systemPrompt, buildSystemPromptWithContext } from '../constants/systemPrompt.js'
+import { buildApiUrl } from './apiClient.js'
 
 function safeTrim(text) {
   return String(text ?? '').trim()
-}
-
-function normalizeBase(base) {
-  const value = safeTrim(base)
-  if (!value) return ''
-  return value.endsWith('/') ? value.slice(0, -1) : value
-}
-
-function buildUrl(path) {
-  const base = normalizeBase(import.meta.env.VITE_API_BASE_URL)
-  return base ? `${base}${path}` : path
 }
 
 function toRecentHistory(messages, max = 8) {
@@ -81,7 +71,7 @@ export async function sendMessageToRabino(payload) {
   // TODO: persistir progresso por usuário
   // TODO: salvar memória do Rabino Mentor
 
-  const url = buildUrl('/api/rabino-mentor')
+  const url = buildApiUrl('/api/rabino-mentor')
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 20000)
 
@@ -135,7 +125,7 @@ export function buildRabinoPayload({
     streak: userProfile?.streakDays,
     score: score ?? userProfile?.financialAwarenessScore,
     currentChallenge: currentChallenge ?? userProfile?.currentChallengeId,
-    currentPlan: userProfile?.planName,
+    currentPlan: userProfile?.planName || userProfile?.plan,
     recentHistory: toRecentHistory(recentMessages),
     contextualPrompt,
   }

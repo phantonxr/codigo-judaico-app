@@ -46,6 +46,58 @@ npm run dev
 - API: `http://localhost:8080`
 - Health check: `http://localhost:8080/api/health`
 
+## Easypanel
+
+Para Easypanel, deixei dois arquivos principais:
+
+- [Dockerfile.frontend](Dockerfile.frontend): builda o React e serve com Nginx
+- [docker-compose.easypanel.yml](docker-compose.easypanel.yml): sobe `frontend`, `api` e `erp-db`
+
+O frontend foi configurado para usar proxy interno do Nginx:
+
+- tudo que entrar em `/api` vai para `http://api:8080`
+- isso evita depender de `VITE_API_BASE_URL` em producao
+
+### Opcao 1: Compose Service no Easypanel
+
+Use [docker-compose.easypanel.yml](docker-compose.easypanel.yml) como stack do projeto.
+
+Servico web principal:
+
+- `frontend`
+- porta interna: `80`
+
+Se quiser expor a API separadamente tambem:
+
+- servico: `api`
+- porta interna: `8080`
+
+### Opcao 2: App Services separados
+
+Se preferir criar servicos separados no Easypanel:
+
+1. `frontend`
+   - Dockerfile: `Dockerfile.frontend`
+   - porta/proxy: `80`
+   - env: `API_UPSTREAM=<URL interna ou dominio publico da API>`
+
+2. `api`
+   - Dockerfile: `backend/CodigoJudaico.Api/Dockerfile`
+   - porta/proxy: `8080`
+   - env:
+     - `ASPNETCORE_ENVIRONMENT=Production`
+     - `ASPNETCORE_URLS=http://+:8080`
+     - `ConnectionStrings__Postgres=Host=erp-db;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!`
+
+3. `erp-db`
+   - imagem: `postgres:17-alpine`
+   - volume persistente em `/var/lib/postgresql/data`
+
+Observacao:
+
+- no `docker-compose.easypanel.yml`, o frontend usa `API_UPSTREAM=http://api:8080` porque `api` e o nome do servico dentro da mesma stack Docker
+- em App Services separados no Easypanel, use a URL privada/publica real da API
+
 ## Rodando backend fora do Docker
 
 Se voce rodar a API direto no host com `dotnet run`, o host do Postgres normalmente precisa ser `localhost`, nao `erp-db`.

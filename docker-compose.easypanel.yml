@@ -1,0 +1,38 @@
+services:
+  erp-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: codjudaicotest
+      POSTGRES_USER: judaictotest
+      POSTGRES_PASSWORD: Jud@2026Wa!
+    volumes:
+      - codigo-judaico-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U judaictotest -d codjudaicotest"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/CodigoJudaico.Api/Dockerfile
+    depends_on:
+      erp-db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: Host=erp-db;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      - api
+    environment:
+      API_UPSTREAM: http://api:8080
+
+volumes:
+  codigo-judaico-postgres-data:

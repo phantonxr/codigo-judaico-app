@@ -18,21 +18,45 @@ export default function CheckoutSuccess() {
 
     let active = true
 
-    getCheckoutSessionStatus(sessionId)
-      .then((data) => {
-        if (active) setStatus(data)
-      })
-      .catch(() => {
-        if (active) {
-          setError('Recebemos seu retorno, mas ainda nao consegui consultar o status agora.')
+    let timeoutId
+
+    async function poll(attempt = 0) {
+      try {
+        const data = await getCheckoutSessionStatus(sessionId)
+
+        if (!active) return
+
+        setStatus(data)
+        setError('')
+
+        if (data?.accessGranted || attempt >= 9) {
+          setLoading(false)
+          return
         }
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
+
+        timeoutId = window.setTimeout(() => {
+          poll(attempt + 1)
+        }, 3000)
+      } catch {
+        if (!active) return
+
+        if (attempt >= 4) {
+          setError('Recebemos seu retorno, mas ainda nao consegui consultar o status agora.')
+          setLoading(false)
+          return
+        }
+
+        timeoutId = window.setTimeout(() => {
+          poll(attempt + 1)
+        }, 3000)
+      }
+    }
+
+    poll()
 
     return () => {
       active = false
+      window.clearTimeout(timeoutId)
     }
   }, [sessionId])
 

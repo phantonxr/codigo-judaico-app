@@ -18,6 +18,7 @@ public static class SessionEndpoints
             AppDbContext dbContext,
             PasswordHashService passwordHashService,
             SessionTokenService sessionTokenService,
+            StripeWebhookProcessor stripeWebhookProcessor,
             CancellationToken cancellationToken) =>
         {
             var email = ApiMappers.NormalizeEmail(request.Email);
@@ -39,6 +40,30 @@ public static class SessionEndpoints
             if (user is null ||
                 string.IsNullOrWhiteSpace(user.PasswordHash) ||
                 !passwordHashService.VerifyPassword(request.Password, user.PasswordHash))
+            {
+                return Results.Problem(
+                    title: "Credenciais invalidas.",
+                    detail: "Confirme o e-mail, a senha ou a liberacao do seu acesso.",
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            if (!user.AccessEnabled)
+            {
+                if (!string.IsNullOrWhiteSpace(user.LastStripeCheckoutSessionId))
+                {
+                    await stripeWebhookProcessor.TryReconcileCheckoutSessionAsync(
+                        user.LastStripeCheckoutSessionId,
+                        cancellationToken);
+
+                    user = await dbContext.Users
+                        .Include(x => x.Diagnosis)
+                        .Include(x => x.JourneyState)
+                        .Include(x => x.LessonProgressEntries)
+                        .SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
+                }
+            }
+
+            if (user is null)
             {
                 return Results.Problem(
                     title: "Credenciais invalidas.",

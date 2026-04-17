@@ -16,7 +16,7 @@ public sealed class AccessEmailService(
 
     public async Task SendAccessGrantedEmailAsync(
         AppUser user,
-        string plainPassword,
+        string? plainPassword,
         CancellationToken cancellationToken)
     {
         if (!_resendOptions.Enabled)
@@ -30,6 +30,14 @@ public sealed class AccessEmailService(
         var loginUrl = $"{_stripeOptions.FrontendBaseUrl.TrimEnd('/')}/login";
         var displayName = string.IsNullOrWhiteSpace(user.Name) ? "Aluno" : user.Name;
 
+        var usingTemporaryPassword = !string.IsNullOrWhiteSpace(plainPassword);
+        var passwordPlainTextBlock = usingTemporaryPassword
+            ? $"Senha temporaria: {plainPassword}"
+            : "Senha: use a senha criada no checkout.";
+        var passwordHtmlBlock = usingTemporaryPassword
+            ? $"<strong>Senha temporaria:</strong> {WebUtility.HtmlEncode(plainPassword)}<br />"
+            : "<strong>Senha:</strong> use a senha criada no checkout.<br />";
+
         var subject = "Seu acesso ao Metodo Judaico foi liberado";
         var plainTextBody = $"""
 Shalom, {displayName}.
@@ -37,7 +45,7 @@ Shalom, {displayName}.
 Seu pagamento foi confirmado e seu acesso ja esta liberado.
 
 E-mail: {user.Email}
-Senha temporaria: {plainPassword}
+{passwordPlainTextBlock}
 Plano: {user.PlanName}
 
 Entre por aqui:
@@ -50,13 +58,13 @@ Se nao encontrar este e-mail depois, confira sua caixa de spam.
 <p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
 <p>Seu pagamento foi confirmado e seu acesso ja esta liberado.</p>
 <p><strong>E-mail:</strong> {WebUtility.HtmlEncode(user.Email)}<br />
-<strong>Senha temporaria:</strong> {WebUtility.HtmlEncode(plainPassword)}<br />
-<strong>Plano:</strong> {WebUtility.HtmlEncode(user.PlanName)}</p>
+{passwordHtmlBlock}<strong>Plano:</strong> {WebUtility.HtmlEncode(user.PlanName)}</p>
 <p><a href="{WebUtility.HtmlEncode(loginUrl)}">Clique aqui para entrar no sistema</a>.</p>
 <p>Se nao encontrar este e-mail depois, confira sua caixa de spam.</p>
 """;
 
         var client = httpClientFactory.CreateClient("Resend");
+        logger.LogInformation("Enviando e-mail via Resend para {Email}.", user.Email);
         using var response = await client.PostAsJsonAsync(
             "emails",
             new ResendSendEmailRequest(

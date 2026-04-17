@@ -94,7 +94,6 @@ public static class PaymentEndpoints
             user.AccessEnabled = false;
             user.PlanName = plan.PlanName;
             user.PlanStatus = PendingCheckoutPlanStatus;
-            user.LastStripeCheckoutSessionId = string.Empty;
             user.UpdatedAt = now;
 
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -103,10 +102,6 @@ public static class PaymentEndpoints
                 request with { Email = email, Password = string.Empty },
                 plan,
                 cancellationToken);
-
-            user.LastStripeCheckoutSessionId = response.SessionId;
-            user.UpdatedAt = DateTimeOffset.UtcNow;
-            await dbContext.SaveChangesAsync(cancellationToken);
 
             return Results.Ok(response);
         })

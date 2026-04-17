@@ -6,7 +6,7 @@ Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stri
 
 - checkout da Kirvano substituido por Stripe Checkout
 - suporte a Stripe Connect com retencao da plataforma e repasse para `connected account`
-- login real com e-mail + senha temporaria enviada apos pagamento confirmado
+- login real com e-mail + senha criada no checkout, com e-mail de acesso apos pagamento confirmado
 - sessao autenticada por token no frontend e no backend
 - webhook Stripe para ativar o usuario, sincronizar assinatura e atualizar proxima cobranca
 - endpoints premium protegidos por autenticacao
@@ -18,8 +18,8 @@ Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stri
 2. O frontend pede ao backend uma Checkout Session do Stripe.
 3. O pagamento acontece no Stripe.
 4. O webhook `POST /api/payments/webhooks/stripe` confirma a compra.
-5. A API cria ou atualiza o usuario pelo e-mail pago, gera uma senha temporaria e envia pela Resend.
-6. O usuario entra em `/login` com o e-mail e a senha recebida.
+5. A API cria ou atualiza o usuario pelo e-mail pago, libera o acesso e envia o e-mail pela Resend.
+6. O usuario entra em `/login` com o e-mail e a senha criada no checkout, ou com a senha temporaria enviada quando necessario.
 
 ## Configuracao obrigatoria
 

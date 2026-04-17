@@ -36,11 +36,29 @@ public sealed class StripeWebhookProcessor(
         }
     }
 
+    public async Task<bool> TryReconcileCheckoutSessionAsync(
+        string sessionId,
+        CancellationToken cancellationToken)
+    {
+        var normalizedSessionId = ApiMappers.Clean(sessionId);
+
+        if (string.IsNullOrWhiteSpace(normalizedSessionId))
+        {
+            return false;
+        }
+
+        var session = await stripeBillingService.GetCheckoutSessionAsync(normalizedSessionId, cancellationToken);
+        return await TryGrantAccessFromCheckoutSessionAsync(session, cancellationToken);
+    }
+
     public async Task<CheckoutSessionStatusResponse?> GetCheckoutStatusAsync(
         string sessionId,
         CancellationToken cancellationToken)
     {
         var session = await stripeBillingService.GetCheckoutSessionAsync(sessionId, cancellationToken);
+
+        await TryGrantAccessFromCheckoutSessionAsync(session, cancellationToken);
+
         var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
         var matchedPlan = await ResolveTrackedPlanAsync(session, subscription, cancellationToken);
 
@@ -69,6 +87,30 @@ public sealed class StripeWebhookProcessor(
             string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
     }
 
+    private async Task<bool> TryGrantAccessFromCheckoutSessionAsync(
+        Session session,
+        CancellationToken cancellationToken)
+    {
+        if (!string.Equals(ApiMappers.Clean(session.Status), "complete", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
+        var matchedPlan = await ResolveTrackedPlanAsync(session, subscription, cancellationToken);
+
+        if (matchedPlan is null)
+        {
+            logger.LogInformation(
+                "Checkout {SessionId} concluido, mas ignorado na reconciliacao por nao pertencer a este app.",
+                session.Id);
+            return false;
+        }
+
+        await HandleCheckoutSessionCompletedAsync(session, cancellationToken);
+        return true;
+    }
+
     private async Task HandleCheckoutSessionCompletedAsync(Session session, CancellationToken cancellationToken)
     {
         var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
@@ -94,6 +136,7 @@ public sealed class StripeWebhookProcessor(
         var planName = ReadMetadata(session.Metadata, StripeBillingService.PlanNameMetadataKey);
         var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
         var now = DateTimeOffset.UtcNow;
+        var lastCompletedCheckoutSessionId = user?.LastStripeCheckoutSessionId;
 
         if (user is null)
         {
@@ -113,6 +156,9 @@ public sealed class StripeWebhookProcessor(
             user.Name = name;
         }
 
+        var shouldSendAccessEmail =
+            user.AccessEmailSentAt is null ||
+            !string.Equals(lastCompletedCheckoutSessionId, session.Id, StringComparison.OrdinalIgnoreCase);
         var shouldGenerateFallbackPassword = string.IsNullOrWhiteSpace(user.PasswordHash);
         var plainPassword = shouldGenerateFallbackPassword
             ? passwordHashService.GenerateTemporaryPassword()
@@ -132,7 +178,7 @@ public sealed class StripeWebhookProcessor(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(plainPassword))
+        if (shouldSendAccessEmail)
         {
             await accessEmailService.SendAccessGrantedEmailAsync(user, plainPassword, cancellationToken);
             user.AccessEmailSentAt = DateTimeOffset.UtcNow;

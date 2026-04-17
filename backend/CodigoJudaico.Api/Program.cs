@@ -3,6 +3,7 @@ using CodigoJudaico.Api.Endpoints;
 using CodigoJudaico.Api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,15 @@ builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
 
 var app = builder.Build();
+
+var resendOptions = app.Services.GetRequiredService<IOptions<ResendOptions>>().Value;
+
+if (resendOptions.Enabled &&
+    (string.IsNullOrWhiteSpace(resendOptions.ApiKey) || string.IsNullOrWhiteSpace(resendOptions.From)))
+{
+    app.Logger.LogWarning(
+        "Resend esta habilitado, mas ApiKey/From nao foram configurados. O acesso sera liberado normalmente, porem os e-mails nao serao enviados ate corrigir a configuracao.");
+}
 
 if (app.Environment.IsDevelopment())
 {

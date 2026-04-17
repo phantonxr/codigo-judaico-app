@@ -136,6 +136,7 @@ public sealed class StripeWebhookProcessor(
         var planName = ReadMetadata(session.Metadata, StripeBillingService.PlanNameMetadataKey);
         var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
         var now = DateTimeOffset.UtcNow;
+        var accessWasEnabled = user?.AccessEnabled ?? false;
         var lastCompletedCheckoutSessionId = user?.LastStripeCheckoutSessionId;
 
         if (user is null)
@@ -156,19 +157,6 @@ public sealed class StripeWebhookProcessor(
             user.Name = name;
         }
 
-        var shouldSendAccessEmail =
-            user.AccessEmailSentAt is null ||
-            !string.Equals(lastCompletedCheckoutSessionId, session.Id, StringComparison.OrdinalIgnoreCase);
-        var shouldGenerateFallbackPassword = string.IsNullOrWhiteSpace(user.PasswordHash);
-        var plainPassword = shouldGenerateFallbackPassword
-            ? passwordHashService.GenerateTemporaryPassword()
-            : null;
-
-        if (!string.IsNullOrWhiteSpace(plainPassword))
-        {
-            user.PasswordHash = passwordHashService.HashPassword(plainPassword);
-        }
-
         ApplySubscriptionState(
             user,
             subscription,
@@ -176,15 +164,12 @@ public sealed class StripeWebhookProcessor(
         user.LastStripeCheckoutSessionId = session.Id;
         user.UpdatedAt = now;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (shouldSendAccessEmail)
-        {
-            await accessEmailService.SendAccessGrantedEmailAsync(user, plainPassword, cancellationToken);
-            user.AccessEmailSentAt = DateTimeOffset.UtcNow;
-            user.UpdatedAt = DateTimeOffset.UtcNow;
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
+        await PersistUserAndMaybeSendAccessEmailAsync(
+            user,
+            accessWasEnabled,
+            lastCompletedCheckoutSessionId,
+            session.Id,
+            cancellationToken);
     }
 
     private async Task HandleSubscriptionChangedAsync(
@@ -231,9 +216,23 @@ public sealed class StripeWebhookProcessor(
             dbContext.Users.Add(user);
         }
 
+        var accessWasEnabled = user.AccessEnabled;
+        var lastCompletedCheckoutSessionId = user.LastStripeCheckoutSessionId;
+
+        if (!string.IsNullOrWhiteSpace(fallbackName))
+        {
+            user.Name = fallbackName;
+        }
+
         ApplySubscriptionState(user, subscription, fallbackPlanName);
         user.UpdatedAt = DateTimeOffset.UtcNow;
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        await PersistUserAndMaybeSendAccessEmailAsync(
+            user,
+            accessWasEnabled,
+            lastCompletedCheckoutSessionId,
+            null,
+            cancellationToken);
     }
 
     private async Task<AppUser?> FindUserAsync(
@@ -296,6 +295,80 @@ public sealed class StripeWebhookProcessor(
         user.StripeSubscriptionId = string.IsNullOrWhiteSpace(subscription?.Id)
             ? user.StripeSubscriptionId
             : subscription!.Id;
+    }
+
+    private async Task PersistUserAndMaybeSendAccessEmailAsync(
+        AppUser user,
+        bool accessWasEnabled,
+        string? previousCheckoutSessionId,
+        string? currentCheckoutSessionId,
+        CancellationToken cancellationToken)
+    {
+        var shouldSendAccessEmail = ShouldSendAccessEmail(
+            user,
+            accessWasEnabled,
+            previousCheckoutSessionId,
+            currentCheckoutSessionId);
+
+        string? plainPassword = null;
+
+        if (shouldSendAccessEmail && string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            plainPassword = passwordHashService.GenerateTemporaryPassword();
+            user.PasswordHash = passwordHashService.HashPassword(plainPassword);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (!shouldSendAccessEmail)
+        {
+            if (!user.AccessEnabled)
+            {
+                logger.LogInformation(
+                    "Acesso do usuario {Email} ainda nao esta habilitado; o e-mail sera enviado quando a assinatura ficar ativa.",
+                    user.Email);
+            }
+
+            return;
+        }
+
+        try
+        {
+            await accessEmailService.SendAccessGrantedEmailAsync(user, plainPassword, cancellationToken);
+            user.AccessEmailSentAt = DateTimeOffset.UtcNow;
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Falha ao enviar e-mail de acesso para {Email}. O acesso foi mantido e uma nova tentativa sera feita em eventos futuros.",
+                user.Email);
+        }
+    }
+
+    private static bool ShouldSendAccessEmail(
+        AppUser user,
+        bool accessWasEnabled,
+        string? previousCheckoutSessionId,
+        string? currentCheckoutSessionId)
+    {
+        if (!user.AccessEnabled)
+        {
+            return false;
+        }
+
+        var normalizedPreviousCheckoutSessionId = ApiMappers.Clean(previousCheckoutSessionId);
+        var normalizedCurrentCheckoutSessionId = ApiMappers.Clean(currentCheckoutSessionId);
+
+        return user.AccessEmailSentAt is null
+            || !accessWasEnabled
+            || (!string.IsNullOrWhiteSpace(normalizedCurrentCheckoutSessionId)
+                && !string.Equals(
+                    normalizedPreviousCheckoutSessionId,
+                    normalizedCurrentCheckoutSessionId,
+                    StringComparison.OrdinalIgnoreCase));
     }
 
     private static DateOnly? ResolveNextChargeDate(Subscription? subscription)

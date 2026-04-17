@@ -25,6 +25,23 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Postgres: Host=erp-db;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!
       Cors__AllowedOrigins__0: https://www.codigomilenarjudaico.com
+      Stripe__SecretKey: ${Stripe__SecretKey}
+      Stripe__WebhookSecret: ${Stripe__WebhookSecret}
+      Stripe__ConnectedAccountId: ${Stripe__ConnectedAccountId}
+      Stripe__FrontendBaseUrl: ${Stripe__FrontendBaseUrl:-https://www.codigomilenarjudaico.com}
+      Stripe__ApplicationKey: ${Stripe__ApplicationKey:-codigo-judaico}
+      Stripe__RequiredCurrency: ${Stripe__RequiredCurrency:-brl}
+      Stripe__PlatformRetentionPercent: ${Stripe__PlatformRetentionPercent:-2}
+      Stripe__Monthly__PriceId: ${Stripe__Monthly__PriceId}
+      Stripe__Monthly__PlanName: ${Stripe__Monthly__PlanName:-Premium Mensal}
+      Stripe__Monthly__PromotionCouponId: ${Stripe__Monthly__PromotionCouponId:-}
+      Stripe__Annual__PriceId: ${Stripe__Annual__PriceId}
+      Stripe__Annual__PlanName: ${Stripe__Annual__PlanName:-Premium Anual}
+      Resend__Enabled: ${Resend__Enabled:-true}
+      Resend__ApiKey: ${Resend__ApiKey}
+      Resend__From: ${Resend__From}
+      Resend__InboundWebhookSecret: ${Resend__InboundWebhookSecret:-}
+      Resend__InboundWebhookDisableVerification: ${Resend__InboundWebhookDisableVerification:-false}
 
   frontend:
     build:

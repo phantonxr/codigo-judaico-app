@@ -21,8 +21,11 @@ public static class PaymentEndpoints
             AppDbContext dbContext,
             PasswordHashService passwordHashService,
             StripeBillingService stripeBillingService,
+            AccessEmailService accessEmailService,
+            ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
+            var logger = loggerFactory.CreateLogger("PaymentEndpoints");
             var email = ApiMappers.NormalizeEmail(request.Email);
             var password = request.Password ?? string.Empty;
             var trimmedPassword = password.Trim();
@@ -45,6 +48,7 @@ public static class PaymentEndpoints
 
             var plan = await stripeBillingService.GetValidatedPlanAsync(request.PlanId, cancellationToken);
             var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
+            var shouldSendAccountCreatedEmail = user?.AccountCreatedEmailSentAt is null;
 
             if (user?.AccessEnabled == true)
             {
@@ -102,6 +106,24 @@ public static class PaymentEndpoints
                 request with { Email = email, Password = string.Empty },
                 plan,
                 cancellationToken);
+
+            if (shouldSendAccountCreatedEmail)
+            {
+                try
+                {
+                    await accessEmailService.SendAccountCreatedEmailAsync(user, cancellationToken);
+                    user.AccountCreatedEmailSentAt = DateTimeOffset.UtcNow;
+                    user.UpdatedAt = DateTimeOffset.UtcNow;
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(
+                        ex,
+                        "Falha ao enviar e-mail de conta criada para {Email}. O checkout continuou normalmente.",
+                        user.Email);
+                }
+            }
 
             return Results.Ok(response);
         })

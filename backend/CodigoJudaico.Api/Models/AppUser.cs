@@ -7,6 +7,7 @@ public sealed class AppUser
     public string Name { get; set; } = "Aluno";
     public string PasswordHash { get; set; } = string.Empty;
     public bool AccessEnabled { get; set; }
+    public DateTimeOffset? AccountCreatedEmailSentAt { get; set; }
     public DateTimeOffset? AccessGrantedAt { get; set; }
     public DateTimeOffset? AccessEmailSentAt { get; set; }
     public string PlanName { get; set; } = string.Empty;

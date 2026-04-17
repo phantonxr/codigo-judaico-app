@@ -39,8 +39,7 @@ builder.Services.AddHttpClient("Resend", (serviceProvider, client) =>
     }
 });
 
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ??
-    ["http://localhost:5173", "http://127.0.0.1:5173"];
+var allowedOrigins = ResolveAllowedOrigins(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
@@ -88,3 +87,56 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.Run();
+
+static string[] ResolveAllowedOrigins(IConfiguration configuration)
+{
+    const string AllowedOriginsKey = "Cors:AllowedOrigins";
+    const string OriginsAliasKey = "Cors:Origins";
+
+    var resolvedOrigins = new List<string>();
+
+    AddOrigins(resolvedOrigins, configuration.GetSection(AllowedOriginsKey).Get<string[]>());
+    AddOrigins(resolvedOrigins, configuration.GetSection(OriginsAliasKey).Get<string[]>());
+    AddOrigins(resolvedOrigins, configuration[AllowedOriginsKey]);
+    AddOrigins(resolvedOrigins, configuration[OriginsAliasKey]);
+
+    return resolvedOrigins.Count > 0
+        ? [.. resolvedOrigins.Distinct(StringComparer.OrdinalIgnoreCase)]
+        : ["http://localhost:5173", "http://127.0.0.1:5173"];
+}
+
+static void AddOrigins(List<string> resolvedOrigins, IEnumerable<string>? configuredOrigins)
+{
+    if (configuredOrigins is null)
+    {
+        return;
+    }
+
+    foreach (var configuredOrigin in configuredOrigins)
+    {
+        AddOrigins(resolvedOrigins, configuredOrigin);
+    }
+}
+
+static void AddOrigins(List<string> resolvedOrigins, string? configuredOrigins)
+{
+    if (string.IsNullOrWhiteSpace(configuredOrigins))
+    {
+        return;
+    }
+
+    var entries = configuredOrigins.Split(
+        [',', ';', '\n', '\r'],
+        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    foreach (var entry in entries)
+    {
+        var normalizedOrigin = entry.Trim().TrimEnd('/');
+
+        if (Uri.TryCreate(normalizedOrigin, UriKind.Absolute, out var originUri) &&
+            (originUri.Scheme == Uri.UriSchemeHttp || originUri.Scheme == Uri.UriSchemeHttps))
+        {
+            resolvedOrigins.Add(normalizedOrigin);
+        }
+    }
+}

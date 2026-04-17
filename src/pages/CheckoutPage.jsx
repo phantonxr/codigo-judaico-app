@@ -25,6 +25,17 @@ function findPlan(planId) {
   return plans.find((plan) => plan.id === planId) ?? plans[0]
 }
 
+function buildFreshCheckoutPath(planId) {
+  const params = new URLSearchParams()
+
+  if (planId) {
+    params.set('plan', planId)
+  }
+
+  const query = params.toString()
+  return query ? `/checkout?${query}` : '/checkout'
+}
+
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
   const [selectedPlan, setSelectedPlan] = useState(() => findPlan(searchParams.get('plan')).id)
@@ -36,17 +47,18 @@ export default function CheckoutPage() {
   const [error, setError] = useState('')
   const currentPlan = useMemo(() => findPlan(selectedPlan), [selectedPlan])
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
+  const existingAccountFlow = redirectedFromLogin && Boolean(email)
 
   async function onSubmit(event) {
     event.preventDefault()
     setError('')
 
-    if (password.trim().length < MINIMUM_PASSWORD_LENGTH) {
+    if (!existingAccountFlow && password.trim().length < MINIMUM_PASSWORD_LENGTH) {
       setError(`Crie uma senha com pelo menos ${MINIMUM_PASSWORD_LENGTH} caracteres.`)
       return
     }
 
-    if (password !== passwordConfirmation) {
+    if (!existingAccountFlow && password !== passwordConfirmation) {
       setError('A confirmacao da senha nao confere.')
       return
     }
@@ -86,10 +98,14 @@ export default function CheckoutPage() {
           <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
             <span className="badge" style={{ width: 'fit-content' }}>Checkout oficial via Stripe</span>
             <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05 }}>
-              Desbloqueie o Metodo Judaico da Prosperidade
+              {existingAccountFlow
+                ? 'Finalize sua assinatura'
+                : 'Desbloqueie o Metodo Judaico da Prosperidade'}
             </h1>
             <div className="muted">
-              Crie sua conta agora com e-mail e senha. Assim que o pagamento for confirmado, liberamos o login no mesmo instante.
+              {existingAccountFlow
+                ? 'Sua conta ja foi encontrada. Agora falta so concluir o pagamento para liberar o acesso.'
+                : 'Crie sua conta agora com e-mail e senha. Assim que o pagamento for confirmado, liberamos o login no mesmo instante.'}
             </div>
           </div>
         </div>
@@ -156,9 +172,11 @@ export default function CheckoutPage() {
 
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
-              <div style={{ fontWeight: 900, fontSize: 18 }}>Dados para liberar o acesso</div>
+              <div style={{ fontWeight: 900, fontSize: 18 }}>
+                {existingAccountFlow ? 'Conta encontrada' : 'Dados para liberar o acesso'}
+              </div>
 
-              {redirectedFromLogin ? (
+              {existingAccountFlow ? (
                 <div
                   className="muted"
                   style={{
@@ -169,21 +187,24 @@ export default function CheckoutPage() {
                     color: 'var(--text)',
                   }}
                 >
-                  Sua conta ja existe, mas o pagamento ainda nao foi confirmado. Finalize o checkout para ativar o acesso.
+                  Vamos continuar com <strong>{email}</strong> e com a senha que voce ja cadastrou.
+                  Agora falta so finalizar o checkout para ativar o acesso.
                 </div>
               ) : null}
 
-              <div className="field">
-                <label htmlFor="checkout-name">Nome</label>
-                <input
-                  id="checkout-name"
-                  className="input"
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Como devemos te chamar"
-                />
-              </div>
+              {existingAccountFlow ? null : (
+                <div className="field">
+                  <label htmlFor="checkout-name">Nome</label>
+                  <input
+                    id="checkout-name"
+                    className="input"
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Como devemos te chamar"
+                  />
+                </div>
+              )}
 
               <div className="field">
                 <label htmlFor="checkout-email">E-mail</label>
@@ -194,42 +215,62 @@ export default function CheckoutPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="voce@exemplo.com"
+                  readOnly={existingAccountFlow}
                   required
                 />
               </div>
 
-              <div className="field">
-                <label htmlFor="checkout-password">Senha</label>
-                <input
-                  id="checkout-password"
-                  className="input"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Crie sua senha de acesso"
-                  autoComplete="new-password"
-                  required
-                />
-              </div>
+              {existingAccountFlow ? null : (
+                <div className="field">
+                  <label htmlFor="checkout-password">Senha</label>
+                  <input
+                    id="checkout-password"
+                    className="input"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Crie sua senha de acesso"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+              )}
 
-              <div className="field">
-                <label htmlFor="checkout-password-confirmation">Confirmar senha</label>
-                <input
-                  id="checkout-password-confirmation"
-                  className="input"
-                  type="password"
-                  value={passwordConfirmation}
-                  onChange={(event) => setPasswordConfirmation(event.target.value)}
-                  placeholder="Repita a senha"
-                  autoComplete="new-password"
-                  required
-                />
-              </div>
+              {existingAccountFlow ? null : (
+                <div className="field">
+                  <label htmlFor="checkout-password-confirmation">Confirmar senha</label>
+                  <input
+                    id="checkout-password-confirmation"
+                    className="input"
+                    type="password"
+                    value={passwordConfirmation}
+                    onChange={(event) => setPasswordConfirmation(event.target.value)}
+                    placeholder="Repita a senha"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+              )}
 
               <div className="muted">
-                Sua conta sera criada para <strong>{email || 'o e-mail informado acima'}</strong>.
-                O login sera liberado depois da confirmacao do Stripe, usando a senha criada acima.
+                {existingAccountFlow ? (
+                  <>
+                    O login sera liberado para <strong>{email}</strong> assim que o Stripe confirmar o pagamento.
+                  </>
+                ) : (
+                  <>
+                    Sua conta sera criada para <strong>{email || 'o e-mail informado acima'}</strong>.
+                    O login sera liberado depois da confirmacao do Stripe, usando a senha criada acima.
+                  </>
+                )}
               </div>
+
+              {existingAccountFlow ? (
+                <div className="muted" style={{ fontSize: 14 }}>
+                  Se quiser usar outro e-mail, abra um checkout novo em{' '}
+                  <Link to={buildFreshCheckoutPath(selectedPlan)}>usar outra conta</Link>.
+                </div>
+              ) : null}
 
               {error ? (
                 <div className="muted" style={{ color: '#f3b0b0' }}>
@@ -238,7 +279,11 @@ export default function CheckoutPage() {
               ) : null}
 
               <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
-                {loading ? 'Abrindo checkout...' : `Continuar com ${currentPlan.title}`}
+                {loading
+                  ? 'Abrindo checkout...'
+                  : existingAccountFlow
+                    ? `Finalizar ${currentPlan.title}`
+                    : `Continuar com ${currentPlan.title}`}
               </button>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -246,7 +291,7 @@ export default function CheckoutPage() {
                   Voltar para a landing
                 </Link>
                 <Link className="btn btn-soft" to="/login">
-                  Ja tenho conta
+                  {existingAccountFlow ? 'Voltar ao login' : 'Ja tenho conta'}
                 </Link>
               </div>
             </div>

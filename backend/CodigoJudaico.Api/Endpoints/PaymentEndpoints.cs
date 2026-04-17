@@ -25,6 +25,7 @@ public static class PaymentEndpoints
         {
             var email = ApiMappers.NormalizeEmail(request.Email);
             var password = request.Password ?? string.Empty;
+            var trimmedPassword = password.Trim();
 
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -42,14 +43,6 @@ public static class PaymentEndpoints
                 });
             }
 
-            if (string.IsNullOrWhiteSpace(password) || password.Trim().Length < MinimumCheckoutPasswordLength)
-            {
-                return Results.ValidationProblem(new Dictionary<string, string[]>
-                {
-                    ["password"] = [$"Crie uma senha com pelo menos {MinimumCheckoutPasswordLength} caracteres."]
-                });
-            }
-
             var plan = await stripeBillingService.GetValidatedPlanAsync(request.PlanId, cancellationToken);
             var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
 
@@ -58,6 +51,16 @@ public static class PaymentEndpoints
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {
                     ["email"] = ["Este e-mail ja possui acesso liberado. Entre no login para continuar."]
+                });
+            }
+
+            var shouldRequireNewPassword = user is null || string.IsNullOrWhiteSpace(user.PasswordHash);
+
+            if (shouldRequireNewPassword && trimmedPassword.Length < MinimumCheckoutPasswordLength)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["password"] = [$"Crie uma senha com pelo menos {MinimumCheckoutPasswordLength} caracteres."]
                 });
             }
 
@@ -83,7 +86,11 @@ public static class PaymentEndpoints
                 user.Name = cleanedName;
             }
 
-            user.PasswordHash = passwordHashService.HashPassword(password.Trim());
+            if (!string.IsNullOrWhiteSpace(trimmedPassword))
+            {
+                user.PasswordHash = passwordHashService.HashPassword(trimmedPassword);
+            }
+
             user.AccessEnabled = false;
             user.PlanName = plan.PlanName;
             user.PlanStatus = PendingCheckoutPlanStatus;

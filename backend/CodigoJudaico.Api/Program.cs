@@ -95,17 +95,17 @@ static string[] ResolveAllowedOrigins(IConfiguration configuration)
 
     var resolvedOrigins = new List<string>();
 
-    AddOrigins(resolvedOrigins, configuration.GetSection(AllowedOriginsKey).Get<string[]>());
-    AddOrigins(resolvedOrigins, configuration.GetSection(OriginsAliasKey).Get<string[]>());
-    AddOrigins(resolvedOrigins, configuration[AllowedOriginsKey]);
-    AddOrigins(resolvedOrigins, configuration[OriginsAliasKey]);
+    AddConfiguredOrigins(resolvedOrigins, configuration.GetSection(AllowedOriginsKey).Get<string[]>());
+    AddConfiguredOrigins(resolvedOrigins, configuration.GetSection(OriginsAliasKey).Get<string[]>());
+    AddConfiguredOrigin(resolvedOrigins, configuration[AllowedOriginsKey]);
+    AddConfiguredOrigin(resolvedOrigins, configuration[OriginsAliasKey]);
 
     return resolvedOrigins.Count > 0
         ? [.. resolvedOrigins.Distinct(StringComparer.OrdinalIgnoreCase)]
         : ["http://localhost:5173", "http://127.0.0.1:5173"];
 }
 
-static void AddOrigins(List<string> resolvedOrigins, IEnumerable<string>? configuredOrigins)
+static void AddConfiguredOrigins(List<string> resolvedOrigins, IEnumerable<string>? configuredOrigins)
 {
     if (configuredOrigins is null)
     {
@@ -114,11 +114,11 @@ static void AddOrigins(List<string> resolvedOrigins, IEnumerable<string>? config
 
     foreach (var configuredOrigin in configuredOrigins)
     {
-        AddOrigins(resolvedOrigins, configuredOrigin);
+        AddConfiguredOrigin(resolvedOrigins, configuredOrigin);
     }
 }
 
-static void AddOrigins(List<string> resolvedOrigins, string? configuredOrigins)
+static void AddConfiguredOrigin(List<string> resolvedOrigins, string? configuredOrigins)
 {
     if (string.IsNullOrWhiteSpace(configuredOrigins))
     {

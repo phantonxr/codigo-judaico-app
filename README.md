@@ -57,7 +57,7 @@ Observacoes:
 - `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` sao obrigatorios e sao usados de verdade no checkout. Eles apontam para os `Prices` recorrentes da conta da plataforma Stripe e definem o valor e a moeda da assinatura.
 - `Stripe__Monthly__PlanName` e `Stripe__Annual__PlanName` sao usados como rotulo interno no app, metadata do checkout e descricao da assinatura.
 - `Stripe__Monthly__PromotionCouponId` so e aplicado quando estiver preenchido.
-- o repasse para a connected account usa `transfer_data.amount_percent`; por padrao, `2%` fica na plataforma e `98%` vai para a conta conectada.
+- o repasse para a connected account usa `transfer_data.destination` com `application_fee_percent`; por padrao, `2%` vira taxa da plataforma no Stripe e aparece em `Collected fees`.
 - `Resend__InboundWebhookSecret` e `Resend__InboundWebhookDisableVerification` ficam prontos para o momento em que voce adicionar um webhook inbound da Resend. O fluxo atual de liberacao de acesso usa apenas envio.
 
 ## Stripe

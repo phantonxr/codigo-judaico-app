@@ -134,10 +134,10 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
             {
                 Description = plan.PlanName,
                 Metadata = metadata,
+                ApplicationFeePercent = _options.PlatformRetentionPercent,
                 TransferData = new SessionSubscriptionDataTransferDataOptions
                 {
                     Destination = _options.ConnectedAccountId,
-                    AmountPercent = 100m - _options.PlatformRetentionPercent,
                 },
             },
         };

@@ -18,7 +18,7 @@ Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stri
 2. O frontend pede ao backend uma Checkout Session do Stripe.
 3. O pagamento acontece no Stripe.
 4. O webhook `POST /api/payments/webhooks/stripe` confirma a compra.
-5. A API cria ou atualiza o usuario pelo e-mail pago, gera uma senha temporaria e envia por SMTP.
+5. A API cria ou atualiza o usuario pelo e-mail pago, gera uma senha temporaria e envia pela Resend.
 6. O usuario entra em `/login` com o e-mail e a senha recebida.
 
 ## Configuracao obrigatoria
@@ -32,6 +32,8 @@ Stripe__SecretKey=sk_live_...
 Stripe__WebhookSecret=whsec_...
 Stripe__ConnectedAccountId=acct_...
 Stripe__FrontendBaseUrl=https://seu-dominio.com
+Stripe__ApplicationKey=codigo-judaico
+Stripe__RequiredCurrency=brl
 Stripe__PlatformRetentionPercent=2
 
 Stripe__Monthly__PriceId=price_...
@@ -41,21 +43,22 @@ Stripe__Monthly__PromotionCouponId=coupon_...
 Stripe__Annual__PriceId=price_...
 Stripe__Annual__PlanName=Premium Anual
 
-Email__Enabled=true
-Email__Host=smtp.seu-provedor.com
-Email__Port=587
-Email__EnableSsl=true
-Email__Username=usuario-smtp
-Email__Password=senha-smtp
-Email__FromEmail=acesso@seudominio.com
-Email__FromName=Codigo Judaico
+Resend__ApiKey=re_...
+Resend__From=noreply@codigomilenarjudaico.com
+Resend__InboundWebhookSecret=
+Resend__InboundWebhookDisableVerification=false
 ```
 
 Observacoes:
 
+- `Stripe__ApplicationKey` marca os checkouts e webhooks deste app. Use um valor exclusivo por projeto para evitar processar eventos de outros sistemas na mesma conta Stripe.
+- `Stripe__RequiredCurrency` deve ficar como `brl`. O backend valida a moeda do `Price` antes de abrir o checkout e ignora webhooks com `Price` fora dessa moeda.
 - `Stripe__Monthly__PromotionCouponId` e opcional. Use quando quiser manter a oferta de primeiro mes com desconto.
-- `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` devem existir na conta da plataforma Stripe.
+- `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` sao obrigatorios e sao usados de verdade no checkout. Eles apontam para os `Prices` recorrentes da conta da plataforma Stripe e definem o valor e a moeda da assinatura.
+- `Stripe__Monthly__PlanName` e `Stripe__Annual__PlanName` sao usados como rotulo interno no app, metadata do checkout e descricao da assinatura.
+- `Stripe__Monthly__PromotionCouponId` so e aplicado quando estiver preenchido.
 - o repasse para a connected account usa `transfer_data.amount_percent`; por padrao, `2%` fica na plataforma e `98%` vai para a conta conectada.
+- `Resend__InboundWebhookSecret` e `Resend__InboundWebhookDisableVerification` ficam prontos para o momento em que voce adicionar um webhook inbound da Resend. O fluxo atual de liberacao de acesso usa apenas envio.
 
 ## Stripe
 
@@ -103,16 +106,14 @@ No servico `api`, alem da string de conexao do Postgres, configure tambem:
 - `Stripe__WebhookSecret`
 - `Stripe__ConnectedAccountId`
 - `Stripe__FrontendBaseUrl`
+- `Stripe__ApplicationKey`
 - `Stripe__Monthly__PriceId`
 - `Stripe__Monthly__PromotionCouponId` se usar promo
 - `Stripe__Annual__PriceId`
-- `Email__Host`
-- `Email__Port`
-- `Email__EnableSsl`
-- `Email__Username`
-- `Email__Password`
-- `Email__FromEmail`
-- `Email__FromName`
+- `Resend__ApiKey`
+- `Resend__From`
+- `Resend__InboundWebhookSecret`
+- `Resend__InboundWebhookDisableVerification`
 
 ## Comandos uteis
 

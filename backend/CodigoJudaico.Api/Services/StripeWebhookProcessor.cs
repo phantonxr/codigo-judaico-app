@@ -30,7 +30,7 @@ public sealed class StripeWebhookProcessor(
             case "customer.subscription.deleted":
                 if (stripeEvent.Data.Object is Subscription subscription)
                 {
-                    await ApplySubscriptionStateAsync(subscription, null, null, null, cancellationToken);
+                    await HandleSubscriptionChangedAsync(subscription, cancellationToken);
                 }
                 break;
         }
@@ -41,9 +41,17 @@ public sealed class StripeWebhookProcessor(
         CancellationToken cancellationToken)
     {
         var session = await stripeBillingService.GetCheckoutSessionAsync(sessionId, cancellationToken);
+        var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
+        var matchedPlan = await ResolveTrackedPlanAsync(session, subscription, cancellationToken);
+
+        if (matchedPlan is null)
+        {
+            return null;
+        }
+
         var email = ResolveSessionEmail(session);
-        var planId = ReadMetadata(session.Metadata, "plan_id");
-        var planName = ReadMetadata(session.Metadata, "plan_name");
+        var planId = ReadMetadata(session.Metadata, StripeBillingService.PlanIdMetadataKey);
+        var planName = ReadMetadata(session.Metadata, StripeBillingService.PlanNameMetadataKey);
 
         var user = string.IsNullOrWhiteSpace(email)
             ? null
@@ -57,13 +65,23 @@ public sealed class StripeWebhookProcessor(
             session.PaymentStatus ?? string.Empty,
             user?.AccessEnabled ?? false,
             email,
-            planId,
-            string.IsNullOrWhiteSpace(planName) ? user?.PlanName : planName);
+            string.IsNullOrWhiteSpace(planId) ? matchedPlan.Id : planId,
+            string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
     }
 
     private async Task HandleCheckoutSessionCompletedAsync(Session session, CancellationToken cancellationToken)
     {
         var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
+        var matchedPlan = await ResolveTrackedPlanAsync(session, subscription, cancellationToken);
+
+        if (matchedPlan is null)
+        {
+            logger.LogInformation(
+                "Ignorando checkout Stripe {SessionId} porque nao pertence a este app ou nao usa os PriceIds configurados.",
+                session.Id);
+            return;
+        }
+
         var email = ResolveSessionEmail(session);
 
         if (string.IsNullOrWhiteSpace(email))
@@ -72,8 +90,8 @@ public sealed class StripeWebhookProcessor(
             return;
         }
 
-        var name = ReadMetadata(session.Metadata, "name");
-        var planName = ReadMetadata(session.Metadata, "plan_name");
+        var name = ReadMetadata(session.Metadata, StripeBillingService.NameMetadataKey);
+        var planName = ReadMetadata(session.Metadata, StripeBillingService.PlanNameMetadataKey);
         var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
@@ -95,8 +113,8 @@ public sealed class StripeWebhookProcessor(
             user.Name = name;
         }
 
-        var shouldSendInitialCredentials = user.AccessEmailSentAt is null;
-        var plainPassword = shouldSendInitialCredentials
+        var shouldGenerateFallbackPassword = string.IsNullOrWhiteSpace(user.PasswordHash);
+        var plainPassword = shouldGenerateFallbackPassword
             ? passwordHashService.GenerateTemporaryPassword()
             : null;
 
@@ -105,7 +123,10 @@ public sealed class StripeWebhookProcessor(
             user.PasswordHash = passwordHashService.HashPassword(plainPassword);
         }
 
-        ApplySubscriptionState(user, subscription, planName);
+        ApplySubscriptionState(
+            user,
+            subscription,
+            string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
         user.LastStripeCheckoutSessionId = session.Id;
         user.UpdatedAt = now;
 
@@ -118,6 +139,23 @@ public sealed class StripeWebhookProcessor(
             user.UpdatedAt = DateTimeOffset.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private async Task HandleSubscriptionChangedAsync(
+        Subscription subscription,
+        CancellationToken cancellationToken)
+    {
+        var matchedPlan = await ResolveTrackedPlanAsync(null, subscription, cancellationToken);
+
+        if (matchedPlan is null)
+        {
+            logger.LogInformation(
+                "Ignorando assinatura Stripe {SubscriptionId} porque nao pertence a este app ou nao usa os PriceIds configurados.",
+                subscription.Id);
+            return;
+        }
+
+        await ApplySubscriptionStateAsync(subscription, null, null, matchedPlan.PlanName, cancellationToken);
     }
 
     private async Task ApplySubscriptionStateAsync(
@@ -251,7 +289,7 @@ public sealed class StripeWebhookProcessor(
 
     private static string ResolveSessionEmail(Session session)
     {
-        var metadataEmail = ReadMetadata(session.Metadata, "email");
+        var metadataEmail = ReadMetadata(session.Metadata, StripeBillingService.EmailMetadataKey);
         var customerEmail = ApiMappers.Clean(session.CustomerEmail);
         var customerDetailsEmail = ApiMappers.Clean(session.CustomerDetails?.Email);
 
@@ -261,6 +299,39 @@ public sealed class StripeWebhookProcessor(
                     ? customerEmail
                     : customerDetailsEmail
                 : metadataEmail);
+    }
+
+    private async Task<StripePlanDefinition?> ResolveTrackedPlanAsync(
+        Session? session,
+        Subscription? subscription,
+        CancellationToken cancellationToken)
+    {
+        var matchedSubscriptionPlan = await stripeBillingService.MatchSubscriptionAsync(subscription, cancellationToken);
+
+        if (matchedSubscriptionPlan is not null)
+        {
+            return matchedSubscriptionPlan;
+        }
+
+        if (subscription is not null
+            && stripeBillingService.HasExpectedMetadata(subscription.Metadata)
+            && stripeBillingService.TryGetConfiguredPlanById(
+                ReadMetadata(subscription.Metadata, StripeBillingService.PlanIdMetadataKey),
+                out var subscriptionPlan))
+        {
+            return subscriptionPlan;
+        }
+
+        if (session is not null
+            && stripeBillingService.HasExpectedMetadata(session.Metadata)
+            && stripeBillingService.TryGetConfiguredPlanById(
+                ReadMetadata(session.Metadata, StripeBillingService.PlanIdMetadataKey),
+                out var sessionPlan))
+        {
+            return sessionPlan;
+        }
+
+        return null;
     }
 
     private static string ReadMetadata(Dictionary<string, string>? metadata, string key)

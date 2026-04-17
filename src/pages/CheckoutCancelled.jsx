@@ -8,7 +8,7 @@ export default function CheckoutCancelled() {
           <span className="badge" style={{ width: 'fit-content' }}>Checkout cancelado</span>
           <h1 style={{ margin: 0, fontSize: 30 }}>Seu acesso ainda nao foi liberado</h1>
           <div className="muted">
-            O pagamento no Stripe nao foi concluido. Quando quiser, volte e finalize o checkout com o plano escolhido.
+            O pagamento no Stripe nao foi concluido. Sua conta continua salva, mas o login so sera liberado depois que o checkout for finalizado.
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link className="btn btn-primary" to="/checkout">

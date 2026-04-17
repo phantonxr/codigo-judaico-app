@@ -45,7 +45,7 @@ export default function CheckoutSuccess() {
 
           {loading ? (
             <div className="muted">
-              Conferindo a confirmacao do checkout e o envio das credenciais...
+              Conferindo a confirmacao do checkout e liberando o login da sua conta...
             </div>
           ) : error ? (
             <div className="muted" style={{ color: '#f3b0b0' }}>{error}</div>
@@ -53,8 +53,8 @@ export default function CheckoutSuccess() {
             <>
               <div className="muted">
                 {status?.accessGranted
-                  ? `Seu acesso ja foi liberado para ${status?.email || 'o e-mail informado'}.`
-                  : 'O pagamento voltou com sucesso. Se o e-mail ainda nao chegou, aguarde alguns instantes e confira sua caixa de spam.'}
+                  ? `Seu acesso ja foi liberado para ${status?.email || 'o e-mail informado'}. Entre com a senha criada no checkout.`
+                  : 'O pagamento voltou com sucesso. Se o acesso ainda nao apareceu, aguarde alguns instantes para a confirmacao final do Stripe.'}
               </div>
               <div className="card" style={{ boxShadow: 'none' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 6 }}>

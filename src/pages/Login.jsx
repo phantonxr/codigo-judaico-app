@@ -2,6 +2,22 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { readCurrentUser, signInUser } from '../hooks/useCurrentUser.js'
 
+function buildCheckoutRedirect(errorData, email) {
+  const params = new URLSearchParams()
+
+  if (errorData?.email || email) {
+    params.set('email', errorData?.email || email)
+  }
+
+  if (errorData?.planId) {
+    params.set('plan', errorData.planId)
+  }
+
+  params.set('reason', 'payment_required')
+
+  return `/checkout?${params.toString()}`
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -18,8 +34,19 @@ export default function Login() {
     try {
       await signInUser({ email, password })
       navigate(location.state?.from || '/dashboard', { replace: true })
-    } catch {
-      setError('Nao consegui entrar. Confira o e-mail, a senha e se o acesso ja foi liberado.')
+    } catch (caught) {
+      if (caught?.status === 403 && caught?.data?.code === 'checkout_required') {
+        navigate(buildCheckoutRedirect(caught.data, email), { replace: true })
+        return
+      }
+
+      const nextError =
+        caught?.data?.detail ||
+        caught?.data?.message ||
+        caught?.message ||
+        'Nao consegui entrar. Confira o e-mail, a senha e se o acesso ja foi liberado.'
+
+      setError(String(nextError).replace(/^API \d+:\s*/u, ''))
     } finally {
       setLoading(false)
     }
@@ -32,7 +59,7 @@ export default function Login() {
           <div style={{ display: 'grid', gap: 6 }}>
             <div style={{ fontWeight: 900, fontSize: 18 }}>Login</div>
             <div className="muted">
-              Entre com o e-mail liberado no pagamento. A senha chega por e-mail apos a confirmacao no Stripe.
+              Entre com o e-mail e a senha criados no checkout. Se o pagamento ainda nao estiver confirmado, vamos te levar de volta para finalizar a assinatura.
             </div>
           </div>
 

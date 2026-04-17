@@ -9,6 +9,8 @@ public sealed class StripeBillingOptions
     public string ConnectedAccountId { get; set; } = string.Empty;
     public decimal PlatformRetentionPercent { get; set; } = 2m;
     public string FrontendBaseUrl { get; set; } = "http://localhost:5173";
+    public string ApplicationKey { get; set; } = "codigo-judaico";
+    public string RequiredCurrency { get; set; } = "brl";
     public StripeCheckoutPlanOptions Monthly { get; set; } = new();
     public StripeCheckoutPlanOptions Annual { get; set; } = new();
 }

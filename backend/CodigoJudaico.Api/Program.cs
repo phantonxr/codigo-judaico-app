@@ -3,6 +3,7 @@ using CodigoJudaico.Api.Endpoints;
 using CodigoJudaico.Api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +22,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.Configure<StripeBillingOptions>(
     builder.Configuration.GetSection(StripeBillingOptions.SectionName));
-builder.Services.Configure<EmailOptions>(
-    builder.Configuration.GetSection(EmailOptions.SectionName));
+builder.Services.Configure<ResendOptions>(
+    builder.Configuration.GetSection(ResendOptions.SectionName));
+builder.Services.AddHttpClient("Resend", (serviceProvider, client) =>
+{
+    var resendOptions = serviceProvider.GetRequiredService<
+        Microsoft.Extensions.Options.IOptions<ResendOptions>>().Value;
+
+    client.BaseAddress = new Uri("https://api.resend.com/");
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+    if (!string.IsNullOrWhiteSpace(resendOptions.ApiKey))
+    {
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", resendOptions.ApiKey);
+    }
+});
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ??
     ["http://localhost:5173", "http://127.0.0.1:5173"];

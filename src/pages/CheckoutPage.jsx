@@ -2,6 +2,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
 
+const MINIMUM_PASSWORD_LENGTH = 8
+
 const plans = [
   {
     id: 'mensal',
@@ -27,21 +29,36 @@ export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
   const [selectedPlan, setSelectedPlan] = useState(() => findPlan(searchParams.get('plan')).id)
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
+  const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const currentPlan = useMemo(() => findPlan(selectedPlan), [selectedPlan])
+  const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
 
   async function onSubmit(event) {
     event.preventDefault()
-    setLoading(true)
     setError('')
+
+    if (password.trim().length < MINIMUM_PASSWORD_LENGTH) {
+      setError(`Crie uma senha com pelo menos ${MINIMUM_PASSWORD_LENGTH} caracteres.`)
+      return
+    }
+
+    if (password !== passwordConfirmation) {
+      setError('A confirmacao da senha nao confere.')
+      return
+    }
+
+    setLoading(true)
 
     try {
       const response = await createCheckoutSession({
         name,
         email,
         planId: selectedPlan,
+        password,
       })
 
       if (!response?.url) {
@@ -49,8 +66,15 @@ export default function CheckoutPage() {
       }
 
       window.location.href = response.url
-    } catch {
-      setError('Nao consegui abrir o checkout agora. Tente novamente em instantes.')
+    } catch (caught) {
+      const nextError =
+        caught?.data?.detail ||
+        caught?.data?.message ||
+        caught?.message ||
+        'Nao consegui abrir o checkout agora. Tente novamente em instantes.'
+      setError(
+        String(nextError).replace(/^API \d+:\s*/u, ''),
+      )
       setLoading(false)
     }
   }
@@ -65,7 +89,7 @@ export default function CheckoutPage() {
               Desbloqueie o Metodo Judaico da Prosperidade
             </h1>
             <div className="muted">
-              Depois da confirmacao do pagamento, liberamos o acesso para o e-mail informado e enviamos a senha automaticamente.
+              Crie sua conta agora com e-mail e senha. Assim que o pagamento for confirmado, liberamos o login no mesmo instante.
             </div>
           </div>
         </div>
@@ -134,6 +158,21 @@ export default function CheckoutPage() {
             <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
               <div style={{ fontWeight: 900, fontSize: 18 }}>Dados para liberar o acesso</div>
 
+              {redirectedFromLogin ? (
+                <div
+                  className="muted"
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: '1px solid rgba(215, 178, 74, 0.35)',
+                    background: 'rgba(215, 178, 74, 0.08)',
+                    color: 'var(--text)',
+                  }}
+                >
+                  Sua conta ja existe, mas o pagamento ainda nao foi confirmado. Finalize o checkout para ativar o acesso.
+                </div>
+              ) : null}
+
               <div className="field">
                 <label htmlFor="checkout-name">Nome</label>
                 <input
@@ -159,9 +198,37 @@ export default function CheckoutPage() {
                 />
               </div>
 
+              <div className="field">
+                <label htmlFor="checkout-password">Senha</label>
+                <input
+                  id="checkout-password"
+                  className="input"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Crie sua senha de acesso"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="checkout-password-confirmation">Confirmar senha</label>
+                <input
+                  id="checkout-password-confirmation"
+                  className="input"
+                  type="password"
+                  value={passwordConfirmation}
+                  onChange={(event) => setPasswordConfirmation(event.target.value)}
+                  placeholder="Repita a senha"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
               <div className="muted">
-                O acesso sera liberado para <strong>{email || 'o e-mail informado acima'}</strong>.
-                A senha temporaria sera enviada para esse mesmo endereco.
+                Sua conta sera criada para <strong>{email || 'o e-mail informado acima'}</strong>.
+                O login sera liberado depois da confirmacao do Stripe, usando a senha criada acima.
               </div>
 
               {error ? (
@@ -179,7 +246,7 @@ export default function CheckoutPage() {
                   Voltar para a landing
                 </Link>
                 <Link className="btn btn-soft" to="/login">
-                  Ja recebi minha senha
+                  Ja tenho conta
                 </Link>
               </div>
             </div>

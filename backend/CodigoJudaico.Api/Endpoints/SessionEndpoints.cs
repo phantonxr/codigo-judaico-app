@@ -37,7 +37,6 @@ public static class SessionEndpoints
                 .SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
 
             if (user is null ||
-                !user.AccessEnabled ||
                 string.IsNullOrWhiteSpace(user.PasswordHash) ||
                 !passwordHashService.VerifyPassword(request.Password, user.PasswordHash))
             {
@@ -45,6 +44,19 @@ public static class SessionEndpoints
                     title: "Credenciais invalidas.",
                     detail: "Confirme o e-mail, a senha ou a liberacao do seu acesso.",
                     statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            if (!user.AccessEnabled)
+            {
+                return Results.Json(
+                    new LoginBlockedResponse(
+                        "checkout_required",
+                        BuildBlockedLoginMessage(user.PlanStatus),
+                        user.Email,
+                        ResolvePlanId(user.PlanName),
+                        user.PlanName,
+                        user.PlanStatus),
+                    statusCode: StatusCodes.Status403Forbidden);
             }
 
             var token = sessionTokenService.GenerateToken();
@@ -122,5 +134,29 @@ public static class SessionEndpoints
         .WithName("Logout");
 
         return app;
+    }
+
+    private static string BuildBlockedLoginMessage(string? planStatus)
+    {
+        return string.Equals(planStatus, "Checkout pendente", StringComparison.OrdinalIgnoreCase)
+            ? "Sua conta ja foi criada, mas o pagamento ainda nao foi confirmado. Finalize o checkout para liberar o acesso."
+            : "Seu acesso nao esta ativo no momento. Reative a assinatura no checkout para voltar a entrar.";
+    }
+
+    private static string? ResolvePlanId(string? planName)
+    {
+        var normalized = ApiMappers.Clean(planName).ToLowerInvariant();
+
+        if (normalized.Contains("anual", StringComparison.Ordinal))
+        {
+            return "anual";
+        }
+
+        if (normalized.Contains("mensal", StringComparison.Ordinal))
+        {
+            return "mensal";
+        }
+
+        return null;
     }
 }

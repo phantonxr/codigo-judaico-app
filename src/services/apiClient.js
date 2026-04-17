@@ -10,6 +10,22 @@ function normalizeBase(base) {
   return value.endsWith('/') ? value.slice(0, -1) : value
 }
 
+function readValidationMessage(payload) {
+  const errors = payload?.errors
+
+  if (!errors || typeof errors !== 'object') {
+    return ''
+  }
+
+  for (const messages of Object.values(errors)) {
+    if (Array.isArray(messages) && messages.length > 0) {
+      return safeTrim(messages[0])
+    }
+  }
+
+  return ''
+}
+
 export function buildApiUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const base = normalizeBase(import.meta.env.VITE_API_BASE_URL)
@@ -43,8 +59,27 @@ export async function apiFetch(path, options = {}) {
   }
 
   if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`API ${res.status}: ${text || res.statusText}`.trim())
+    const contentType = String(res.headers.get('content-type') ?? '')
+    let payload = null
+    let message = ''
+
+    if (contentType.includes('application/json')) {
+      payload = await res.json().catch(() => null)
+      message =
+        readValidationMessage(payload) ||
+        safeTrim(payload?.detail) ||
+        safeTrim(payload?.message) ||
+        safeTrim(payload?.title)
+    } else {
+      message = await res.text().catch(() => '')
+    }
+
+    const error = new Error(
+      `API ${res.status}: ${message || res.statusText}`.trim(),
+    )
+    error.status = res.status
+    error.data = payload
+    throw error
   }
 
   if (res.status === 204) return null

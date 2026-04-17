@@ -1,16 +1,17 @@
 using System.Net;
-using System.Net.Mail;
+using System.Net.Http.Json;
 using CodigoJudaico.Api.Models;
 using Microsoft.Extensions.Options;
 
 namespace CodigoJudaico.Api.Services;
 
 public sealed class AccessEmailService(
-    IOptions<EmailOptions> emailOptions,
+    IHttpClientFactory httpClientFactory,
+    IOptions<ResendOptions> resendOptions,
     IOptions<StripeBillingOptions> stripeOptions,
     ILogger<AccessEmailService> logger)
 {
-    private readonly EmailOptions _emailOptions = emailOptions.Value;
+    private readonly ResendOptions _resendOptions = resendOptions.Value;
     private readonly StripeBillingOptions _stripeOptions = stripeOptions.Value;
 
     public async Task SendAccessGrantedEmailAsync(
@@ -18,7 +19,7 @@ public sealed class AccessEmailService(
         string plainPassword,
         CancellationToken cancellationToken)
     {
-        if (!_emailOptions.Enabled)
+        if (!_resendOptions.Enabled)
         {
             logger.LogInformation("Envio de e-mail desabilitado; credenciais geradas para {Email}.", user.Email);
             return;
@@ -55,41 +56,56 @@ Se nao encontrar este e-mail depois, confira sua caixa de spam.
 <p>Se nao encontrar este e-mail depois, confira sua caixa de spam.</p>
 """;
 
-        using var message = new MailMessage
-        {
-            From = new MailAddress(_emailOptions.FromEmail, _emailOptions.FromName),
-            Subject = subject,
-            Body = plainTextBody,
-            IsBodyHtml = false,
-        };
+        var client = httpClientFactory.CreateClient("Resend");
+        using var response = await client.PostAsJsonAsync(
+            "emails",
+            new ResendSendEmailRequest(
+                _resendOptions.From,
+                [user.Email],
+                subject,
+                htmlBody,
+                plainTextBody),
+            cancellationToken);
 
-        message.To.Add(user.Email);
-        message.AlternateViews.Add(
-            AlternateView.CreateAlternateViewFromString(htmlBody, null, "text/html"));
-
-        using var smtp = new SmtpClient(_emailOptions.Host, _emailOptions.Port)
+        if (!response.IsSuccessStatusCode)
         {
-            EnableSsl = _emailOptions.EnableSsl,
-        };
-
-        if (!string.IsNullOrWhiteSpace(_emailOptions.Username))
-        {
-            smtp.Credentials = new NetworkCredential(_emailOptions.Username, _emailOptions.Password);
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            logger.LogError(
+                "Falha ao enviar e-mail via Resend para {Email}. Status: {StatusCode}. Resposta: {ResponseBody}",
+                user.Email,
+                (int)response.StatusCode,
+                errorBody);
+            throw new InvalidOperationException("Falha ao enviar e-mail via Resend.");
         }
 
-        await smtp.SendMailAsync(message, cancellationToken);
+        var resendResponse =
+            await response.Content.ReadFromJsonAsync<ResendSendEmailResponse>(cancellationToken: cancellationToken);
+
+        logger.LogInformation(
+            "E-mail via Resend enviado para {Email}. MessageId: {ResendMessageId}",
+            user.Email,
+            resendResponse?.Id ?? "desconhecido");
     }
 
     private void EnsureConfigured()
     {
-        if (string.IsNullOrWhiteSpace(_emailOptions.Host))
+        if (string.IsNullOrWhiteSpace(_resendOptions.ApiKey))
         {
-            throw new InvalidOperationException("Email:Host nao configurado.");
+            throw new InvalidOperationException("Resend:ApiKey nao configurado.");
         }
 
-        if (string.IsNullOrWhiteSpace(_emailOptions.FromEmail))
+        if (string.IsNullOrWhiteSpace(_resendOptions.From))
         {
-            throw new InvalidOperationException("Email:FromEmail nao configurado.");
+            throw new InvalidOperationException("Resend:From nao configurado.");
         }
     }
+
+    private sealed record ResendSendEmailRequest(
+        string From,
+        string[] To,
+        string Subject,
+        string Html,
+        string Text);
+
+    private sealed record ResendSendEmailResponse(string? Id);
 }

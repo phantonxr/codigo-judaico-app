@@ -1,0 +1,81 @@
+import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { getCheckoutSessionStatus } from '../services/payments.js'
+
+export default function CheckoutSuccess() {
+  const [searchParams] = useSearchParams()
+  const sessionId = searchParams.get('session_id')
+  const [loading, setLoading] = useState(Boolean(sessionId))
+  const [status, setStatus] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!sessionId) {
+      setLoading(false)
+      setError('Nao encontrei a sessao de checkout para confirmar o pagamento.')
+      return
+    }
+
+    let active = true
+
+    getCheckoutSessionStatus(sessionId)
+      .then((data) => {
+        if (active) setStatus(data)
+      })
+      .catch(() => {
+        if (active) {
+          setError('Recebemos seu retorno, mas ainda nao consegui consultar o status agora.')
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [sessionId])
+
+  return (
+    <div className="container" style={{ padding: '48px 0 72px' }}>
+      <div className="card" style={{ maxWidth: 720, marginInline: 'auto' }}>
+        <div className="card-inner" style={{ display: 'grid', gap: 16 }}>
+          <span className="badge" style={{ width: 'fit-content' }}>Pagamento recebido</span>
+          <h1 style={{ margin: 0, fontSize: 30 }}>Estamos liberando seu acesso</h1>
+
+          {loading ? (
+            <div className="muted">
+              Conferindo a confirmacao do checkout e o envio das credenciais...
+            </div>
+          ) : error ? (
+            <div className="muted" style={{ color: '#f3b0b0' }}>{error}</div>
+          ) : (
+            <>
+              <div className="muted">
+                {status?.accessGranted
+                  ? `Seu acesso ja foi liberado para ${status?.email || 'o e-mail informado'}.`
+                  : 'O pagamento voltou com sucesso. Se o e-mail ainda nao chegou, aguarde alguns instantes e confira sua caixa de spam.'}
+              </div>
+              <div className="card" style={{ boxShadow: 'none' }}>
+                <div className="card-inner" style={{ display: 'grid', gap: 6 }}>
+                  <div><strong>Plano:</strong> {status?.planName || 'Premium'}</div>
+                  <div><strong>E-mail:</strong> {status?.email || 'nao informado'}</div>
+                  <div><strong>Status Stripe:</strong> {status?.paymentStatus || 'processando'}</div>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <Link className="btn btn-primary" to="/login">
+              Ir para o login
+            </Link>
+            <Link className="btn" to="/checkout">
+              Voltar ao checkout
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

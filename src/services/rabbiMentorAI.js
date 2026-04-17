@@ -1,4 +1,4 @@
-import { buildApiUrl } from './apiClient.js'
+import { apiFetch } from './apiClient.js'
 
 /**
  * Servico de feedback diario do Rabino Mentor IA.
@@ -156,14 +156,12 @@ function parseAIResponse(text) {
 export async function generateDailyFeedback(payload) {
   var prompt = buildDailyPrompt(payload)
 
-  var url = buildApiUrl('/api/rabino-daily-feedback')
   var controller = new AbortController()
   var timeout = setTimeout(function () { controller.abort() }, 25000)
 
   try {
-    var res = await fetch(url, {
+    var data = await apiFetch('/api/rabino-daily-feedback', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         systemPrompt: prompt,
         trailType: payload.trailType,
@@ -175,12 +173,6 @@ export async function generateDailyFeedback(payload) {
       }),
       signal: controller.signal,
     })
-
-    if (!res.ok) {
-      throw new Error('Backend respondeu ' + res.status)
-    }
-
-    var data = await res.json().catch(function () { return {} })
     var reply = data.reply || data.message || data.output || ''
 
     if (!reply && !data.summary && !data.macroLesson) {

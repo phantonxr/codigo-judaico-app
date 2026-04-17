@@ -1,30 +1,30 @@
+import { Link } from 'react-router-dom'
 import SectionCard from '../components/SectionCard.jsx'
-import { KIRVANO_URL } from '../data/offers.js'
 import useCurrentUser from '../hooks/useCurrentUser.js'
 
 const annualBenefits = [
   'Comunidade Premium (grupo fechado)',
-  'Conteúdos exclusivos',
+  'Conteudos exclusivos',
   'Mentoria ao vivo',
   'Acesso a eventos ao vivo',
-  'Ensinamentos diários',
+  'Ensinamentos diarios',
   'Desafios em grupo',
-  'Biblioteca avançada',
+  'Biblioteca avancada',
   'Networking de membros',
   'Templates premium',
 ]
 
 export default function Assinatura() {
   const currentUser = useCurrentUser()
-  const planName = currentUser?.plan || '—'
-  const planStatus = currentUser?.planStatus || (planName && planName !== '—' ? 'Ativo' : '—')
-  const nextChargeDate = currentUser?.nextChargeDate || '—'
+  const planName = currentUser?.plan || '-'
+  const planStatus = currentUser?.planStatus || (planName && planName !== '-' ? 'Ativo' : '-')
+  const nextChargeDate = currentUser?.nextChargeDate || '-'
 
   return (
     <div className="container dashboard-grid">
       <SectionCard
         title="Plano atual"
-        description="Status e benefícios liberados (mockado)."
+        description="Status e beneficios liberados pela assinatura no Stripe."
       >
         <div className="subscription-grid">
           <div className="card">
@@ -44,19 +44,19 @@ export default function Assinatura() {
                 <div className="card" style={{ boxShadow: 'none' }}>
                   <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
                     <div className="muted">Valor</div>
-                    <div style={{ fontWeight: 900, color: 'var(--gold-2)' }}>R$27,90</div>
+                    <div style={{ fontWeight: 900, color: 'var(--gold-2)' }}>Conforme plano ativo</div>
                   </div>
                 </div>
                 <div className="card" style={{ boxShadow: 'none' }}>
                   <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
-                    <div className="muted">Próxima cobrança</div>
+                    <div className="muted">Proxima cobranca</div>
                     <div style={{ fontWeight: 900 }}>{nextChargeDate}</div>
                   </div>
                 </div>
               </div>
 
               <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ fontWeight: 900 }}>Benefícios liberados</div>
+                <div style={{ fontWeight: 900 }}>Beneficios liberados</div>
                 <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.82)' }}>
                   <li>Rabino Mentor (chat guiado)</li>
                   <li>Biblioteca de ensinamentos</li>
@@ -75,16 +75,16 @@ export default function Assinatura() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ display: 'grid', gap: 4 }}>
                   <div style={{ fontWeight: 900, fontSize: 16 }}>
-                    Comunidade Código Judaico Premium
+                    Comunidade Codigo Judaico Premium
                   </div>
                   <div className="muted">Upgrade para anual</div>
                 </div>
-                <span className="badge">R$997/ano</span>
+                <span className="badge">R$297/ano</span>
               </div>
 
               <div style={{ display: 'grid', gap: 6 }}>
                 <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 22 }}>
-                  R$997 / ano
+                  R$297 / ano
                 </div>
                 <div className="muted">Acesso premium por 12 meses</div>
               </div>
@@ -92,23 +92,21 @@ export default function Assinatura() {
               <div style={{ display: 'grid', gap: 8 }}>
                 <div style={{ fontWeight: 900 }}>O que inclui</div>
                 <div className="grid grid-2">
-                  {annualBenefits.map((b) => (
-                    <div key={b} className="badge" style={{ justifyContent: 'flex-start' }}>
-                      {b}
+                  {annualBenefits.map((benefit) => (
+                    <div key={benefit} className="badge" style={{ justifyContent: 'flex-start' }}>
+                      {benefit}
                     </div>
                   ))}
                 </div>
               </div>
 
-              <a
+              <Link
                 className="btn btn-primary btn-block"
                 style={{ marginTop: 'auto' }}
-                href={KIRVANO_URL}
-                target="_blank"
-                rel="noreferrer"
+                to="/checkout?plan=anual"
               >
                 Fazer upgrade anual
-              </a>
+              </Link>
             </div>
           </div>
         </div>

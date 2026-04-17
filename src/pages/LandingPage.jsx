@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { KIRVANO_URL } from '../data/offers.js'
 import { Flame, Crown, Sprout, Star, Compass, BookOpen, Target, Award } from 'lucide-react'
 
 var PHASES = [
@@ -38,14 +37,12 @@ export default function LandingPage() {
           </p>
 
           <div className="hero-actions">
-            <a
+            <Link
               className="btn btn-primary btn-mentor-glow landing-cta-primary"
-              href={KIRVANO_URL}
-              target="_blank"
-              rel="noreferrer"
+              to="/checkout"
             >
               Quero desbloquear o metodo
-            </a>
+            </Link>
             <Link className="btn landing-cta-secondary" to="/login">
               Ja tenho acesso (Entrar)
             </Link>
@@ -139,14 +136,12 @@ export default function LandingPage() {
               Desbloqueie a experiencia premium e siga a mesma progressao diaria
               usada ha geracoes para construir riqueza e legado.
             </div>
-            <a
+            <Link
               className="btn btn-primary btn-mentor-glow landing-cta-primary"
-              href={KIRVANO_URL}
-              target="_blank"
-              rel="noreferrer"
+              to="/checkout"
             >
               Quero comecar minha ascensao
-            </a>
+            </Link>
           </div>
         </section>
 

@@ -1,4 +1,5 @@
 import { apiFetch } from './apiClient.js'
+import { clearAuthToken, readAuthToken, writeAuthToken } from './authStorage.js'
 
 const USER_ID_KEY = 'auth_user_id'
 const NAME_KEY = 'auth_user_name'
@@ -135,6 +136,29 @@ export function readStoredCurrentUser() {
   }
 }
 
+export function clearSessionCache() {
+  const current = readStoredCurrentUser()
+
+  clearAuthToken()
+  removeKeys([
+    USER_ID_KEY,
+    NAME_KEY,
+    EMAIL_KEY,
+    PLAN_KEY,
+    PLAN_STATUS_KEY,
+    NEXT_CHARGE_DATE_KEY,
+    DIAGNOSIS_KEY,
+    TRACK_KEY,
+    JOURNEY_START_KEY,
+    PROGRESS_KEY,
+    CALENDAR_KEY,
+    mentorChatStorageKey(current.id),
+    lessonProgressStorageKey(current.email),
+  ])
+
+  dispatchAll()
+}
+
 export function hydrateSessionCache(session) {
   if (!session?.user) return null
 
@@ -191,30 +215,46 @@ export function hydrateSessionCache(session) {
   return user
 }
 
-export async function bootstrapSession(userInput) {
+export function persistAuthenticatedSession(response) {
+  if (!response?.token || !response?.session) return null
+
+  writeAuthToken(response.token)
+  return hydrateSessionCache(response.session)
+}
+
+export async function loginWithPassword(userInput) {
   const payload = {
     email: safeTrim(userInput?.email),
-    name: safeTrim(userInput?.name),
-    plan: safeTrim(userInput?.plan),
+    password: safeTrim(userInput?.password),
   }
 
-  if (!payload.email) return null
-
-  const session = await apiFetch('/api/session', {
+  const response = await apiFetch('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 
+  persistAuthenticatedSession(response)
+  return response?.session ?? null
+}
+
+export async function refreshCurrentSession() {
+  if (!readAuthToken()) return null
+
+  const session = await apiFetch('/api/auth/session')
   hydrateSessionCache(session)
   return session
 }
 
-export async function refreshBootstrapByUserId(userId) {
-  const normalized = safeTrim(userId)
-  if (!normalized) return null
-  const session = await apiFetch(`/api/users/${normalized}/bootstrap`)
-  hydrateSessionCache(session)
-  return session
+export async function logoutCurrentSession() {
+  if (readAuthToken()) {
+    await apiFetch('/api/auth/logout', {
+      method: 'POST',
+    }).catch(() => {
+      // best effort; local cleanup still runs
+    })
+  }
+
+  clearSessionCache()
 }
 
 export async function syncCurrentUserProfile(userInput) {

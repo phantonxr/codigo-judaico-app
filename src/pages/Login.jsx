@@ -1,21 +1,28 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { readCurrentUser, saveCurrentUser } from '../hooks/useCurrentUser.js'
+import { readCurrentUser, signInUser } from '../hooks/useCurrentUser.js'
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState(() => readCurrentUser().email || '')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  async function onSubmit(e) {
-    e.preventDefault()
+  async function onSubmit(event) {
+    event.preventDefault()
+    setLoading(true)
+    setError('')
 
-    const existing = readCurrentUser()
-    const nextEmail = String(email ?? '').trim() || existing.email || 'auditoria@codigojudaico.com'
-    const nextName = existing.name && existing.name !== 'Aluno' ? existing.name : 'Anderson'
-    const nextPlan = existing.plan || 'Premium Mensal'
-    await saveCurrentUser({ name: nextName, email: nextEmail, plan: nextPlan })
-
-    navigate('/dashboard')
+    try {
+      await signInUser({ email, password })
+      navigate(location.state?.from || '/dashboard', { replace: true })
+    } catch {
+      setError('Nao consegui entrar. Confira o e-mail, a senha e se o acesso ja foi liberado.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -25,7 +32,7 @@ export default function Login() {
           <div style={{ display: 'grid', gap: 6 }}>
             <div style={{ fontWeight: 900, fontSize: 18 }}>Login</div>
             <div className="muted">
-              Acesso demonstrativo (sem backend). Depois pluga autenticação.
+              Entre com o e-mail liberado no pagamento. A senha chega por e-mail apos a confirmacao no Stripe.
             </div>
           </div>
 
@@ -37,18 +44,34 @@ export default function Login() {
                 className="input"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 required
               />
             </div>
             <div className="field">
               <label htmlFor="password">Senha</label>
-              <input id="password" className="input" type="password" required />
+              <input
+                id="password"
+                className="input"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
             </div>
 
-            <button className="btn btn-primary" type="submit">
-              Entrar
+            {error ? (
+              <div className="muted" style={{ color: '#f3b0b0' }}>
+                {error}
+              </div>
+            ) : null}
+
+            <button className="btn btn-primary" type="submit" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
+            <Link className="btn btn-soft" to="/checkout">
+              Ainda nao tenho acesso
+            </Link>
             <Link className="btn" to="/">
               Voltar para a Landing
             </Link>

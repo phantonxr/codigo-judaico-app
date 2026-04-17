@@ -2,6 +2,7 @@ using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Data;
 using CodigoJudaico.Api.Models;
 using CodigoJudaico.Api.Services;
+using System.Security.Claims;
 
 namespace CodigoJudaico.Api.Endpoints;
 
@@ -9,9 +10,10 @@ public static class MentorEndpoints
 {
     public static IEndpointRouteBuilder MapMentorEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api").WithTags("Mentor");
+        var group = app.MapGroup("/api").WithTags("Mentor").RequireAuthorization();
 
         group.MapPost("/rabino-mentor", async (
+            ClaimsPrincipal userPrincipal,
             MentorChatRequest request,
             AppDbContext dbContext,
             MentorFallbackService fallbackService,
@@ -28,30 +30,27 @@ public static class MentorEndpoints
             }
 
             var reply = fallbackService.BuildMentorReply(message, request.CurrentPlan);
-            var userId = Guid.TryParse(request.UserId, out var parsedUserId) ? parsedUserId : Guid.Empty;
+            var userId = userPrincipal.GetRequiredUserId();
 
-            if (userId != Guid.Empty)
-            {
-                var now = DateTimeOffset.UtcNow;
+            var now = DateTimeOffset.UtcNow;
 
-                dbContext.MentorChatMessages.AddRange(
-                    new MentorChatMessage
-                    {
-                        UserId = userId,
-                        Role = "user",
-                        Content = message,
-                        CreatedAt = now,
-                    },
-                    new MentorChatMessage
-                    {
-                        UserId = userId,
-                        Role = "assistant",
-                        Content = reply,
-                        CreatedAt = now.AddMilliseconds(1),
-                    });
+            dbContext.MentorChatMessages.AddRange(
+                new MentorChatMessage
+                {
+                    UserId = userId,
+                    Role = "user",
+                    Content = message,
+                    CreatedAt = now,
+                },
+                new MentorChatMessage
+                {
+                    UserId = userId,
+                    Role = "assistant",
+                    Content = reply,
+                    CreatedAt = now.AddMilliseconds(1),
+                });
 
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             return Results.Ok(new MentorChatResponse(reply));
         });
@@ -72,7 +71,8 @@ public static class MentorEndpoints
                 payload.NextFocus,
                 payload.ExtraTask,
                 payload.TomorrowFocus));
-        });
+        })
+        .RequireAuthorization();
 
         return app;
     }

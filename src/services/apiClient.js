@@ -1,3 +1,5 @@
+import { clearAuthToken, readAuthToken } from './authStorage.js'
+
 function safeTrim(text) {
   return String(text ?? '').trim()
 }
@@ -15,6 +17,9 @@ export function buildApiUrl(path) {
 }
 
 export async function apiFetch(path, options = {}) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const token = readAuthToken()
+
   const init = {
     ...options,
     headers: {
@@ -22,11 +27,20 @@ export async function apiFetch(path, options = {}) {
     },
   }
 
+  if (token && !init.headers.Authorization) {
+    init.headers.Authorization = `Bearer ${token}`
+  }
+
   if (init.body !== undefined && !init.headers['Content-Type']) {
     init.headers['Content-Type'] = 'application/json'
   }
 
-  const res = await fetch(buildApiUrl(path), init)
+  const res = await fetch(buildApiUrl(normalizedPath), init)
+
+  if (res.status === 401 && !normalizedPath.startsWith('/api/auth/login')) {
+    clearAuthToken()
+    window.dispatchEvent(new Event('auth_session_invalid'))
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')

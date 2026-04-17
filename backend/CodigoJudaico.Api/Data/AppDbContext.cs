@@ -6,6 +6,7 @@ namespace CodigoJudaico.Api.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<AppUser> Users => Set<AppUser>();
+    public DbSet<AppSession> AppSessions => Set<AppSession>();
     public DbSet<UserDiagnosis> UserDiagnoses => Set<UserDiagnosis>();
     public DbSet<UserJourneyState> UserJourneyStates => Set<UserJourneyState>();
     public DbSet<UserLessonProgress> UserLessonProgressEntries => Set<UserLessonProgress>();
@@ -24,8 +25,25 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasIndex(x => x.Email).IsUnique();
             entity.Property(x => x.Email).HasMaxLength(320);
             entity.Property(x => x.Name).HasMaxLength(120);
+            entity.Property(x => x.PasswordHash).HasMaxLength(400);
             entity.Property(x => x.PlanName).HasMaxLength(120);
             entity.Property(x => x.PlanStatus).HasMaxLength(40);
+            entity.Property(x => x.StripeCustomerId).HasMaxLength(120);
+            entity.Property(x => x.StripeSubscriptionId).HasMaxLength(120);
+            entity.Property(x => x.LastStripeCheckoutSessionId).HasMaxLength(120);
+        });
+
+        modelBuilder.Entity<AppSession>(entity =>
+        {
+            entity.ToTable("app_sessions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TokenHash).IsUnique();
+            entity.HasIndex(x => new { x.UserId, x.ExpiresAt });
+            entity.Property(x => x.TokenHash).HasMaxLength(128);
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.Sessions)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserDiagnosis>(entity =>

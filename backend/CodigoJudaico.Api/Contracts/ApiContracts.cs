@@ -45,6 +45,10 @@ public sealed record SessionBootstrapResponse(
     IReadOnlyList<LessonProgressDto> LessonProgress,
     IReadOnlyList<MentorMessageDto> MentorMessages);
 
+public sealed record AuthenticatedSessionResponse(
+    string Token,
+    SessionBootstrapResponse Session);
+
 public sealed record LessonDto(
     string Id,
     string Title,
@@ -97,6 +101,32 @@ public sealed record SessionRequest
     public string? Name { get; init; }
     public string? Plan { get; init; }
 }
+
+public sealed record LoginRequest
+{
+    public string Email { get; init; } = string.Empty;
+    public string Password { get; init; } = string.Empty;
+}
+
+public sealed record CheckoutSessionCreateRequest
+{
+    public string Email { get; init; } = string.Empty;
+    public string? Name { get; init; }
+    public string PlanId { get; init; } = string.Empty;
+}
+
+public sealed record CheckoutSessionCreateResponse(
+    string SessionId,
+    string Url);
+
+public sealed record CheckoutSessionStatusResponse(
+    string SessionId,
+    string Status,
+    string PaymentStatus,
+    bool AccessGranted,
+    string? Email,
+    string? PlanId,
+    string? PlanName);
 
 public sealed record ProfileUpsertRequest
 {

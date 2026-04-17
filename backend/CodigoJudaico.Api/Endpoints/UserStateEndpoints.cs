@@ -1,7 +1,9 @@
 using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Data;
 using CodigoJudaico.Api.Models;
+using CodigoJudaico.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace CodigoJudaico.Api.Endpoints;
 
@@ -9,13 +11,19 @@ public static class UserStateEndpoints
 {
     public static IEndpointRouteBuilder MapUserStateEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/users").WithTags("Users");
+        var group = app.MapGroup("/api/users").WithTags("Users").RequireAuthorization();
 
         group.MapGet("/{userId:guid}/bootstrap", async (
             Guid userId,
+            ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var user = await dbContext.Users
                 .Include(x => x.Diagnosis)
                 .Include(x => x.JourneyState)
@@ -37,10 +45,16 @@ public static class UserStateEndpoints
 
         group.MapPut("/{userId:guid}/profile", async (
             Guid userId,
+            ClaimsPrincipal userPrincipal,
             ProfileUpsertRequest request,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
             if (user is null)
@@ -80,10 +94,16 @@ public static class UserStateEndpoints
 
         group.MapPut("/{userId:guid}/diagnosis", async (
             Guid userId,
+            ClaimsPrincipal userPrincipal,
             DiagnosisUpsertRequest request,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var user = await dbContext.Users
                 .Include(x => x.Diagnosis)
                 .Include(x => x.JourneyState)
@@ -143,10 +163,16 @@ public static class UserStateEndpoints
 
         group.MapPut("/{userId:guid}/journey", async (
             Guid userId,
+            ClaimsPrincipal userPrincipal,
             JourneyStateUpsertRequest request,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var user = await dbContext.Users
                 .Include(x => x.JourneyState)
                 .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
@@ -185,10 +211,16 @@ public static class UserStateEndpoints
         group.MapPut("/{userId:guid}/lessons/progress/{lessonId}", async (
             Guid userId,
             string lessonId,
+            ClaimsPrincipal userPrincipal,
             LessonProgressUpsertRequest request,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var userExists = await dbContext.Users.AnyAsync(x => x.Id == userId, cancellationToken);
 
             if (!userExists)
@@ -221,9 +253,15 @@ public static class UserStateEndpoints
 
         group.MapGet("/{userId:guid}/mentor/messages", async (
             Guid userId,
+            ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var userExists = await dbContext.Users.AnyAsync(x => x.Id == userId, cancellationToken);
 
             if (!userExists)
@@ -241,9 +279,15 @@ public static class UserStateEndpoints
 
         group.MapDelete("/{userId:guid}/mentor/messages", async (
             Guid userId,
+            ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
             var messages = await dbContext.MentorChatMessages
                 .Where(x => x.UserId == userId)
                 .ToListAsync(cancellationToken);

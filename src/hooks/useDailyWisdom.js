@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { pickWisdomForDate } from '../data/wisdom.js'
 import { apiFetch } from '../services/apiClient.js'
 
 export default function useDailyWisdom() {
-  const [wisdom, setWisdom] = useState(() => pickWisdomForDate())
+  const [wisdom, setWisdom] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -14,7 +13,7 @@ export default function useDailyWisdom() {
         setWisdom(data)
       })
       .catch(() => {
-        // Keep the bundled wisdom snippet as a fallback.
+        if (active) setWisdom(null)
       })
 
     return () => {

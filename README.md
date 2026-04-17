@@ -1,167 +1,133 @@
 # Codigo Judaico App
 
-Frontend em React/Vite com backend em ASP.NET Core 10 e PostgreSQL.
+Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stripe e liberacao automatica de acesso por e-mail.
 
-## O que foi adicionado
+## O que mudou
 
-- API `.NET 10` em [`backend/CodigoJudaico.Api`](backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj)
-- EF Core + Npgsql + migration inicial
-- Seed do catalogo (`lessons`, `plans`, `offers`, `wisdom`) reaproveitando os dados do frontend
-- Endpoints para:
-  - sessao/bootstrap
-  - perfil do usuario
-  - diagnostico financeiro
-  - estado da jornada
-  - progresso das aulas
-  - chat do Rabino Mentor
-  - feedback diario
-- Sincronizacao do frontend com a API, mantendo `localStorage` apenas como cache/fallback
-- `docker-compose.yml` com Postgres (`erp-db`) e API
+- checkout da Kirvano substituido por Stripe Checkout
+- suporte a Stripe Connect com retencao da plataforma e repasse para `connected account`
+- login real com e-mail + senha temporaria enviada apos pagamento confirmado
+- sessao autenticada por token no frontend e no backend
+- webhook Stripe para ativar o usuario, sincronizar assinatura e atualizar proxima cobranca
+- endpoints premium protegidos por autenticacao
+- migration nova para senha, sessao e dados de assinatura
 
-## Estrutura
+## Fluxo atual
 
-- `src/`: frontend React/Vite
-- `backend/CodigoJudaico.Api/`: API ASP.NET Core 10
-- `docker-compose.yml`: sobe Postgres + API
-- `scripts/export-backend-seed.mjs`: exporta o catalogo do frontend para `SeedData`
+1. O usuario entra em `/checkout` e escolhe `mensal` ou `anual`.
+2. O frontend pede ao backend uma Checkout Session do Stripe.
+3. O pagamento acontece no Stripe.
+4. O webhook `POST /api/payments/webhooks/stripe` confirma a compra.
+5. A API cria ou atualiza o usuario pelo e-mail pago, gera uma senha temporaria e envia por SMTP.
+6. O usuario entra em `/login` com o e-mail e a senha recebida.
 
-## Rodando com Docker
+## Configuracao obrigatoria
 
-1. Suba banco e API:
-
-```bash
-docker compose up -d
-```
-
-2. Em outro terminal, rode o frontend:
-
-```bash
-npm install
-npm run dev
-```
-
-3. Acesse:
-
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:8080`
-- Health check: `http://localhost:8080/api/health`
-
-## Easypanel
-
-Para Easypanel, deixei dois arquivos principais:
-
-- [Dockerfile.frontend](Dockerfile.frontend): builda o React e serve com Nginx
-- [docker-compose.easypanel.yml](docker-compose.easypanel.yml): sobe `frontend`, `api` e `erp-db`
-
-O frontend foi configurado para usar proxy interno do Nginx:
-
-- tudo que entrar em `/api` vai para `http://api:8080`
-- isso serve como fallback de proxy no container
-
-Neste projeto, o valor esperado para o frontend publicado no Easypanel e:
+As chaves abaixo devem ficar no servico da API, nunca no frontend:
 
 ```env
-VITE_API_BASE_URL=https://erp-saas-codigojudaico.3oyj69.easypanel.host
+ConnectionStrings__Postgres=Host=localhost;Port=5432;Database=codigo_judaico;Username=postgres;Password=postgres
+
+Stripe__SecretKey=sk_live_...
+Stripe__WebhookSecret=whsec_...
+Stripe__ConnectedAccountId=acct_...
+Stripe__FrontendBaseUrl=https://seu-dominio.com
+Stripe__PlatformRetentionPercent=2
+
+Stripe__Monthly__PriceId=price_...
+Stripe__Monthly__PlanName=Premium Mensal
+Stripe__Monthly__PromotionCouponId=coupon_...
+
+Stripe__Annual__PriceId=price_...
+Stripe__Annual__PlanName=Premium Anual
+
+Email__Enabled=true
+Email__Host=smtp.seu-provedor.com
+Email__Port=587
+Email__EnableSsl=true
+Email__Username=usuario-smtp
+Email__Password=senha-smtp
+Email__FromEmail=acesso@seudominio.com
+Email__FromName=Codigo Judaico
 ```
 
-O [Dockerfile.frontend](Dockerfile.frontend) consome essa variavel no build do Vite.
+Observacoes:
 
-### Opcao 1: Compose Service no Easypanel
+- `Stripe__Monthly__PromotionCouponId` e opcional. Use quando quiser manter a oferta de primeiro mes com desconto.
+- `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` devem existir na conta da plataforma Stripe.
+- o repasse para a connected account usa `transfer_data.amount_percent`; por padrao, `2%` fica na plataforma e `98%` vai para a conta conectada.
 
-Use [docker-compose.easypanel.yml](docker-compose.easypanel.yml) como stack do projeto.
+## Stripe
 
-Servico web principal:
+Voce precisa configurar no Stripe:
 
-- `frontend`
-- porta interna: `80`
+- um `Price` mensal recorrente na conta da plataforma
+- um `Price` anual recorrente na conta da plataforma
+- opcionalmente um `Coupon` para o desconto do primeiro mes
+- um webhook apontando para:
 
-Se quiser expor a API separadamente tambem:
+```text
+POST https://seu-dominio-api.com/api/payments/webhooks/stripe
+```
 
-- servico: `api`
-- porta interna: `8080`
+Eventos recomendados:
 
-### Opcao 2: App Services separados
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
 
-Se preferir criar servicos separados no Easypanel:
+## Desenvolvimento
 
-1. `frontend`
-   - Dockerfile: `Dockerfile.frontend`
-   - porta/proxy: `80`
-   - build env: `VITE_API_BASE_URL=https://erp-saas-codigojudaico.3oyj69.easypanel.host`
-   - env: `API_UPSTREAM=<URL interna ou dominio publico da API>`
-
-2. `api`
-   - Dockerfile: `backend/CodigoJudaico.Api/Dockerfile`
-   - porta/proxy: `8080`
-   - env:
-     - `ASPNETCORE_ENVIRONMENT=Production`
-     - `ASPNETCORE_URLS=http://+:8080`
-     - `ConnectionStrings__Postgres=Host=erp-db;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!`
-
-3. `erp-db`
-   - imagem: `postgres:17-alpine`
-   - volume persistente em `/var/lib/postgresql/data`
-
-Observacao:
-
-- no `docker-compose.easypanel.yml`, o frontend usa `API_UPSTREAM=http://api:8080` porque `api` e o nome do servico dentro da mesma stack Docker
-- em App Services separados no Easypanel, use a URL privada/publica real da API
-- o Nginx do frontend foi configurado com resolucao dinamica, entao ele nao cai no boot se a API ainda estiver subindo; mas o hostname configurado em `API_UPSTREAM` ainda precisa existir de verdade para as requisicoes funcionarem
-
-## Rodando backend fora do Docker
-
-Se voce rodar a API direto no host com `dotnet run`, o host do Postgres normalmente precisa ser `localhost`, nao `erp-db`.
-
-Exemplo:
+### Backend
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!" --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj
+dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=codigo_judaico;Username=postgres;Password=postgres" --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj
 dotnet run --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj
 ```
 
-Se quiser manter `Host=erp-db`, rode a API dentro do `docker compose`, porque esse nome so resolve dentro da rede Docker.
-
-## Frontend
-
-O frontend usa:
-
-- proxy do Vite para `/api -> http://localhost:8080`
-- `VITE_API_BASE_URL` configurado no build para apontar para a API publicada
-
-Para desenvolvimento:
+### Frontend
 
 ```bash
 npm install
 npm run dev
 ```
 
-Para build:
+## Docker / Easypanel
 
-```bash
-npm run build
-```
+O frontend continua sendo servido pelo Nginx e falando com a API via `/api`.
 
-## Backend
+No servico `api`, alem da string de conexao do Postgres, configure tambem:
 
-Comandos uteis:
+- `Stripe__SecretKey`
+- `Stripe__WebhookSecret`
+- `Stripe__ConnectedAccountId`
+- `Stripe__FrontendBaseUrl`
+- `Stripe__Monthly__PriceId`
+- `Stripe__Monthly__PromotionCouponId` se usar promo
+- `Stripe__Annual__PriceId`
+- `Email__Host`
+- `Email__Port`
+- `Email__EnableSsl`
+- `Email__Username`
+- `Email__Password`
+- `Email__FromEmail`
+- `Email__FromName`
+
+## Comandos uteis
 
 ```bash
 dotnet build CodigoJudaicoApp.slnx
-dotnet dotnet-ef migrations add NomeDaMigration --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj --startup-project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj --output-dir Data/Migrations
 dotnet dotnet-ef database update --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj --startup-project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj
+npm run build
 ```
 
 ## Validacao feita
 
-- `dotnet build CodigoJudaicoApp.slnx`
 - `dotnet build backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj`
-- `dotnet dotnet-ef migrations add InitialCreate ...`
-- `dotnet dotnet-ef database update ...`
-- `docker compose up -d erp-db`
-- `docker compose up -d api`
-- `npm install`
+- `dotnet dotnet-ef migrations add AddStripeAuthAndSessions ...`
 - `npm run build`
 
-## Observacao sobre lint
+## Observacao
 
-`npm run lint` ainda falha por problemas ja existentes no frontend, principalmente em [`src/pages/Calendario.jsx`](src/pages/Calendario.jsx) e [`src/components/MacroMonthCalendarModal.jsx`](src/components/MacroMonthCalendarModal.jsx). Esses erros ja estavam no codigo e nao impedem o build de producao.
+`npm run lint` ainda pode falhar por problemas antigos do projeto em arquivos nao relacionados a este fluxo. O build de producao segue funcionando.

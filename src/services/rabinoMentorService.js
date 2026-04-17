@@ -1,5 +1,5 @@
 import { systemPrompt, buildSystemPromptWithContext } from '../constants/systemPrompt.js'
-import { buildApiUrl } from './apiClient.js'
+import { apiFetch } from './apiClient.js'
 
 function safeTrim(text) {
   return String(text ?? '').trim()
@@ -71,26 +71,15 @@ export async function sendMessageToRabino(payload) {
   // TODO: persistir progresso por usuário
   // TODO: salvar memória do Rabino Mentor
 
-  const url = buildApiUrl('/api/rabino-mentor')
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 20000)
 
   try {
-    const res = await fetch(url, {
+    const data = await apiFetch('/api/rabino-mentor', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(requestBody),
       signal: controller.signal,
     })
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '')
-      throw new Error(`Backend respondeu ${res.status}. ${text}`.trim())
-    }
-
-    const data = await res.json().catch(() => ({}))
     const reply =
       (typeof data?.reply === 'string' && data.reply) ||
       (typeof data?.message === 'string' && data.message) ||

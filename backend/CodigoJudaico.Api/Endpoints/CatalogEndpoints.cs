@@ -17,7 +17,8 @@ public static class CatalogEndpoints
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(lessons.Select(x => x.ToDto()));
-        });
+        })
+        .RequireAuthorization();
 
         group.MapGet("/plans", async (AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
@@ -52,7 +53,8 @@ public static class CatalogEndpoints
             var index = Math.Abs(targetDate.DayNumber) % snippets.Count;
 
             return Results.Ok(snippets[index].ToDto());
-        });
+        })
+        .RequireAuthorization();
 
         return app;
     }

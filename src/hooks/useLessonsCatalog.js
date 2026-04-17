@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { lessons as fallbackLessons } from '../data/lessons.js'
 import { apiFetch } from '../services/apiClient.js'
 
 export default function useLessonsCatalog() {
-  const [lessons, setLessons] = useState(() => fallbackLessons)
+  const [lessons, setLessons] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -11,11 +10,11 @@ export default function useLessonsCatalog() {
 
     apiFetch('/api/catalog/lessons')
       .then((data) => {
-        if (!active || !Array.isArray(data) || data.length === 0) return
+        if (!active || !Array.isArray(data)) return
         setLessons(data)
       })
       .catch(() => {
-        // Keep the bundled catalog as a fallback when the API is unavailable.
+        if (active) setLessons([])
       })
       .finally(() => {
         if (active) setLoading(false)

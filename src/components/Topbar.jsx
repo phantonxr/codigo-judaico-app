@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import useCurrentUser from '../hooks/useCurrentUser.js'
+import useCurrentUser, { signOutUser } from '../hooks/useCurrentUser.js'
 import { computeDailyStreak, computeWeeklyProgressPct } from '../utils/progress.js'
 
 function clampPct(value) {
@@ -9,6 +9,7 @@ function clampPct(value) {
 }
 
 export default function Topbar({ title }) {
+  const navigate = useNavigate()
   const currentUser = useCurrentUser()
   const greetingName = currentUser?.name || 'Aluno'
 
@@ -40,6 +41,11 @@ export default function Topbar({ title }) {
   }, [currentUser?.email])
 
   const weeklyPct = clampPct(weeklyPctRaw)
+
+  async function onLogout() {
+    await signOutUser()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <header className="topbar" role="banner">
@@ -80,9 +86,9 @@ export default function Topbar({ title }) {
               {initials}
             </span>
           </Link>
-          <Link className="btn btn-soft" to="/login">
-            Trocar conta
-          </Link>
+          <button className="btn btn-soft" type="button" onClick={onLogout}>
+            Sair
+          </button>
         </div>
       </div>
     </header>

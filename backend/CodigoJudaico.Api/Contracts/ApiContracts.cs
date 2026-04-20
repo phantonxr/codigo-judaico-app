@@ -177,6 +177,11 @@ public sealed record MentorChatRequest
     public string? UserName { get; init; }
     public string? CurrentPlan { get; init; }
     public string? Message { get; init; }
+
+    /// <summary>System prompt from the SPA (includes journey phase and diagnosis context).</summary>
+    public string? SystemPrompt { get; init; }
+
+    /// <summary>Recent chat turns: [{ "role": "user"|"assistant", "content": "..." }].</summary>
     public JsonElement? RecentHistory { get; init; }
 }
 

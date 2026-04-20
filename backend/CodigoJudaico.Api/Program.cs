@@ -25,6 +25,19 @@ builder.Services.Configure<StripeBillingOptions>(
     builder.Configuration.GetSection(StripeBillingOptions.SectionName));
 builder.Services.Configure<ResendOptions>(
     builder.Configuration.GetSection(ResendOptions.SectionName));
+builder.Services.Configure<OpenAIOptions>(
+    builder.Configuration.GetSection(OpenAIOptions.SectionName));
+builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
+{
+    var opts = sp.GetRequiredService<
+        Microsoft.Extensions.Options.IOptions<OpenAIOptions>>().Value;
+    var baseUrl = string.IsNullOrWhiteSpace(opts.BaseUrl)
+        ? "https://api.openai.com/"
+        : opts.BaseUrl.TrimEnd('/') + "/";
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 builder.Services.AddHttpClient("Resend", (serviceProvider, client) =>
 {
     var resendOptions = serviceProvider.GetRequiredService<

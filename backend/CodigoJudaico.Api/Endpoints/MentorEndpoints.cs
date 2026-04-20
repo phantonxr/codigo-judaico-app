@@ -17,6 +17,7 @@ public static class MentorEndpoints
             MentorChatRequest request,
             AppDbContext dbContext,
             MentorFallbackService fallbackService,
+            MentorOpenAiClient openAiClient,
             CancellationToken cancellationToken) =>
         {
             var message = ApiMappers.Clean(request.Message);
@@ -29,7 +30,28 @@ public static class MentorEndpoints
                 });
             }
 
-            var reply = fallbackService.BuildMentorReply(message, request.CurrentPlan);
+            string reply;
+
+            if (openAiClient.IsConfigured)
+            {
+                try
+                {
+                    var ai = await openAiClient.CompleteMentorChatAsync(request, cancellationToken);
+                    if (!string.IsNullOrWhiteSpace(ai))
+                        reply = ai;
+                    else
+                        reply = fallbackService.BuildMentorReply(message, request.CurrentPlan);
+                }
+                catch (Exception)
+                {
+                    reply = fallbackService.BuildMentorReply(message, request.CurrentPlan);
+                }
+            }
+            else
+            {
+                reply = fallbackService.BuildMentorReply(message, request.CurrentPlan);
+            }
+
             var userId = userPrincipal.GetRequiredUserId();
 
             var now = DateTimeOffset.UtcNow;
@@ -55,10 +77,30 @@ public static class MentorEndpoints
             return Results.Ok(new MentorChatResponse(reply));
         });
 
-        group.MapPost("/rabino-daily-feedback", (
+        group.MapPost("/rabino-daily-feedback", async (
             DailyFeedbackRequest request,
-            MentorFallbackService fallbackService) =>
+            MentorFallbackService fallbackService,
+            MentorOpenAiClient openAiClient,
+            CancellationToken cancellationToken) =>
         {
+            if (openAiClient.IsConfigured && !string.IsNullOrWhiteSpace(request.SystemPrompt))
+            {
+                try
+                {
+                    var raw = await openAiClient.CompleteDailyFeedbackAsync(
+                        request.SystemPrompt,
+                        cancellationToken);
+
+                    var parsed = MentorOpenAiClient.TryParseDailyFeedback(raw);
+                    if (parsed is not null)
+                        return Results.Ok(parsed);
+                }
+                catch (Exception)
+                {
+                    // Fall through to deterministic fallback
+                }
+            }
+
             var payload = fallbackService.BuildDailyFeedback(request.CurrentDay ?? 0);
 
             return Results.Ok(new DailyFeedbackResponse(
@@ -71,8 +113,7 @@ public static class MentorEndpoints
                 payload.NextFocus,
                 payload.ExtraTask,
                 payload.TomorrowFocus));
-        })
-        .RequireAuthorization();
+        });
 
         return app;
     }

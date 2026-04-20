@@ -54,7 +54,7 @@ export default function RabinoMentorIA() {
     <div className="container" style={{ display: 'grid', gap: 14 }}>
       <SectionCard
         title="Rabino Mentor"
-        description="Mentor premium com integração via backend (n8n / Supabase / Vercel)."
+        description="Pergunte sobre o Código Judaico da Prosperidade: gatilhos de gasto, autocontrole, organização e patrimônio — com orientação prática e sabedoria judaica."
       >
         <div className="chat-shell" aria-label="Chat do Rabino Mentor">
           <div

@@ -185,11 +185,11 @@ export function useRabinoMentor(userProfile) {
 
   const quickSuggestions = useMemo(
     () => [
-      'Quero organizar meus gastos',
-      'Como acumular bens sem culpa?',
-      'Tenho compulsão por compras',
-      'Quero começar a investir',
-      'Como prosperar com equilíbrio?',
+      'Quais gatilhos me fazem gastar sem perceber?',
+      'Preciso de autocontrole nas compras por impulso',
+      'Como organizar casa e finanças nesta fase?',
+      'Por onde começo a investir com prudência?',
+      'Como prosperar com equilíbrio emocional?',
     ],
     [],
   )

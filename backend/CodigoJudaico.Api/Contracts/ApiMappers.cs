@@ -1,4 +1,5 @@
 using CodigoJudaico.Api.Models;
+using CodigoJudaico.Api.Services;
 using System.Text.Json;
 
 namespace CodigoJudaico.Api.Contracts;
@@ -12,7 +13,8 @@ public static class ApiMappers
             user.Name,
             user.PlanName,
             user.PlanStatus,
-            user.NextChargeDate?.ToString("yyyy-MM-dd"));
+            user.NextChargeDate?.ToString("yyyy-MM-dd"),
+            AppAccessEvaluator.HasPremiumAccess(user));
 
     public static DiagnosisDto? ToDto(this UserDiagnosis? diagnosis)
     {

@@ -14,13 +14,18 @@ Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stri
 
 ## Fluxo atual
 
-1. O usuario entra em `/checkout` e escolhe `mensal` ou `anual`.
-2. O frontend pede ao backend uma Checkout Session do Stripe.
+1. O primeiro checkout publico usa o plano `primeiro-acesso`: 21 dias por `R$ 29,90`.
+2. O frontend pede ao backend uma Checkout Session do Stripe para o plano escolhido.
 3. A API cria a conta antes do pagamento e envia um e-mail avisando que o cadastro foi criado.
 4. O pagamento acontece no Stripe.
 5. O webhook `POST /api/payments/webhooks/stripe` confirma a compra.
-6. Quando a assinatura fica `active` ou `trialing`, a API libera o acesso e envia outro e-mail confirmando o pagamento e a liberacao do acesso.
-7. O usuario entra em `/login` com o e-mail e a senha criada no checkout, ou com a senha temporaria enviada quando necessario.
+6. Quando o pagamento libera o acesso, a API atualiza o prazo da assinatura, envia o e-mail de acesso e grava a proxima data de cobranca.
+7. Depois que o usuario ja teve acesso, a tela `/assinatura` oferece:
+   - `renovacao`: +21 dias por `R$ 17,90` (somente uma vez)
+   - `mensal`: `R$ 37,90`
+   - `anual`: `R$ 297,90`
+   - `vitalicio`: `R$ 497,90`
+8. Se a assinatura vencer, o usuario continua autenticando, mas as areas premium ficam bloqueadas ate renovar pela tela `/assinatura`.
 
 ## Configuracao obrigatoria
 
@@ -37,12 +42,21 @@ Stripe__ApplicationKey=codigo-judaico
 Stripe__RequiredCurrency=brl
 Stripe__PlatformRetentionPercent=2
 
+Stripe__FirstAccess__PriceId=price_...
+Stripe__FirstAccess__PlanName=Primeiro Acesso
+
+Stripe__Renewal__PriceId=price_...
+Stripe__Renewal__PlanName=Renovacao Especial
+
 Stripe__Monthly__PriceId=price_...
 Stripe__Monthly__PlanName=Premium Mensal
 Stripe__Monthly__PromotionCouponId=coupon_...
 
 Stripe__Annual__PriceId=price_...
 Stripe__Annual__PlanName=Premium Anual
+
+Stripe__Lifetime__PriceId=price_...
+Stripe__Lifetime__PlanName=Acesso Vitalicio
 
 Resend__ApiKey=re_...
 Resend__Enabled=true
@@ -55,9 +69,11 @@ Observacoes:
 
 - `Stripe__ApplicationKey` marca os checkouts e webhooks deste app. Use um valor exclusivo por projeto para evitar processar eventos de outros sistemas na mesma conta Stripe.
 - `Stripe__RequiredCurrency` deve ficar como `brl`. O backend valida a moeda do `Price` antes de abrir o checkout e ignora webhooks com `Price` fora dessa moeda.
-- `Stripe__Monthly__PromotionCouponId` e opcional. Use quando quiser manter a oferta de primeiro mes com desconto.
-- `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` sao obrigatorios e sao usados de verdade no checkout. Eles apontam para os `Prices` recorrentes da conta da plataforma Stripe e definem o valor e a moeda da assinatura.
-- `Stripe__Monthly__PlanName` e `Stripe__Annual__PlanName` sao usados como rotulo interno no app, metadata do checkout e descricao da assinatura.
+- `Stripe__FirstAccess__PriceId` e obrigatorio para o checkout inicial de 21 dias por `R$ 29,90`.
+- `Stripe__Renewal__PriceId` e obrigatorio se voce quiser vender a renovacao especial de `R$ 17,90`.
+- `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` sao os `Prices` recorrentes da conta da plataforma Stripe.
+- `Stripe__Lifetime__PriceId` e obrigatorio se voce quiser habilitar o acesso vitalicio.
+- `Stripe__FirstAccess__PlanName`, `Stripe__Renewal__PlanName`, `Stripe__Monthly__PlanName`, `Stripe__Annual__PlanName` e `Stripe__Lifetime__PlanName` sao usados como rotulo interno no app, metadata do checkout e descricao da compra.
 - `Stripe__Monthly__PromotionCouponId` so e aplicado quando estiver preenchido.
 - o repasse para a connected account usa `transfer_data.destination` com `application_fee_percent`; por padrao, `2%` vira taxa da plataforma no Stripe e aparece em `Collected fees`.
 - `Resend__Enabled` deve ficar `true` no ambiente que realmente vai enviar os e-mails.
@@ -68,9 +84,12 @@ Observacoes:
 
 Voce precisa configurar no Stripe:
 
-- um `Price` mensal recorrente na conta da plataforma
-- um `Price` anual recorrente na conta da plataforma
-- opcionalmente um `Coupon` para o desconto do primeiro mes
+- um `Price` de pagamento unico para `Primeiro Acesso` no valor de `R$ 29,90`
+- um `Price` de pagamento unico para `Renovacao Especial` no valor de `R$ 17,90`
+- um `Price` mensal recorrente no valor de `R$ 37,90`
+- um `Price` anual recorrente no valor de `R$ 297,90`
+- um `Price` de pagamento unico para `Acesso Vitalicio` no valor de `R$ 497,90`
+- opcionalmente um `Coupon` para qualquer promocao que voce quiser aplicar
 - um webhook apontando para:
 
 ```text
@@ -83,6 +102,14 @@ Eventos recomendados:
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
+
+### Mapeamento sugerido no Stripe
+
+- `Stripe__FirstAccess__PriceId`: price one-time BRL `29.90`
+- `Stripe__Renewal__PriceId`: price one-time BRL `17.90`
+- `Stripe__Monthly__PriceId`: subscription monthly BRL `37.90`
+- `Stripe__Annual__PriceId`: subscription yearly BRL `297.90`
+- `Stripe__Lifetime__PriceId`: price one-time BRL `497.90`
 
 ## Desenvolvimento
 
@@ -111,9 +138,12 @@ No servico `api`, alem da string de conexao do Postgres, configure tambem:
 - `Stripe__ConnectedAccountId`
 - `Stripe__FrontendBaseUrl`
 - `Stripe__ApplicationKey`
+- `Stripe__FirstAccess__PriceId`
+- `Stripe__Renewal__PriceId`
 - `Stripe__Monthly__PriceId`
 - `Stripe__Monthly__PromotionCouponId` se usar promo
 - `Stripe__Annual__PriceId`
+- `Stripe__Lifetime__PriceId`
 - `Resend__ApiKey`
 - `Resend__Enabled`
 - `Resend__From`

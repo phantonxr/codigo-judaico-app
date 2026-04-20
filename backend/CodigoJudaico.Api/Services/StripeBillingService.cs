@@ -237,7 +237,7 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
             cancellationToken: cancellationToken);
 
         var unitAmount = price?.UnitAmount ?? 0;
-        var feeAmount = (long)Math.Round(unitAmount * (double)_options.PlatformRetentionPercent / 100m);
+        var feeAmount = (long)Math.Round(unitAmount * (double)_options.PlatformRetentionPercent / 100d);
 
         var sessionOptions = new SessionCreateOptions
         {

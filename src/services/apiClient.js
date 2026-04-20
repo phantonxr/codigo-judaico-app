@@ -74,6 +74,14 @@ export async function apiFetch(path, options = {}) {
       message = await res.text().catch(() => '')
     }
 
+    if (res.status === 403 && payload?.code === 'subscription_required') {
+      window.dispatchEvent(
+        new CustomEvent('subscription_required', {
+          detail: payload,
+        }),
+      )
+    }
+
     const error = new Error(
       `API ${res.status}: ${message || res.statusText}`.trim(),
     )

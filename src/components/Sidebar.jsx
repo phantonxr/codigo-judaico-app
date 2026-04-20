@@ -3,10 +3,10 @@ import useCurrentUser from '../hooks/useCurrentUser.js'
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Avaliação', to: '/avaliacao' },
+  { label: 'Avaliacao', to: '/avaliacao' },
   { label: 'Rabino Mentor IA', to: '/mentor' },
   { label: 'Desafios', to: '/desafios' },
-  { label: 'Calendário', to: '/calendario' },
+  { label: 'Calendario', to: '/calendario' },
   { label: 'Biblioteca', to: '/biblioteca' },
   { label: 'Mais', to: '/mais' },
   { label: 'Assinatura', to: '/assinatura' },
@@ -15,18 +15,19 @@ const navItems = [
 export default function Sidebar() {
   const currentUser = useCurrentUser()
   const name = currentUser?.name || 'Aluno'
-  const plan = currentUser?.plan || '—'
+  const plan = currentUser?.plan || '-'
+  const hasActiveAccess = currentUser?.hasActiveAccess !== false
   const initials = (name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
+    .map((part) => part[0]?.toUpperCase())
     .join('') || 'CJ')
 
   return (
     <aside className="sidebar" aria-label="Menu lateral">
       <div className="sidebar-inner">
-        <Link to="/" className="brand" aria-label="Ir para a Landing Page">
+        <Link to="/" className="brand" aria-label="Ir para a landing page">
           <div className="brand-mark" aria-hidden="true">
             <svg
               width="18"
@@ -44,11 +45,11 @@ export default function Sidebar() {
             </svg>
           </div>
           <div className="brand-text">
-            <strong>Código Judaico</strong>
+            <strong>Codigo Judaico</strong>
             <span>da Prosperidade</span>
           </div>
         </Link>
-        <nav className="nav" aria-label="Navegação">
+        <nav className="nav" aria-label="Navegacao">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -61,14 +62,16 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="sidebar-footer" aria-label="Perfil do usuário">
+        <div className="sidebar-footer" aria-label="Perfil do usuario">
           <div className="mini-profile">
             <div className="avatar" aria-hidden="true">
               {initials}
             </div>
             <div className="mini-profile-text">
               <div className="mini-name">{name}</div>
-              <div className="mini-meta">Plano: {plan}</div>
+              <div className="mini-meta">
+                {hasActiveAccess ? `Plano: ${plan}` : 'Assinatura: renovar agora'}
+              </div>
             </div>
           </div>
         </div>

@@ -77,8 +77,29 @@ public static class PaymentEndpoints
                 });
             }
 
-            var plan = await stripeBillingService.GetValidatedPlanAsync(request.PlanId, cancellationToken);
             var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
+            StripePlanDefinition plan;
+
+            try
+            {
+                plan = await stripeBillingService.GetValidatedPlanAsync(request.PlanId, cancellationToken);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogError(ex, "Plano {PlanId} indisponivel no checkout para {Email}.", request.PlanId, email);
+                return Results.Problem(
+                    title: "Plano indisponivel no checkout.",
+                    detail: "O plano selecionado ainda nao foi configurado corretamente no Stripe. Revise o PriceId desse plano e tente novamente.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            catch (StripeException ex)
+            {
+                logger.LogError(ex, "Falha ao validar o plano {PlanId} no Stripe para {Email}.", request.PlanId, email);
+                return Results.Problem(
+                    title: "Falha ao validar o plano.",
+                    detail: "Nao consegui validar esse plano no Stripe agora. Tente novamente em instantes.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
 
             var planEligibilityError = ValidatePlanEligibility(plan, user);
 
@@ -102,7 +123,7 @@ public static class PaymentEndpoints
                 });
             }
 
-            var shouldSendAccountCreatedEmail = user?.AccountCreatedEmailSentAt is null;
+            var shouldSendAccountCreatedEmail = user is null;
             var shouldRequireNewPassword = user is null || string.IsNullOrWhiteSpace(user.PasswordHash);
 
             if (shouldRequireNewPassword && trimmedPassword.Length < MinimumCheckoutPasswordLength)
@@ -111,6 +132,38 @@ public static class PaymentEndpoints
                 {
                     ["password"] = [$"Crie uma senha com pelo menos {MinimumCheckoutPasswordLength} caracteres."]
                 });
+            }
+
+            var cleanedName = ApiMappers.Clean(request.Name);
+            CheckoutSessionCreateResponse response;
+
+            try
+            {
+                response = await stripeBillingService.CreateCheckoutSessionAsync(
+                    request with
+                    {
+                        Email = email,
+                        Name = cleanedName,
+                        Password = string.Empty,
+                    },
+                    plan,
+                    cancellationToken);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogError(ex, "Falha de configuracao ao criar checkout do plano {PlanId} para {Email}.", plan.Id, email);
+                return Results.Problem(
+                    title: "Checkout indisponivel no momento.",
+                    detail: "O checkout desse plano ainda nao esta configurado corretamente no Stripe. Revise o PriceId e tente novamente.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            catch (StripeException ex)
+            {
+                logger.LogError(ex, "Falha ao criar checkout do plano {PlanId} para {Email}.", plan.Id, email);
+                return Results.Problem(
+                    title: "Nao consegui abrir o checkout.",
+                    detail: "O Stripe nao aceitou a criacao desta sessao agora. Tente novamente em instantes.",
+                    statusCode: StatusCodes.Status502BadGateway);
             }
 
             var now = DateTimeOffset.UtcNow;
@@ -128,8 +181,6 @@ public static class PaymentEndpoints
                 dbContext.Users.Add(user);
             }
 
-            var cleanedName = ApiMappers.Clean(request.Name);
-
             if (!string.IsNullOrWhiteSpace(cleanedName))
             {
                 user.Name = cleanedName;
@@ -140,17 +191,16 @@ public static class PaymentEndpoints
                 user.PasswordHash = passwordHashService.HashPassword(trimmedPassword);
             }
 
-            user.AccessEnabled = false;
-            user.PlanName = plan.PlanName;
-            user.PlanStatus = PendingCheckoutPlanStatus;
+            if (!AppAccessEvaluator.HasPremiumAccess(user))
+            {
+                user.PlanName = plan.PlanName;
+                user.PlanStatus = PendingCheckoutPlanStatus;
+            }
+
+            user.LastStripeCheckoutSessionId = response.SessionId;
             user.UpdatedAt = now;
 
             await dbContext.SaveChangesAsync(cancellationToken);
-
-            var response = await stripeBillingService.CreateCheckoutSessionAsync(
-                request with { Email = email, Password = string.Empty },
-                plan,
-                cancellationToken);
 
             if (shouldSendAccountCreatedEmail)
             {

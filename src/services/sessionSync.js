@@ -7,6 +7,7 @@ const EMAIL_KEY = 'auth_user_email'
 const PLAN_KEY = 'auth_user_plan'
 const PLAN_STATUS_KEY = 'auth_user_plan_status'
 const NEXT_CHARGE_DATE_KEY = 'auth_user_next_charge_date'
+const HAS_ACTIVE_ACCESS_KEY = 'auth_user_has_active_access'
 
 const DIAGNOSIS_KEY = 'cj_financial_diagnosis'
 const TRACK_KEY = 'cj_assigned_track'
@@ -126,6 +127,8 @@ export function readStoredUserId() {
 }
 
 export function readStoredCurrentUser() {
+  const rawHasActiveAccess = safeTrim(localStorage.getItem(HAS_ACTIVE_ACCESS_KEY)).toLowerCase()
+
   return {
     id: readStoredUserId(),
     name: safeTrim(localStorage.getItem(NAME_KEY)) || 'Aluno',
@@ -133,6 +136,7 @@ export function readStoredCurrentUser() {
     plan: safeTrim(localStorage.getItem(PLAN_KEY)),
     planStatus: safeTrim(localStorage.getItem(PLAN_STATUS_KEY)),
     nextChargeDate: safeTrim(localStorage.getItem(NEXT_CHARGE_DATE_KEY)),
+    hasActiveAccess: rawHasActiveAccess !== 'false',
   }
 }
 
@@ -147,6 +151,7 @@ export function clearSessionCache() {
     PLAN_KEY,
     PLAN_STATUS_KEY,
     NEXT_CHARGE_DATE_KEY,
+    HAS_ACTIVE_ACCESS_KEY,
     DIAGNOSIS_KEY,
     TRACK_KEY,
     JOURNEY_START_KEY,
@@ -169,6 +174,7 @@ export function hydrateSessionCache(session) {
   writeRaw(PLAN_KEY, user.plan)
   writeRaw(PLAN_STATUS_KEY, user.planStatus)
   writeRaw(NEXT_CHARGE_DATE_KEY, user.nextChargeDate)
+  writeRaw(HAS_ACTIVE_ACCESS_KEY, user.hasActiveAccess ? 'true' : 'false')
 
   if (session.diagnosis) {
     writeJson(DIAGNOSIS_KEY, {
@@ -275,6 +281,7 @@ export async function syncCurrentUserProfile(userInput) {
   writeRaw(PLAN_KEY, response?.plan)
   writeRaw(PLAN_STATUS_KEY, response?.planStatus)
   writeRaw(NEXT_CHARGE_DATE_KEY, response?.nextChargeDate)
+  writeRaw(HAS_ACTIVE_ACCESS_KEY, response?.hasActiveAccess ? 'true' : 'false')
   dispatch('auth_user_updated')
   return response
 }

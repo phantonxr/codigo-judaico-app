@@ -3,21 +3,59 @@ import { useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
 
 const MINIMUM_PASSWORD_LENGTH = 8
+const DEFAULT_PLAN_ID = 'primeiro-acesso'
 
-const PRIMEIRO_ACESSO_PLAN = {
-  id: 'primeiro-acesso',
-  title: 'Primeiro Acesso',
-  price: 'R$ 29,90',
-  subtitle: '21 dias de acesso completo',
-  highlight: 'Oferta de entrada',
+const PLAN_CATALOG = {
+  'primeiro-acesso': {
+    id: 'primeiro-acesso',
+    title: 'Primeiro Acesso',
+    price: 'R$ 29,90',
+    subtitle: '21 dias de acesso completo',
+    highlight: 'Primeira assinatura',
+  },
+  renovacao: {
+    id: 'renovacao',
+    title: 'Renovacao Especial',
+    price: 'R$ 17,90',
+    subtitle: '+ 21 dias de acesso, disponivel uma unica vez',
+    highlight: 'Oferta exclusiva',
+  },
+  mensal: {
+    id: 'mensal',
+    title: 'Premium Mensal',
+    price: 'R$ 37,90',
+    subtitle: 'Renovacao automatica mensal',
+    highlight: 'Plano recorrente',
+  },
+  anual: {
+    id: 'anual',
+    title: 'Premium Anual',
+    price: 'R$ 297,90',
+    subtitle: '12 meses de acesso',
+    highlight: 'Melhor custo-beneficio',
+  },
+  vitalicio: {
+    id: 'vitalicio',
+    title: 'Acesso Vitalicio',
+    price: 'R$ 497,90',
+    subtitle: 'Pagamento unico, sem renovacao',
+    highlight: 'Para sempre',
+  },
 }
 
-function buildFreshCheckoutPath() {
-  return '/checkout'
+function resolvePlan(planId) {
+  const normalized = String(planId ?? '').trim().toLowerCase()
+  return PLAN_CATALOG[normalized] ?? PLAN_CATALOG[DEFAULT_PLAN_ID]
+}
+
+function buildFreshCheckoutPath(planId) {
+  const selectedPlan = resolvePlan(planId)
+  return `/checkout?plan=${encodeURIComponent(selectedPlan.id)}`
 }
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
+  const selectedPlan = resolvePlan(searchParams.get('plan'))
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -47,7 +85,7 @@ export default function CheckoutPage() {
       const response = await createCheckoutSession({
         name,
         email,
-        planId: PRIMEIRO_ACESSO_PLAN.id,
+        planId: selectedPlan.id,
         password,
       })
 
@@ -100,13 +138,13 @@ export default function CheckoutPage() {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <strong style={{ fontSize: 18 }}>{PRIMEIRO_ACESSO_PLAN.title}</strong>
-                <span className="badge">{PRIMEIRO_ACESSO_PLAN.highlight}</span>
+                <strong style={{ fontSize: 18 }}>{selectedPlan.title}</strong>
+                <span className="badge">{selectedPlan.highlight}</span>
               </div>
               <div style={{ fontWeight: 900, fontSize: 28, color: 'var(--gold-2)' }}>
-                {PRIMEIRO_ACESSO_PLAN.price}
+                {selectedPlan.price}
               </div>
-              <div className="muted">{PRIMEIRO_ACESSO_PLAN.subtitle}</div>
+              <div className="muted">{selectedPlan.subtitle}</div>
             </div>
           </div>
 
@@ -208,7 +246,7 @@ export default function CheckoutPage() {
               {existingAccountFlow ? (
                 <div className="muted" style={{ fontSize: 14 }}>
                   Se quiser usar outro e-mail, abra um checkout novo em{' '}
-                  <Link to={buildFreshCheckoutPath()}>usar outra conta</Link>.
+                  <Link to={buildFreshCheckoutPath(selectedPlan.id)}>usar outra conta</Link>.
                 </div>
               ) : null}
 
@@ -222,7 +260,7 @@ export default function CheckoutPage() {
                 {loading
                   ? 'Abrindo checkout...'
                   : existingAccountFlow
-                    ? 'Finalizar Primeiro Acesso'
+                    ? `Finalizar ${selectedPlan.title}`
                     : 'Continuar para o pagamento'}
               </button>
 

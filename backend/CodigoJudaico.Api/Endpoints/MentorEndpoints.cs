@@ -10,7 +10,10 @@ public static class MentorEndpoints
 {
     public static IEndpointRouteBuilder MapMentorEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api").WithTags("Mentor").RequireAuthorization();
+        var group = app.MapGroup("/api")
+            .WithTags("Mentor")
+            .RequireAuthorization()
+            .AddEndpointFilter<RequirePremiumAccessEndpointFilter>();
 
         group.MapPost("/rabino-mentor", async (
             ClaimsPrincipal userPrincipal,

@@ -11,7 +11,10 @@ public static class UserStateEndpoints
 {
     public static IEndpointRouteBuilder MapUserStateEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/users").WithTags("Users").RequireAuthorization();
+        var group = app.MapGroup("/api/users")
+            .WithTags("Users")
+            .RequireAuthorization()
+            .AddEndpointFilter<RequirePremiumAccessEndpointFilter>();
 
         group.MapGet("/{userId:guid}/bootstrap", async (
             Guid userId,

@@ -47,7 +47,7 @@ public static class SessionEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            if (!user.AccessEnabled)
+            if (!AppAccessEvaluator.HasPremiumAccess(user))
             {
                 if (!string.IsNullOrWhiteSpace(user.LastStripeCheckoutSessionId))
                 {
@@ -71,14 +71,14 @@ public static class SessionEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            if (!user.AccessEnabled)
+            if (!AppAccessEvaluator.HasPremiumAccess(user) && AppAccessEvaluator.HasPendingCheckout(user))
             {
                 return Results.Json(
                     new LoginBlockedResponse(
                         "checkout_required",
                         BuildBlockedLoginMessage(user.PlanStatus),
                         user.Email,
-                        ResolvePlanId(user.PlanName),
+                        AppAccessEvaluator.ResolvePlanId(user.PlanName),
                         user.PlanName,
                         user.PlanStatus),
                     statusCode: StatusCodes.Status403Forbidden);
@@ -168,20 +168,4 @@ public static class SessionEndpoints
             : "Seu acesso nao esta ativo no momento. Reative a assinatura no checkout para voltar a entrar.";
     }
 
-    private static string? ResolvePlanId(string? planName)
-    {
-        var normalized = ApiMappers.Clean(planName).ToLowerInvariant();
-
-        if (normalized.Contains("anual", StringComparison.Ordinal))
-        {
-            return "anual";
-        }
-
-        if (normalized.Contains("mensal", StringComparison.Ordinal))
-        {
-            return "mensal";
-        }
-
-        return null;
-    }
 }

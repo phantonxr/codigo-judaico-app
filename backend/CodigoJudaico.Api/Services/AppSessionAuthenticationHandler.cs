@@ -46,7 +46,7 @@ public sealed class AppSessionAuthenticationHandler(
                      x.ExpiresAt > now,
                 Context.RequestAborted);
 
-        if (session is null || !session.User.AccessEnabled)
+        if (session is null)
         {
             return AuthenticateResult.Fail("Sessao invalida ou expirada.");
         }

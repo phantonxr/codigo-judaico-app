@@ -71,6 +71,7 @@ builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<StripeBillingService>();
 builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
+builder.Services.AddScoped<RequirePremiumAccessEndpointFilter>();
 
 var app = builder.Build();
 

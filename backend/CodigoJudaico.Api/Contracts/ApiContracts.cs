@@ -8,7 +8,8 @@ public sealed record UserDto(
     string Name,
     string Plan,
     string PlanStatus,
-    string? NextChargeDate);
+    string? NextChargeDate,
+    bool HasActiveAccess);
 
 public sealed record DiagnosisDto(
     string TrackId,

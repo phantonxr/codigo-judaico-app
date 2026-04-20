@@ -50,6 +50,7 @@ export default function Assinatura() {
   const planName = currentUser?.plan || '-'
   const planStatus = currentUser?.planStatus || (planName && planName !== '-' ? 'Ativo' : '-')
   const nextChargeDate = currentUser?.nextChargeDate || '-'
+  const hasActiveAccess = currentUser?.hasActiveAccess !== false
   const [availablePlans, setAvailablePlans] = useState([])
 
   useEffect(() => {
@@ -65,6 +66,27 @@ export default function Assinatura() {
         description="Status e beneficios liberados pela assinatura no Stripe."
       >
         <div style={{ display: 'grid', gap: 18 }}>
+          {!hasActiveAccess ? (
+            <div
+              className="card"
+              style={{
+                borderColor: 'rgba(215, 178, 74, 0.6)',
+                background: 'linear-gradient(180deg, rgba(215, 178, 74, 0.08), rgba(255,255,255,0.02))',
+              }}
+            >
+              <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
+                <span className="badge" style={{ width: 'fit-content' }}>Volte para a jornada</span>
+                <div style={{ fontWeight: 900, fontSize: 22, lineHeight: 1.2 }}>
+                  Sua assinatura precisa ser renovada para liberar novamente todo o metodo
+                </div>
+                <div className="muted" style={{ lineHeight: 1.7 }}>
+                  Escolha uma das opcoes abaixo para voltar a acessar o Rabino Mentor, os desafios,
+                  a biblioteca e o acompanhamento completo da jornada.
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="card">
             <div
               className="card-inner"
@@ -94,7 +116,9 @@ export default function Assinatura() {
               </div>
 
               <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ fontWeight: 900 }}>Beneficios liberados</div>
+                <div style={{ fontWeight: 900 }}>
+                  {hasActiveAccess ? 'Beneficios liberados' : 'O que sera liberado ao renovar'}
+                </div>
                 <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.82)' }}>
                   <li>Rabino Mentor (chat guiado)</li>
                   <li>Biblioteca de ensinamentos</li>
@@ -107,7 +131,9 @@ export default function Assinatura() {
 
           {availablePlans.length > 0 ? (
             <div style={{ display: 'grid', gap: 10 }}>
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Opcoes de plano</div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>
+                {hasActiveAccess ? 'Opcoes de plano' : 'Escolha sua renovacao'}
+              </div>
               <div className="subscription-grid">
                 {availablePlans.map((plan) => (
                   <PlanUpgradeCard key={plan.id} plan={plan} email={currentUser?.email} />

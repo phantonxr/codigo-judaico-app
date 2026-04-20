@@ -17,6 +17,7 @@ export function readCurrentUser() {
     plan: cached.plan,
     planStatus: cached.planStatus,
     nextChargeDate: cached.nextChargeDate,
+    hasActiveAccess: cached.hasActiveAccess,
   }
 }
 

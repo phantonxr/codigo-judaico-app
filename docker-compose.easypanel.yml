@@ -32,11 +32,20 @@ services:
       Stripe__ApplicationKey: ${Stripe__ApplicationKey:-codigo-judaico}
       Stripe__RequiredCurrency: ${Stripe__RequiredCurrency:-brl}
       Stripe__PlatformRetentionPercent: ${Stripe__PlatformRetentionPercent:-2}
+      Stripe__FirstAccess__PriceId: ${Stripe__FirstAccess__PriceId}
+      Stripe__FirstAccess__PlanName: ${Stripe__FirstAccess__PlanName:-Primeiro Acesso}
+      Stripe__FirstAccess__PromotionCouponId: ${Stripe__FirstAccess__PromotionCouponId:-}
+      Stripe__Renewal__PriceId: ${Stripe__Renewal__PriceId}
+      Stripe__Renewal__PlanName: ${Stripe__Renewal__PlanName:-Renovacao Especial}
+      Stripe__Renewal__PromotionCouponId: ${Stripe__Renewal__PromotionCouponId:-}
       Stripe__Monthly__PriceId: ${Stripe__Monthly__PriceId}
       Stripe__Monthly__PlanName: ${Stripe__Monthly__PlanName:-Premium Mensal}
       Stripe__Monthly__PromotionCouponId: ${Stripe__Monthly__PromotionCouponId:-}
       Stripe__Annual__PriceId: ${Stripe__Annual__PriceId}
       Stripe__Annual__PlanName: ${Stripe__Annual__PlanName:-Premium Anual}
+      Stripe__Lifetime__PriceId: ${Stripe__Lifetime__PriceId}
+      Stripe__Lifetime__PlanName: ${Stripe__Lifetime__PlanName:-Acesso Vitalicio}
+      Stripe__Lifetime__PromotionCouponId: ${Stripe__Lifetime__PromotionCouponId:-}
       Resend__Enabled: ${Resend__Enabled:-true}
       Resend__ApiKey: ${Resend__ApiKey}
       Resend__From: ${Resend__From}

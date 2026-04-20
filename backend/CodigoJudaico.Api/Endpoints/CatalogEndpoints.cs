@@ -1,5 +1,6 @@
 using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Data;
+using CodigoJudaico.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace CodigoJudaico.Api.Endpoints;
@@ -18,7 +19,8 @@ public static class CatalogEndpoints
 
             return Results.Ok(lessons.Select(x => x.ToDto()));
         })
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .AddEndpointFilter<RequirePremiumAccessEndpointFilter>();
 
         group.MapGet("/plans", async (AppDbContext dbContext, CancellationToken cancellationToken) =>
         {
@@ -54,7 +56,8 @@ public static class CatalogEndpoints
 
             return Results.Ok(snippets[index].ToDto());
         })
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .AddEndpointFilter<RequirePremiumAccessEndpointFilter>();
 
         return app;
     }

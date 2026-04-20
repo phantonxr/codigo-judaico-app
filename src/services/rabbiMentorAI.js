@@ -1,4 +1,5 @@
 import { apiFetch } from './apiClient.js'
+import { SEDER_HAKESEF_PROMPT_BLOCK } from '../constants/sederHakesefKnowledge.js'
 
 /**
  * Servico de feedback diario do Rabino Mentor IA.
@@ -66,7 +67,7 @@ var MACRO_FEEDBACK_PROMPT = [
 function buildDailyPrompt(payload) {
   var isMacro = payload.currentDay >= 21
   var prompt = isMacro ? MACRO_FEEDBACK_PROMPT : DAILY_FEEDBACK_PROMPT
-  var parts = [prompt, '']
+  var parts = [SEDER_HAKESEF_PROMPT_BLOCK, '', prompt, '']
 
   if (payload.trailType) {
     parts.push('TRILHA DO USUARIO: ' + payload.trailType)

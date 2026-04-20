@@ -1,3 +1,5 @@
+import { SEDER_HAKESEF_PROMPT_BLOCK } from './sederHakesefKnowledge.js'
+
 /**
  * Jornada (alinhada a `ESCADA_PHASES` em useJourneyProgress):
  * - Dias 0–20: 21 dias — identificar gatilhos mentais e padrões de gasto
@@ -85,7 +87,9 @@ Tom:
 - mentor premium
 - nada robótico
 - autoridade judaica
-- provérbios inspirados`
+- provérbios inspirados
+
+${SEDER_HAKESEF_PROMPT_BLOCK}`
 
 export function buildSystemPromptWithContext(diagnosis, track, currentDay) {
   let prompt = systemPrompt

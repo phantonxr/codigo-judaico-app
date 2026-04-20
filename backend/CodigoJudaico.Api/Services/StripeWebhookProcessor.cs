@@ -161,6 +161,12 @@ public sealed class StripeWebhookProcessor(
             user,
             subscription,
             string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
+
+        if (matchedPlan.IsOneTimePayment)
+        {
+            ApplyOneTimeAccessState(user, matchedPlan);
+        }
+
         user.LastStripeCheckoutSessionId = session.Id;
         user.UpdatedAt = now;
 
@@ -275,6 +281,31 @@ public sealed class StripeWebhookProcessor(
         }
 
         return null;
+    }
+
+    private static void ApplyOneTimeAccessState(AppUser user, StripePlanDefinition plan)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        user.AccessEnabled = true;
+        user.PlanStatus = "Ativo";
+
+        if (string.Equals(plan.Id, "vitalicio", StringComparison.OrdinalIgnoreCase))
+        {
+            user.NextChargeDate = null;
+        }
+        else if (string.Equals(plan.Id, "renovacao", StringComparison.OrdinalIgnoreCase))
+        {
+            var baseDate = user.NextChargeDate.HasValue && user.NextChargeDate.Value > today
+                ? user.NextChargeDate.Value
+                : today;
+            user.NextChargeDate = baseDate.AddDays(21);
+            user.HasUsedRenewalOffer = true;
+        }
+        else
+        {
+            user.NextChargeDate = today.AddDays(21);
+        }
     }
 
     private static void ApplySubscriptionState(AppUser user, Subscription? subscription, string? fallbackPlanName)

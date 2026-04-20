@@ -1,24 +1,62 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import SectionCard from '../components/SectionCard.jsx'
 import useCurrentUser from '../hooks/useCurrentUser.js'
+import { getAvailablePlans } from '../services/payments.js'
 
-const annualBenefits = [
-  'Comunidade Premium (grupo fechado)',
-  'Conteudos exclusivos',
-  'Mentoria ao vivo',
-  'Acesso a eventos ao vivo',
-  'Ensinamentos diarios',
-  'Desafios em grupo',
-  'Biblioteca avancada',
-  'Networking de membros',
-  'Templates premium',
-]
+function buildUpgradeLink(planId, email) {
+  const params = new URLSearchParams({ plan: planId, reason: 'payment_required' })
+  if (email) params.set('email', email)
+  return `/checkout?${params.toString()}`
+}
+
+function PlanUpgradeCard({ plan, email }) {
+  return (
+    <div
+      className="card"
+      style={plan.isHighlighted ? { borderColor: 'rgba(215, 178, 74, 0.65)' } : undefined}
+    >
+      <div
+        className="card-inner"
+        style={{ display: 'flex', flexDirection: 'column', gap: 14, height: '100%' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ display: 'grid', gap: 4 }}>
+            <div style={{ fontWeight: 900, fontSize: 16 }}>{plan.name}</div>
+            <div className="muted">{plan.description}</div>
+          </div>
+          {plan.isHighlighted ? <span className="badge">Oferta unica</span> : null}
+        </div>
+
+        <div>
+          <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 22 }}>{plan.price}</div>
+          <div className="muted">{plan.period}</div>
+        </div>
+
+        <Link
+          className={`btn btn-block${plan.isHighlighted ? ' btn-primary' : ''}`}
+          style={{ marginTop: 'auto' }}
+          to={buildUpgradeLink(plan.id, email)}
+        >
+          {plan.isHighlighted ? 'Aproveitar oferta' : `Assinar ${plan.name}`}
+        </Link>
+      </div>
+    </div>
+  )
+}
 
 export default function Assinatura() {
   const currentUser = useCurrentUser()
   const planName = currentUser?.plan || '-'
   const planStatus = currentUser?.planStatus || (planName && planName !== '-' ? 'Ativo' : '-')
   const nextChargeDate = currentUser?.nextChargeDate || '-'
+  const [availablePlans, setAvailablePlans] = useState([])
+
+  useEffect(() => {
+    getAvailablePlans()
+      .then((plans) => setAvailablePlans(plans ?? []))
+      .catch(() => setAvailablePlans([]))
+  }, [])
 
   return (
     <div className="container dashboard-grid">
@@ -26,7 +64,7 @@ export default function Assinatura() {
         title="Plano atual"
         description="Status e beneficios liberados pela assinatura no Stripe."
       >
-        <div className="subscription-grid">
+        <div style={{ display: 'grid', gap: 18 }}>
           <div className="card">
             <div
               className="card-inner"
@@ -49,7 +87,7 @@ export default function Assinatura() {
                 </div>
                 <div className="card" style={{ boxShadow: 'none' }}>
                   <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
-                    <div className="muted">Proxima cobranca</div>
+                    <div className="muted">Valido ate</div>
                     <div style={{ fontWeight: 900 }}>{nextChargeDate}</div>
                   </div>
                 </div>
@@ -67,48 +105,16 @@ export default function Assinatura() {
             </div>
           </div>
 
-          <div className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.45)' }}>
-            <div
-              className="card-inner"
-              style={{ display: 'flex', flexDirection: 'column', gap: 14, height: '100%' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <div style={{ display: 'grid', gap: 4 }}>
-                  <div style={{ fontWeight: 900, fontSize: 16 }}>
-                    Comunidade Codigo Judaico Premium
-                  </div>
-                  <div className="muted">Upgrade para anual</div>
-                </div>
-                <span className="badge">R$297/ano</span>
+          {availablePlans.length > 0 ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>Opcoes de plano</div>
+              <div className="subscription-grid">
+                {availablePlans.map((plan) => (
+                  <PlanUpgradeCard key={plan.id} plan={plan} email={currentUser?.email} />
+                ))}
               </div>
-
-              <div style={{ display: 'grid', gap: 6 }}>
-                <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 22 }}>
-                  R$297 / ano
-                </div>
-                <div className="muted">Acesso premium por 12 meses</div>
-              </div>
-
-              <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ fontWeight: 900 }}>O que inclui</div>
-                <div className="grid grid-2">
-                  {annualBenefits.map((benefit) => (
-                    <div key={benefit} className="badge" style={{ justifyContent: 'flex-start' }}>
-                      {benefit}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Link
-                className="btn btn-primary btn-block"
-                style={{ marginTop: 'auto' }}
-                to="/checkout?plan=anual"
-              >
-                Fazer upgrade anual
-              </Link>
             </div>
-          </div>
+          ) : null}
         </div>
       </SectionCard>
     </div>

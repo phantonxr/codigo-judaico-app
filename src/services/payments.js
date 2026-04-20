@@ -10,3 +10,7 @@ export function createCheckoutSession(payload) {
 export function getCheckoutSessionStatus(sessionId) {
   return apiFetch(`/api/payments/checkout-sessions/${encodeURIComponent(String(sessionId ?? ''))}`)
 }
+
+export function getAvailablePlans() {
+  return apiFetch('/api/payments/available-plans')
+}

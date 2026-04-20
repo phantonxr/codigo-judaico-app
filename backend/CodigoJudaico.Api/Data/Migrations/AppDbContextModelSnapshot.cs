@@ -67,6 +67,9 @@ namespace CodigoJudaico.Api.Data.Migrations
                     b.Property<bool>("AccessEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("HasUsedRenewalOffer")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTimeOffset?>("AccessGrantedAt")
                         .HasColumnType("timestamp with time zone");
 

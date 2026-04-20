@@ -137,6 +137,14 @@ public sealed record CheckoutSessionStatusResponse(
     string? PlanId,
     string? PlanName);
 
+public sealed record AvailablePlanDto(
+    string Id,
+    string Name,
+    string Price,
+    string Period,
+    string Description,
+    bool IsHighlighted);
+
 public sealed record ProfileUpsertRequest
 {
     public string? Name { get; init; }

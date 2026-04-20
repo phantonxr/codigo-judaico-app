@@ -1,51 +1,29 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 
-const plans = [
-  {
-    id: 'mensal',
-    title: 'Plano Mensal',
-    highlight: 'Preco especial',
-    oldPrice: 'R$ 29,90',
-    price: 'R$ 17,90 no primeiro mes',
-    subtitle: 'E depois R$ 29,90 / mes',
-  },
-  {
-    id: 'anual',
-    title: 'Plano Anual',
-    price: 'R$ 297,00 / ano',
-    subtitle: 'Acesso premium por 12 meses',
-  },
-]
-
-function findPlan(planId) {
-  return plans.find((plan) => plan.id === planId) ?? plans[0]
+const PRIMEIRO_ACESSO_PLAN = {
+  id: 'primeiro-acesso',
+  title: 'Primeiro Acesso',
+  price: 'R$ 29,90',
+  subtitle: '21 dias de acesso completo',
+  highlight: 'Oferta de entrada',
 }
 
-function buildFreshCheckoutPath(planId) {
-  const params = new URLSearchParams()
-
-  if (planId) {
-    params.set('plan', planId)
-  }
-
-  const query = params.toString()
-  return query ? `/checkout?${query}` : '/checkout'
+function buildFreshCheckoutPath() {
+  return '/checkout'
 }
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
-  const [selectedPlan, setSelectedPlan] = useState(() => findPlan(searchParams.get('plan')).id)
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const currentPlan = useMemo(() => findPlan(selectedPlan), [selectedPlan])
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
   const existingAccountFlow = redirectedFromLogin && Boolean(email)
 
@@ -69,7 +47,7 @@ export default function CheckoutPage() {
       const response = await createCheckoutSession({
         name,
         email,
-        planId: selectedPlan,
+        planId: PRIMEIRO_ACESSO_PLAN.id,
         password,
       })
 
@@ -111,62 +89,24 @@ export default function CheckoutPage() {
         </div>
 
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 18 }}>
-          <div className="card">
-            <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
-              <div style={{ fontWeight: 900, fontSize: 18 }}>Escolha seu plano</div>
-
-              <div style={{ display: 'grid', gap: 12 }}>
-                {plans.map((plan) => {
-                  const selected = plan.id === selectedPlan
-                  return (
-                    <button
-                      key={plan.id}
-                      type="button"
-                      className="card"
-                      onClick={() => setSelectedPlan(plan.id)}
-                      style={{
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        borderColor: selected ? 'rgba(215, 178, 74, 0.85)' : 'rgba(255,255,255,0.08)',
-                        background: selected
-                          ? 'linear-gradient(180deg, rgba(215, 178, 74, 0.14), rgba(255,255,255,0.04))'
-                          : undefined,
-                      }}
-                    >
-                      <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <span
-                              aria-hidden="true"
-                              style={{
-                                width: 18,
-                                height: 18,
-                                borderRadius: '50%',
-                                border: selected ? '5px solid var(--gold-2)' : '2px solid rgba(255,255,255,0.25)',
-                                display: 'inline-block',
-                              }}
-                            />
-                            <strong style={{ fontSize: 16 }}>{plan.title}</strong>
-                          </div>
-                          {plan.highlight ? <span className="badge">{plan.highlight}</span> : null}
-                        </div>
-
-                        <div style={{ display: 'grid', gap: 4, paddingLeft: 30 }}>
-                          {plan.oldPrice ? (
-                            <div className="muted" style={{ textDecoration: 'line-through' }}>
-                              {plan.oldPrice}
-                            </div>
-                          ) : null}
-                          <div style={{ fontWeight: 900, fontSize: 24, color: 'var(--gold-2)' }}>
-                            {plan.price}
-                          </div>
-                          <div className="muted">{plan.subtitle}</div>
-                        </div>
-                      </div>
-                    </button>
-                  )
-                })}
+          <div className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.85)' }}>
+            <div
+              className="card-inner"
+              style={{
+                background: 'linear-gradient(180deg, rgba(215, 178, 74, 0.14), rgba(255,255,255,0.04))',
+                display: 'grid',
+                gap: 10,
+                borderRadius: 'inherit',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <strong style={{ fontSize: 18 }}>{PRIMEIRO_ACESSO_PLAN.title}</strong>
+                <span className="badge">{PRIMEIRO_ACESSO_PLAN.highlight}</span>
               </div>
+              <div style={{ fontWeight: 900, fontSize: 28, color: 'var(--gold-2)' }}>
+                {PRIMEIRO_ACESSO_PLAN.price}
+              </div>
+              <div className="muted">{PRIMEIRO_ACESSO_PLAN.subtitle}</div>
             </div>
           </div>
 
@@ -268,7 +208,7 @@ export default function CheckoutPage() {
               {existingAccountFlow ? (
                 <div className="muted" style={{ fontSize: 14 }}>
                   Se quiser usar outro e-mail, abra um checkout novo em{' '}
-                  <Link to={buildFreshCheckoutPath(selectedPlan)}>usar outra conta</Link>.
+                  <Link to={buildFreshCheckoutPath()}>usar outra conta</Link>.
                 </div>
               ) : null}
 
@@ -282,8 +222,8 @@ export default function CheckoutPage() {
                 {loading
                   ? 'Abrindo checkout...'
                   : existingAccountFlow
-                    ? `Finalizar ${currentPlan.title}`
-                    : `Continuar com ${currentPlan.title}`}
+                    ? 'Finalizar Primeiro Acesso'
+                    : 'Continuar para o pagamento'}
               </button>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

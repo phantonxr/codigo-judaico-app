@@ -16,6 +16,7 @@ public sealed class AppUser
     public string StripeCustomerId { get; set; } = string.Empty;
     public string StripeSubscriptionId { get; set; } = string.Empty;
     public string LastStripeCheckoutSessionId { get; set; } = string.Empty;
+    public bool HasUsedRenewalOffer { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public UserDiagnosis? Diagnosis { get; set; }

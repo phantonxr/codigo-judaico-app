@@ -4,6 +4,7 @@ using CodigoJudaico.Api.Data;
 using CodigoJudaico.Api.Models;
 using Stripe;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace CodigoJudaico.Api.Endpoints;
 
@@ -15,6 +16,36 @@ public static class PaymentEndpoints
     public static IEndpointRouteBuilder MapPaymentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/payments").WithTags("Payments");
+
+        group.MapGet("/available-plans", async (
+            ClaimsPrincipal userPrincipal,
+            AppDbContext dbContext,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = userPrincipal.GetRequiredUserId();
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            var plans = new List<AvailablePlanDto>();
+
+            if (user is not null && user.AccessGrantedAt is not null && !user.HasUsedRenewalOffer)
+            {
+                plans.Add(new AvailablePlanDto(
+                    "renovacao",
+                    "Renovacao Especial",
+                    "R$ 17,90",
+                    "+ 21 dias de acesso",
+                    "Oferta unica — nao se repete",
+                    IsHighlighted: true));
+            }
+
+            plans.Add(new AvailablePlanDto("mensal", "Premium Mensal", "R$ 37,90", "por mes", "Renovacao automatica mensal", IsHighlighted: false));
+            plans.Add(new AvailablePlanDto("anual", "Premium Anual", "R$ 297,90", "por ano", "Acesso por 12 meses", IsHighlighted: false));
+            plans.Add(new AvailablePlanDto("vitalicio", "Acesso Vitalicio", "R$ 497,90", "pagamento unico", "Acesso permanente, sem renovacao", IsHighlighted: false));
+
+            return Results.Ok(plans);
+        })
+        .RequireAuthorization()
+        .WithName("GetAvailablePlans");
 
         group.MapPost("/checkout-sessions", async (
             CheckoutSessionCreateRequest request,
@@ -48,9 +79,22 @@ public static class PaymentEndpoints
 
             var plan = await stripeBillingService.GetValidatedPlanAsync(request.PlanId, cancellationToken);
             var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
-            var shouldSendAccountCreatedEmail = user?.AccountCreatedEmailSentAt is null;
 
-            if (user?.AccessEnabled == true)
+            var planEligibilityError = ValidatePlanEligibility(plan, user);
+
+            if (planEligibilityError is not null)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["planId"] = [planEligibilityError]
+                });
+            }
+
+            if (user?.AccessEnabled == true
+                && !string.Equals(plan.Id, "renovacao", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(plan.Id, "vitalicio", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(plan.Id, "mensal", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(plan.Id, "anual", StringComparison.OrdinalIgnoreCase))
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {
@@ -58,6 +102,7 @@ public static class PaymentEndpoints
                 });
             }
 
+            var shouldSendAccountCreatedEmail = user?.AccountCreatedEmailSentAt is null;
             var shouldRequireNewPassword = user is null || string.IsNullOrWhiteSpace(user.PasswordHash);
 
             if (shouldRequireNewPassword && trimmedPassword.Length < MinimumCheckoutPasswordLength)
@@ -171,5 +216,22 @@ public static class PaymentEndpoints
         .WithName("StripeWebhook");
 
         return app;
+    }
+
+    private static string? ValidatePlanEligibility(StripePlanDefinition plan, AppUser? user)
+    {
+        if (string.Equals(plan.Id, "primeiro-acesso", StringComparison.OrdinalIgnoreCase)
+            && user?.AccessGrantedAt is not null)
+        {
+            return "Voce ja utilizou o Primeiro Acesso. Escolha outro plano para continuar.";
+        }
+
+        if (string.Equals(plan.Id, "renovacao", StringComparison.OrdinalIgnoreCase)
+            && (user is null || user.HasUsedRenewalOffer))
+        {
+            return "A Renovacao Especial ja foi utilizada ou nao esta disponivel para este e-mail.";
+        }
+
+        return null;
     }
 }

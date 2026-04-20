@@ -238,14 +238,17 @@ public static class PaymentEndpoints
             HttpRequest request,
             StripeBillingService stripeBillingService,
             StripeWebhookProcessor webhookProcessor,
+            ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
+            var logger = loggerFactory.CreateLogger("StripeWebhook");
             using var reader = new StreamReader(request.Body);
             var payload = await reader.ReadToEndAsync(cancellationToken);
             var signature = request.Headers["Stripe-Signature"].ToString();
 
             if (string.IsNullOrWhiteSpace(signature))
             {
+                logger.LogWarning("Webhook Stripe recebido sem cabecalho Stripe-Signature.");
                 return Results.BadRequest("Cabecalho Stripe-Signature ausente.");
             }
 
@@ -257,10 +260,24 @@ public static class PaymentEndpoints
             }
             catch (StripeException ex)
             {
+                logger.LogWarning(ex, "Falha ao validar assinatura do webhook Stripe.");
                 return Results.BadRequest(ex.Message);
             }
 
-            await webhookProcessor.ProcessAsync(stripeEvent, cancellationToken);
+            try
+            {
+                await webhookProcessor.ProcessAsync(stripeEvent, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(
+                    ex,
+                    "Falha ao processar evento Stripe {EventId} do tipo {EventType}.",
+                    stripeEvent.Id,
+                    stripeEvent.Type);
+                return Results.StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
             return Results.Ok();
         })
         .WithName("StripeWebhook");

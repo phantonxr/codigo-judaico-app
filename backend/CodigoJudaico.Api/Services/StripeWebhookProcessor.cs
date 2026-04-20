@@ -16,22 +16,39 @@ public sealed class StripeWebhookProcessor(
 {
     public async Task ProcessAsync(Event stripeEvent, CancellationToken cancellationToken)
     {
+        if (ShouldIgnoreEvent(stripeEvent))
+        {
+            return;
+        }
+
         switch (stripeEvent.Type)
         {
             case "checkout.session.completed":
-                if (stripeEvent.Data.Object is Session checkoutSession)
+                if (stripeEvent.Data.Object is not Session checkoutSession)
                 {
-                    await HandleCheckoutSessionCompletedAsync(checkoutSession, cancellationToken);
+                    logger.LogWarning(
+                        "Evento Stripe {EventId} do tipo {EventType} chegou sem checkout session desserializada.",
+                        stripeEvent.Id,
+                        stripeEvent.Type);
+                    break;
                 }
+
+                await HandleCheckoutSessionCompletedAsync(checkoutSession, cancellationToken);
                 break;
 
             case "customer.subscription.created":
             case "customer.subscription.updated":
             case "customer.subscription.deleted":
-                if (stripeEvent.Data.Object is Subscription subscription)
+                if (stripeEvent.Data.Object is not Subscription subscription)
                 {
-                    await HandleSubscriptionChangedAsync(subscription, cancellationToken);
+                    logger.LogWarning(
+                        "Evento Stripe {EventId} do tipo {EventType} chegou sem subscription desserializada.",
+                        stripeEvent.Id,
+                        stripeEvent.Type);
+                    break;
                 }
+
+                await HandleSubscriptionChangedAsync(subscription, cancellationToken);
                 break;
         }
     }
@@ -492,5 +509,72 @@ public sealed class StripeWebhookProcessor(
         }
 
         return ApiMappers.Clean(value);
+    }
+
+    private bool ShouldIgnoreEvent(Event stripeEvent)
+    {
+        var eventId = ApiMappers.Clean(stripeEvent.Id);
+        var eventType = ApiMappers.Clean(stripeEvent.Type);
+        var eventAccount = ApiMappers.Clean(stripeEvent.Account);
+
+        if (!stripeBillingService.HasExpectedEventAccount(eventAccount))
+        {
+            logger.LogInformation(
+                "Ignorando evento Stripe {EventId} do tipo {EventType} porque veio da conta {EventAccount}, diferente da conta conectada esperada.",
+                eventId,
+                eventType,
+                eventAccount);
+            return true;
+        }
+
+        return eventType switch
+        {
+            "checkout.session.completed" => !ShouldProcessCheckoutSessionEvent(stripeEvent, eventId),
+            "customer.subscription.created" or "customer.subscription.updated" or "customer.subscription.deleted"
+                => !ShouldProcessSubscriptionEvent(stripeEvent, eventId),
+            _ => false,
+        };
+    }
+
+    private bool ShouldProcessCheckoutSessionEvent(Event stripeEvent, string eventId)
+    {
+        if (stripeEvent.Data.Object is not Session session)
+        {
+            logger.LogInformation(
+                "Ignorando evento Stripe {EventId} porque o payload de checkout session nao foi desserializado.",
+                eventId);
+            return false;
+        }
+
+        if (stripeBillingService.HasExpectedMetadata(session.Metadata))
+        {
+            return true;
+        }
+
+        logger.LogInformation(
+            "Ignorando checkout Stripe {EventId} porque a metadata nao pertence a este app.",
+            eventId);
+        return false;
+    }
+
+    private bool ShouldProcessSubscriptionEvent(Event stripeEvent, string eventId)
+    {
+        if (stripeEvent.Data.Object is not Subscription subscription)
+        {
+            logger.LogInformation(
+                "Ignorando evento Stripe {EventId} porque o payload de assinatura nao foi desserializado.",
+                eventId);
+            return false;
+        }
+
+        if (stripeBillingService.HasExpectedMetadata(subscription.Metadata))
+        {
+            return true;
+        }
+
+        logger.LogInformation(
+            "Ignorando assinatura Stripe {EventId} porque a metadata nao pertence a este app.",
+            eventId);
+        return false;
     }
 }

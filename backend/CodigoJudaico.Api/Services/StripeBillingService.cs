@@ -63,6 +63,14 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
             && string.Equals(ReadMetadata(metadata, CurrencyMetadataKey), RequiredCurrency, StringComparison.OrdinalIgnoreCase);
     }
 
+    public bool HasExpectedEventAccount(string? eventAccount)
+    {
+        var normalizedEventAccount = Normalize(eventAccount);
+
+        return string.IsNullOrWhiteSpace(normalizedEventAccount)
+            || string.Equals(normalizedEventAccount, ConnectedAccountId, StringComparison.OrdinalIgnoreCase);
+    }
+
     public bool TryGetConfiguredPlanById(string? planId, out StripePlanDefinition plan)
     {
         plan = default!;

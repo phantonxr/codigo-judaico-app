@@ -84,3 +84,4 @@ pids/
 # ═══════════════════════════════════════════════════════
 backend/CodigoJudaico.Api/bin
 backend/CodigoJudaico.Api/obj
+backend/CodigoJudaico.Api/appsettings.Production.json

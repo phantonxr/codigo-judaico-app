@@ -27,7 +27,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__Postgres: Host=erp-db;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!
+      ConnectionStrings__Postgres: Host=72.60.157.60;Port=5432;Database=codjudaicotest;Username=judaictotest;Password=Jud@2026Wa!
     ports:
       - "8080:8080"
 

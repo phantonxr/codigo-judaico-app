@@ -131,7 +131,47 @@ npm run dev
 
 O frontend continua sendo servido pelo Nginx e falando com a API via `/api`.
 
-No servico `api`, alem da string de conexao do Postgres, configure tambem:
+### Usar `appsettings.Production.json` em producao
+
+O backend ja le `appsettings.Production.json` automaticamente quando o ambiente estiver com:
+
+```text
+ASPNETCORE_ENVIRONMENT=Production
+```
+
+Neste projeto, isso ja acontece no `docker-compose.easypanel.yml`.
+
+Importante:
+
+- `appsettings.Production.json` entra no publish do ASP.NET Core por padrao
+- variaveis de ambiente com a mesma chave sobrescrevem o valor do arquivo
+- por isso, se voce quiser que a connection string venha do arquivo, nao defina `ConnectionStrings__Postgres` no ambiente de producao
+
+Exemplo de `backend/CodigoJudaico.Api/appsettings.Production.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "Postgres": "Host=SEU_HOST;Port=5432;Database=SEU_BANCO;Username=SEU_USUARIO;Password=SUA_SENHA;SSL Mode=Require;Trust Server Certificate=true"
+  },
+  "Cors": {
+    "AllowedOrigins": [
+      "https://www.codigomilenarjudaico.com"
+    ]
+  }
+}
+```
+
+Fluxo para publicar usando esse arquivo:
+
+1. preencha `backend/CodigoJudaico.Api/appsettings.Production.json`
+2. confirme que `ASPNETCORE_ENVIRONMENT=Production` esta no deploy
+3. nao configure `ConnectionStrings__Postgres` no Easypanel para esse servico
+4. publique/rebuild a API
+
+Se voce estiver usando deploy via Git, o arquivo precisa estar versionado no repositorio. Se estiver usando build local, basta ele existir no workspace no momento do `docker build` ou `dotnet publish`.
+
+No servico `api`, se a string de conexao estiver no `appsettings.Production.json`, configure no Easypanel:
 
 - `Stripe__SecretKey`
 - `Stripe__WebhookSecret`
@@ -149,6 +189,92 @@ No servico `api`, alem da string de conexao do Postgres, configure tambem:
 - `Resend__From`
 - `Resend__InboundWebhookSecret`
 - `Resend__InboundWebhookDisableVerification`
+
+### Aplicar migration no banco de producao a partir do seu computador
+
+Se voce criou `backend/CodigoJudaico.Api/appsettings.Production.json` com a connection string de producao, pode rodar a migration localmente usando o ambiente `Production`.
+
+No PowerShell, a partir da raiz do projeto:
+
+```powershell
+Set-Location D:\Study\codigo-judaico-app
+
+dotnet tool restore
+
+$env:ASPNETCORE_ENVIRONMENT = "Production"
+
+dotnet dotnet-ef database update `
+  --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj `
+  --startup-project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj
+
+Remove-Item Env:ASPNETCORE_ENVIRONMENT
+```
+
+Esse comando usa o mesmo `DbContext` da API, le o `appsettings.Production.json` e aplica todas as migrations pendentes no banco de producao.
+
+Se quiser aplicar apenas uma migration especifica:
+
+```powershell
+Set-Location D:\Study\codigo-judaico-app
+
+dotnet tool restore
+
+$env:ASPNETCORE_ENVIRONMENT = "Production"
+
+dotnet dotnet-ef database update 20260420000000_AddHasUsedRenewalOffer `
+  --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj `
+  --startup-project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj
+
+Remove-Item Env:ASPNETCORE_ENVIRONMENT
+```
+
+Cuidados:
+
+- o arquivo precisa estar em `backend/CodigoJudaico.Api/appsettings.Production.json`
+- a connection string de producao precisa estar correta nele
+- se existir `ConnectionStrings__Postgres` no seu shell, ela sobrescreve o arquivo
+- confirme que o banco de producao aceita conexoes externas do seu IP
+- faca backup do banco ou snapshot antes da migration
+
+Se quiser validar quais migrations ja entraram:
+
+```sql
+SELECT "MigrationId"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+```
+
+### Gerar script SQL da migration antes de aplicar
+
+Se preferir revisar o SQL antes de executar no banco de producao:
+
+```powershell
+Set-Location D:\Study\codigo-judaico-app
+
+dotnet tool restore
+
+dotnet dotnet-ef migrations script --idempotent `
+  --project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj `
+  --startup-project backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj `
+  --output .\migration-prod.sql
+```
+
+Depois, abra o arquivo `migration-prod.sql` e execute no banco de producao pelo cliente SQL da sua preferencia.
+
+### Correcao rapida para o erro `HasUsedRenewalOffer does not exist`
+
+Se o banco ficou fora de sincronia e a API ja esta esperando a coluna `HasUsedRenewalOffer`, voce pode corrigir imediatamente com:
+
+```sql
+ALTER TABLE public.app_users
+ADD COLUMN IF NOT EXISTS "HasUsedRenewalOffer" boolean NOT NULL DEFAULT false;
+```
+
+Depois disso:
+
+1. reinicie o servico `api`
+2. rode a migration corretamente com `dotnet dotnet-ef database update`
+3. confira o historico em `__EFMigrationsHistory`
 
 ## Comandos uteis
 

@@ -31,10 +31,7 @@ builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 {
     var opts = sp.GetRequiredService<
         Microsoft.Extensions.Options.IOptions<OpenAIOptions>>().Value;
-    var baseUrl = string.IsNullOrWhiteSpace(opts.BaseUrl)
-        ? "https://api.openai.com/"
-        : opts.BaseUrl.TrimEnd('/') + "/";
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(OpenAIOptions.NormalizeBaseUrl(opts.BaseUrl));
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     client.Timeout = TimeSpan.FromSeconds(60);
 });

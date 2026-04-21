@@ -6,6 +6,8 @@ import Topbar from './components/Topbar.jsx'
 
 import LandingPage from './pages/LandingPage.jsx'
 import Login from './pages/Login.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import CheckoutPage from './pages/CheckoutPage.jsx'
 import CheckoutSuccess from './pages/CheckoutSuccess.jsx'
 import CheckoutCancelled from './pages/CheckoutCancelled.jsx'
@@ -151,6 +153,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/esqueci-senha" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/checkout/sucesso" element={<CheckoutSuccess />} />
       <Route path="/checkout/cancelado" element={<CheckoutCancelled />} />

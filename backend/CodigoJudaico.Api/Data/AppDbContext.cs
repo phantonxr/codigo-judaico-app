@@ -26,6 +26,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.Email).HasMaxLength(320);
             entity.Property(x => x.Name).HasMaxLength(120);
             entity.Property(x => x.PasswordHash).HasMaxLength(400);
+            entity.Property(x => x.PasswordResetTokenHash).HasMaxLength(128);
             entity.Property(x => x.PlanName).HasMaxLength(120);
             entity.Property(x => x.PlanStatus).HasMaxLength(40);
             entity.Property(x => x.StripeCustomerId).HasMaxLength(120);

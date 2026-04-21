@@ -109,6 +109,17 @@ public sealed record LoginRequest
     public string Password { get; init; } = string.Empty;
 }
 
+public sealed record ForgotPasswordRequest
+{
+    public string Email { get; init; } = string.Empty;
+}
+
+public sealed record ResetPasswordRequest
+{
+    public string Token { get; init; } = string.Empty;
+    public string NewPassword { get; init; } = string.Empty;
+}
+
 public sealed record CheckoutSessionCreateRequest
 {
     public string Email { get; init; } = string.Empty;

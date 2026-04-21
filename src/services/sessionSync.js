@@ -263,6 +263,25 @@ export async function logoutCurrentSession() {
   clearSessionCache()
 }
 
+export async function requestPasswordReset(email) {
+  return apiFetch('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      email: safeTrim(email),
+    }),
+  })
+}
+
+export async function resetPassword({ token, password }) {
+  return apiFetch('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      token: safeTrim(token),
+      newPassword: safeTrim(password),
+    }),
+  })
+}
+
 export async function syncCurrentUserProfile(userInput) {
   const userId = readStoredUserId()
   if (!userId) return null

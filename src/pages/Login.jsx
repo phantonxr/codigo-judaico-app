@@ -18,6 +18,25 @@ function buildCheckoutRedirect(errorData, email) {
   return `/checkout?${params.toString()}`
 }
 
+function toFriendlyLoginError(caught) {
+  if (caught?.status === 401) {
+    return 'E-mail ou senha incorretos. Tente novamente.'
+  }
+
+  const raw =
+    caught?.data?.detail ||
+    caught?.data?.message ||
+    caught?.message ||
+    'Nao consegui entrar. Confira o e-mail, a senha e se o acesso ja foi liberado.'
+  const normalized = String(raw).replace(/^API \d+:\s*/u, '').trim()
+
+  if (/credenciais invalidas/i.test(normalized)) {
+    return 'E-mail ou senha incorretos. Tente novamente.'
+  }
+
+  return normalized
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -39,14 +58,7 @@ export default function Login() {
         navigate(buildCheckoutRedirect(caught.data, email), { replace: true })
         return
       }
-
-      const nextError =
-        caught?.data?.detail ||
-        caught?.data?.message ||
-        caught?.message ||
-        'Nao consegui entrar. Confira o e-mail, a senha e se o acesso ja foi liberado.'
-
-      setError(String(nextError).replace(/^API \d+:\s*/u, ''))
+      setError(toFriendlyLoginError(caught))
     } finally {
       setLoading(false)
     }
@@ -96,6 +108,9 @@ export default function Login() {
             <button className="btn btn-primary" type="submit" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
+            <Link className="btn btn-soft" to="/esqueci-senha">
+              Esqueci a senha
+            </Link>
             <Link className="btn btn-soft" to="/checkout">
               Ainda nao tenho acesso
             </Link>

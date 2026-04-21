@@ -10,6 +10,8 @@ public sealed class AppUser
     public DateTimeOffset? AccountCreatedEmailSentAt { get; set; }
     public DateTimeOffset? AccessGrantedAt { get; set; }
     public DateTimeOffset? AccessEmailSentAt { get; set; }
+    public string PasswordResetTokenHash { get; set; } = string.Empty;
+    public DateTimeOffset? PasswordResetTokenExpiresAt { get; set; }
     public string PlanName { get; set; } = string.Empty;
     public string PlanStatus { get; set; } = string.Empty;
     public DateOnly? NextChargeDate { get; set; }

@@ -109,6 +109,87 @@ public static class SessionEndpoints
         })
         .WithName("Login");
 
+        group.MapPost("/forgot-password", async (
+            ForgotPasswordRequest request,
+            AppDbContext dbContext,
+            SessionTokenService sessionTokenService,
+            AccessEmailService accessEmailService,
+            CancellationToken cancellationToken) =>
+        {
+            var email = ApiMappers.NormalizeEmail(request.Email);
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Results.Ok();
+            }
+
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
+            if (user is null)
+            {
+                return Results.Ok();
+            }
+
+            var rawToken = sessionTokenService.GenerateToken();
+            user.PasswordResetTokenHash = sessionTokenService.HashToken(rawToken);
+            user.PasswordResetTokenExpiresAt = DateTimeOffset.UtcNow.AddHours(2);
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            await accessEmailService.SendPasswordResetEmailAsync(user, rawToken, cancellationToken);
+            return Results.Ok();
+        })
+        .WithName("ForgotPassword");
+
+        group.MapPost("/reset-password", async (
+            ResetPasswordRequest request,
+            AppDbContext dbContext,
+            SessionTokenService sessionTokenService,
+            PasswordHashService passwordHashService,
+            CancellationToken cancellationToken) =>
+        {
+            var token = request.Token?.Trim() ?? string.Empty;
+            var password = request.NewPassword?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(password))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["request"] = ["Informe token e nova senha."]
+                });
+            }
+
+            if (password.Length < 8)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["newPassword"] = ["A nova senha deve ter ao menos 8 caracteres."]
+                });
+            }
+
+            var tokenHash = sessionTokenService.HashToken(token);
+            var now = DateTimeOffset.UtcNow;
+
+            var user = await dbContext.Users.SingleOrDefaultAsync(
+                x => x.PasswordResetTokenHash == tokenHash && x.PasswordResetTokenExpiresAt != null,
+                cancellationToken);
+
+            if (user is null || user.PasswordResetTokenExpiresAt < now)
+            {
+                return Results.Problem(
+                    title: "Link invalido ou expirado.",
+                    detail: "Solicite um novo link de recuperacao para redefinir sua senha.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            user.PasswordHash = passwordHashService.HashPassword(password);
+            user.PasswordResetTokenHash = string.Empty;
+            user.PasswordResetTokenExpiresAt = null;
+            user.UpdatedAt = now;
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return Results.Ok();
+        })
+        .WithName("ResetPassword");
+
         group.MapGet("/session", async (
             ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,

@@ -105,6 +105,43 @@ Se nao encontrar este e-mail depois, confira sua caixa de spam.
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "acesso liberado", cancellationToken);
     }
 
+    public async Task SendPasswordResetEmailAsync(
+        AppUser user,
+        string resetToken,
+        CancellationToken cancellationToken)
+    {
+        if (!_resendOptions.Enabled)
+        {
+            logger.LogInformation("Envio de e-mail desabilitado; recuperacao de senha nao enviada para {Email}.", user.Email);
+            return;
+        }
+
+        EnsureConfigured();
+
+        var displayName = string.IsNullOrWhiteSpace(user.Name) ? "Aluno" : user.Name;
+        var resetUrl = $"{_stripeOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={WebUtility.UrlEncode(resetToken)}";
+        var subject = "Redefinicao de senha - Metodo Judaico";
+        var plainTextBody = $"""
+Shalom, {displayName}.
+
+Recebemos um pedido para redefinir sua senha.
+
+Use este link para criar uma nova senha:
+{resetUrl}
+
+Se voce nao pediu essa alteracao, ignore este e-mail.
+""";
+
+        var htmlBody = $"""
+<p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
+<p>Recebemos um pedido para redefinir sua senha.</p>
+<p><a href="{WebUtility.HtmlEncode(resetUrl)}">Clique aqui para criar uma nova senha</a>.</p>
+<p>Se voce nao pediu essa alteracao, ignore este e-mail.</p>
+""";
+
+        await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "recuperacao de senha", cancellationToken);
+    }
+
     private void EnsureConfigured()
     {
         if (string.IsNullOrWhiteSpace(_resendOptions.ApiKey))

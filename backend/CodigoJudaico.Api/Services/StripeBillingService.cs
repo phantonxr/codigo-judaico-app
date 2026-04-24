@@ -12,7 +12,9 @@ public sealed record StripePlanDefinition(
     string PromotionCouponId,
     bool IsOneTimePayment = false);
 
-public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
+public sealed class StripeBillingService(
+    IOptions<StripeBillingOptions> options,
+    ILogger<StripeBillingService> logger)
 {
     public const string AppKeyMetadataKey = "app_key";
     public const string ConnectedAccountMetadataKey = "connected_account_id";
@@ -21,11 +23,19 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
     public const string PlanNameMetadataKey = "plan_name";
     public const string EmailMetadataKey = "email";
     public const string NameMetadataKey = "name";
+    public const string AppIdMetadataKey = "app_id";
+    public const string AppNameMetadataKey = "app_name";
+    public const string TenantIdMetadataKey = "tenant_id";
+    public const string SellerIdMetadataKey = "seller_id";
+    public const string SellerNameMetadataKey = "seller_name";
+    public const string OrderIdMetadataKey = "order_id";
 
     private readonly StripeBillingOptions _options = options.Value;
+    private readonly ILogger<StripeBillingService> _logger = logger;
     private readonly SessionService _checkoutSessions = new();
     private readonly SubscriptionService _subscriptions = new();
     private readonly PriceService _prices = new();
+    private readonly AccountService _accounts = new();
 
     public StripePlanDefinition GetPlan(string planId)
     {
@@ -123,18 +133,58 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
         var email = ApiMappers.NormalizeEmail(request.Email);
         var name = ApiMappers.Clean(request.Name);
         var baseUrl = _options.FrontendBaseUrl.TrimEnd('/');
-        var metadata = BuildCheckoutMetadata(email, name, plan);
+        var paymentCoreMetadata = BuildPaymentCoreMetadata();
+        var metadata = StripeCheckoutSessionBuilder.BuildMetadata(
+            ApplicationKey,
+            ConnectedAccountId,
+            RequiredCurrency,
+            email,
+            name,
+            plan,
+            paymentCoreMetadata);
+        var routing = await ResolveConnectRoutingAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Criando checkout Stripe para PaymentCore. PlanId={PlanId} OrderId={OrderId} AppId={AppId} TenantId={TenantId} SellerId={SellerId} SellerName={SellerName} SplitViaConnect={UseConnectSplit} ConnectedAccountCountry={ConnectedAccountCountry}",
+            plan.Id,
+            paymentCoreMetadata.OrderId,
+            paymentCoreMetadata.AppId,
+            paymentCoreMetadata.TenantId,
+            paymentCoreMetadata.SellerId,
+            paymentCoreMetadata.SellerName,
+            routing.UseConnectSplit,
+            routing.ConnectedAccountCountry);
 
         Session session;
 
         if (plan.IsOneTimePayment)
         {
-            session = await CreateOneTimePaymentSessionAsync(email, baseUrl, metadata, plan, cancellationToken);
+            session = await CreateOneTimePaymentSessionAsync(
+                email,
+                baseUrl,
+                metadata,
+                paymentCoreMetadata,
+                routing,
+                plan,
+                cancellationToken);
         }
         else
         {
-            session = await CreateSubscriptionSessionAsync(email, baseUrl, metadata, plan, cancellationToken);
+            session = await CreateSubscriptionSessionAsync(
+                email,
+                baseUrl,
+                metadata,
+                paymentCoreMetadata,
+                routing,
+                plan,
+                cancellationToken);
         }
+
+        _logger.LogInformation(
+            "Checkout Stripe {SessionId} criado com metadata PaymentCore. OrderId={OrderId} PlanId={PlanId}",
+            session.Id,
+            paymentCoreMetadata.OrderId,
+            plan.Id);
 
         return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty);
     }
@@ -182,48 +232,21 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
         string email,
         string baseUrl,
         Dictionary<string, string> metadata,
+        PaymentCoreCheckoutMetadata paymentCoreMetadata,
+        StripeConnectRouting routing,
         StripePlanDefinition plan,
         CancellationToken cancellationToken)
     {
-        var sessionOptions = new SessionCreateOptions
-        {
-            Mode = "subscription",
-            SuccessUrl = $"{baseUrl}/checkout/sucesso?session_id={{CHECKOUT_SESSION_ID}}",
-            CancelUrl = $"{baseUrl}/checkout/cancelado",
-            CustomerEmail = email,
-            ClientReferenceId = email,
-            BillingAddressCollection = "required",
-            Metadata = metadata,
-            LineItems =
-            [
-                new SessionLineItemOptions
-                {
-                    Price = plan.PriceId,
-                    Quantity = 1,
-                },
-            ],
-            SubscriptionData = new SessionSubscriptionDataOptions
-            {
-                Description = plan.PlanName,
-                Metadata = metadata,
-                ApplicationFeePercent = _options.PlatformRetentionPercent,
-                TransferData = new SessionSubscriptionDataTransferDataOptions
-                {
-                    Destination = _options.ConnectedAccountId,
-                },
-            },
-        };
+        var sessionOptions = StripeCheckoutSessionBuilder.BuildSubscriptionSessionOptions(
+            email,
+            baseUrl,
+            metadata,
+            plan,
+            _options.PlatformRetentionPercent,
+            ConnectedAccountId,
+            routing);
 
-        if (!string.IsNullOrWhiteSpace(plan.PromotionCouponId))
-        {
-            sessionOptions.Discounts =
-            [
-                new SessionDiscountOptions
-                {
-                    Coupon = plan.PromotionCouponId,
-                },
-            ];
-        }
+        LogSplitRoutingDecision(paymentCoreMetadata, routing, plan);
 
         return await _checkoutSessions.CreateAsync(
             sessionOptions,
@@ -235,6 +258,8 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
         string email,
         string baseUrl,
         Dictionary<string, string> metadata,
+        PaymentCoreCheckoutMetadata paymentCoreMetadata,
+        StripeConnectRouting routing,
         StripePlanDefinition plan,
         CancellationToken cancellationToken)
     {
@@ -246,45 +271,16 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
 
         var unitAmount = price?.UnitAmount ?? 0;
         var feeAmount = (long)Math.Round(unitAmount * (double)_options.PlatformRetentionPercent / 100d);
+        var sessionOptions = StripeCheckoutSessionBuilder.BuildOneTimePaymentSessionOptions(
+            email,
+            baseUrl,
+            metadata,
+            plan,
+            feeAmount,
+            ConnectedAccountId,
+            routing);
 
-        var sessionOptions = new SessionCreateOptions
-        {
-            Mode = "payment",
-            SuccessUrl = $"{baseUrl}/checkout/sucesso?session_id={{CHECKOUT_SESSION_ID}}",
-            CancelUrl = $"{baseUrl}/checkout/cancelado",
-            CustomerEmail = email,
-            ClientReferenceId = email,
-            BillingAddressCollection = "required",
-            Metadata = metadata,
-            LineItems =
-            [
-                new SessionLineItemOptions
-                {
-                    Price = plan.PriceId,
-                    Quantity = 1,
-                },
-            ],
-            PaymentIntentData = new SessionPaymentIntentDataOptions
-            {
-                Metadata = metadata,
-                ApplicationFeeAmount = feeAmount > 0 ? feeAmount : null,
-                TransferData = new SessionPaymentIntentDataTransferDataOptions
-                {
-                    Destination = _options.ConnectedAccountId,
-                },
-            },
-        };
-
-        if (!string.IsNullOrWhiteSpace(plan.PromotionCouponId))
-        {
-            sessionOptions.Discounts =
-            [
-                new SessionDiscountOptions
-                {
-                    Coupon = plan.PromotionCouponId,
-                },
-            ];
-        }
+        LogSplitRoutingDecision(paymentCoreMetadata, routing, plan);
 
         return await _checkoutSessions.CreateAsync(
             sessionOptions,
@@ -309,30 +305,43 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
             throw new InvalidOperationException("Stripe:FrontendBaseUrl nao configurada.");
         }
 
+        if (string.IsNullOrWhiteSpace(ApplicationKey))
+        {
+            throw new InvalidOperationException("Stripe:ApplicationKey nao configurada.");
+        }
+
+        if (string.IsNullOrWhiteSpace(PaymentCoreAppName))
+        {
+            throw new InvalidOperationException("Stripe:PaymentCoreAppName nao configurada.");
+        }
+
+        if (string.IsNullOrWhiteSpace(PaymentCoreTenantId))
+        {
+            throw new InvalidOperationException("Stripe:PaymentCoreTenantId nao configurada.");
+        }
+
+        if (string.IsNullOrWhiteSpace(PaymentCoreSellerId))
+        {
+            throw new InvalidOperationException("Stripe:PaymentCoreSellerId nao configurada.");
+        }
+
+        if (string.IsNullOrWhiteSpace(PaymentCoreSellerName))
+        {
+            throw new InvalidOperationException("Stripe:PaymentCoreSellerName nao configurada.");
+        }
+
         StripeConfiguration.ApiKey = _options.SecretKey;
     }
 
-    private Dictionary<string, string> BuildCheckoutMetadata(
-        string email,
-        string? name,
-        StripePlanDefinition plan)
+    private PaymentCoreCheckoutMetadata BuildPaymentCoreMetadata()
     {
-        var metadata = new Dictionary<string, string>
-        {
-            [AppKeyMetadataKey] = ApplicationKey,
-            [ConnectedAccountMetadataKey] = ConnectedAccountId,
-            [CurrencyMetadataKey] = RequiredCurrency,
-            [EmailMetadataKey] = email,
-            [PlanIdMetadataKey] = plan.Id,
-            [PlanNameMetadataKey] = plan.PlanName,
-        };
-
-        if (!string.IsNullOrWhiteSpace(name))
-        {
-            metadata[NameMetadataKey] = name;
-        }
-
-        return metadata;
+        return new PaymentCoreCheckoutMetadata(
+            ApplicationKey,
+            PaymentCoreAppName,
+            PaymentCoreTenantId,
+            PaymentCoreSellerId,
+            PaymentCoreSellerName,
+            BuildOrderId());
     }
 
     private async Task EnsurePriceIsSupportedAsync(
@@ -391,6 +400,52 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
         return string.IsNullOrWhiteSpace(subscription.Id)
             ? subscription
             : await GetSubscriptionAsync(subscription.Id, cancellationToken);
+    }
+
+    private async Task<StripeConnectRouting> ResolveConnectRoutingAsync(CancellationToken cancellationToken)
+    {
+        var account = await _accounts.GetAsync(
+            ConnectedAccountId,
+            options: null,
+            requestOptions: null,
+            cancellationToken: cancellationToken);
+
+        var connectedAccountCountry = Normalize(account?.Country);
+
+        if (string.IsNullOrWhiteSpace(connectedAccountCountry))
+        {
+            throw new InvalidOperationException(
+                $"Stripe: nao foi possivel determinar o pais da connected account '{ConnectedAccountId}'.");
+        }
+
+        var useConnectSplit = !string.Equals(connectedAccountCountry, "br", StringComparison.OrdinalIgnoreCase)
+            && IsSplitSupportedCountry(connectedAccountCountry);
+
+        return new StripeConnectRouting(connectedAccountCountry, useConnectSplit);
+    }
+
+    private void LogSplitRoutingDecision(
+        PaymentCoreCheckoutMetadata paymentCoreMetadata,
+        StripeConnectRouting routing,
+        StripePlanDefinition plan)
+    {
+        if (routing.UseConnectSplit)
+        {
+            _logger.LogInformation(
+                "Checkout {OrderId} do plano {PlanId} mantera Stripe Connect split para a connected account {ConnectedAccountId} no pais {ConnectedAccountCountry}.",
+                paymentCoreMetadata.OrderId,
+                plan.Id,
+                ConnectedAccountId,
+                routing.ConnectedAccountCountry);
+            return;
+        }
+
+        _logger.LogInformation(
+            "Checkout {OrderId} do plano {PlanId} sera cobrado 100% na conta principal Stripe. Connected account {ConnectedAccountId} no pais {ConnectedAccountCountry} sem split; o PaymentCore calculara o repasse depois.",
+            paymentCoreMetadata.OrderId,
+            plan.Id,
+            ConnectedAccountId,
+            routing.ConnectedAccountCountry);
     }
 
     private IEnumerable<StripePlanDefinition> GetConfiguredPlans()
@@ -464,7 +519,37 @@ public sealed class StripeBillingService(IOptions<StripeBillingOptions> options)
 
     private string ConnectedAccountId => Normalize(_options.ConnectedAccountId);
 
+    private string PaymentCoreAppName => ApiMappers.Clean(_options.PaymentCoreAppName);
+
+    private string PaymentCoreTenantId => ApiMappers.Clean(_options.PaymentCoreTenantId);
+
+    private string PaymentCoreSellerId => ApiMappers.Clean(_options.PaymentCoreSellerId);
+
+    private string PaymentCoreSellerName => ApiMappers.Clean(_options.PaymentCoreSellerName);
+
     private string RequiredCurrency => Normalize(_options.RequiredCurrency, "brl");
+
+    private string BuildOrderId()
+    {
+        return $"{ApplicationKey}-{Guid.NewGuid():N}";
+    }
+
+    private bool IsSplitSupportedCountry(string countryCode)
+    {
+        return ResolveSplitSupportedCountries().Contains(countryCode, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private IReadOnlyList<string> ResolveSplitSupportedCountries()
+    {
+        var configuredCountries = _options.ConnectSplitSupportedCountries ?? [];
+        var normalizedCountries = configuredCountries
+            .Select(country => Normalize(country))
+            .Where(country => !string.IsNullOrWhiteSpace(country))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return normalizedCountries.Length > 0 ? normalizedCountries : ["ca"];
+    }
 
     private static string ReadMetadata(Dictionary<string, string>? metadata, string key)
     {

@@ -85,3 +85,5 @@ pids/
 backend/CodigoJudaico.Api/bin
 backend/CodigoJudaico.Api/obj
 backend/CodigoJudaico.Api/appsettings.Production.json
+backend/CodigoJudaico.Api.Tests/bin
+backend/CodigoJudaico.Api.Tests/obj

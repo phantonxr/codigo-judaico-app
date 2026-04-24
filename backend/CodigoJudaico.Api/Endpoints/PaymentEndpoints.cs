@@ -154,7 +154,7 @@ public static class PaymentEndpoints
                 logger.LogError(ex, "Falha de configuracao ao criar checkout do plano {PlanId} para {Email}.", plan.Id, email);
                 return Results.Problem(
                     title: "Checkout indisponivel no momento.",
-                    detail: "O checkout desse plano ainda nao esta configurado corretamente no Stripe. Revise o PriceId e tente novamente.",
+                    detail: BuildCheckoutConfigurationErrorDetail(ex),
                     statusCode: StatusCodes.Status503ServiceUnavailable);
             }
             catch (StripeException ex)
@@ -300,5 +300,20 @@ public static class PaymentEndpoints
         }
 
         return null;
+    }
+
+    private static string BuildCheckoutConfigurationErrorDetail(InvalidOperationException exception)
+    {
+        var message = ApiMappers.Clean(exception.Message);
+
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return "O checkout desse plano ainda nao esta configurado corretamente no Stripe.";
+        }
+
+        return message.StartsWith("Stripe:", StringComparison.OrdinalIgnoreCase)
+            || message.StartsWith("PaymentCore", StringComparison.OrdinalIgnoreCase)
+            ? message
+            : "O checkout desse plano ainda nao esta configurado corretamente no Stripe.";
     }
 }

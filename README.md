@@ -5,7 +5,8 @@ Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stri
 ## O que mudou
 
 - checkout da Kirvano substituido por Stripe Checkout
-- suporte a Stripe Connect com retencao da plataforma e repasse para `connected account`
+- metadata obrigatoria para o PaymentCore em todo checkout Stripe
+- split condicional por pais da `connected account`: paises suportados mantem Stripe Connect; contas BR cobram 100% na conta principal
 - login real com e-mail + senha criada no checkout, com e-mail de acesso apos pagamento confirmado
 - sessao autenticada por token no frontend e no backend
 - webhook Stripe para ativar o usuario, sincronizar assinatura e atualizar proxima cobranca
@@ -17,15 +18,17 @@ Frontend em React/Vite com backend em ASP.NET Core 10, PostgreSQL, checkout Stri
 1. O primeiro checkout publico usa o plano `primeiro-acesso`: 21 dias por `R$ 29,90`.
 2. O frontend pede ao backend uma Checkout Session do Stripe para o plano escolhido.
 3. A API cria a conta antes do pagamento e envia um e-mail avisando que o cadastro foi criado.
-4. O pagamento acontece no Stripe.
-5. O webhook `POST /api/payments/webhooks/stripe` confirma a compra.
-6. Quando o pagamento libera o acesso, a API atualiza o prazo da assinatura, envia o e-mail de acesso e grava a proxima data de cobranca.
-7. Depois que o usuario ja teve acesso, a tela `/assinatura` oferece:
+4. Antes de criar a sessao, a API valida a metadata obrigatoria do PaymentCore: `app_id`, `app_name`, `tenant_id`, `seller_id`, `seller_name` e `order_id`.
+5. O pagamento acontece no Stripe.
+6. O PaymentCore usa essa metadata para identificar app, seller, tenant e pedido no webhook centralizado.
+7. O webhook `POST /api/payments/webhooks/stripe` continua disponivel para reconciliacao/local processing deste app.
+8. Quando o pagamento libera o acesso, a API atualiza o prazo da assinatura, envia o e-mail de acesso e grava a proxima data de cobranca.
+9. Depois que o usuario ja teve acesso, a tela `/assinatura` oferece:
    - `renovacao`: +21 dias por `R$ 17,90` (somente uma vez)
    - `mensal`: `R$ 37,90`
    - `anual`: `R$ 297,90`
    - `vitalicio`: `R$ 497,90`
-8. Se a assinatura vencer, o usuario continua autenticando, mas as areas premium ficam bloqueadas ate renovar pela tela `/assinatura`.
+10. Se a assinatura vencer, o usuario continua autenticando, mas as areas premium ficam bloqueadas ate renovar pela tela `/assinatura`.
 
 ## Configuracao obrigatoria
 
@@ -39,8 +42,13 @@ Stripe__WebhookSecret=whsec_...
 Stripe__ConnectedAccountId=acct_...
 Stripe__FrontendBaseUrl=https://seu-dominio.com
 Stripe__ApplicationKey=codigo-judaico
+Stripe__PaymentCoreAppName=Codigo Judaico
+Stripe__PaymentCoreTenantId=tenant_...
+Stripe__PaymentCoreSellerId=seller_...
+Stripe__PaymentCoreSellerName=Codigo Judaico
 Stripe__RequiredCurrency=brl
 Stripe__PlatformRetentionPercent=2
+Stripe__ConnectSplitSupportedCountries__0=ca
 
 Stripe__FirstAccess__PriceId=price_...
 Stripe__FirstAccess__PlanName=Primeiro Acesso
@@ -67,7 +75,9 @@ Resend__InboundWebhookDisableVerification=false
 
 Observacoes:
 
-- `Stripe__ApplicationKey` marca os checkouts e webhooks deste app. Use um valor exclusivo por projeto para evitar processar eventos de outros sistemas na mesma conta Stripe.
+- `Stripe__ApplicationKey` e o `app_id` fixo enviado ao Stripe por este app. Neste projeto, o valor esperado e `codigo-judaico`.
+- `Stripe__PaymentCoreAppName`, `Stripe__PaymentCoreTenantId`, `Stripe__PaymentCoreSellerId` e `Stripe__PaymentCoreSellerName` sao obrigatorios. Se algum estiver vazio, a API nao cria a Checkout Session.
+- `Stripe__ConnectSplitSupportedCountries` lista os paises que podem continuar usando Stripe Connect split. Por padrao, o projeto considera `ca`.
 - `Stripe__RequiredCurrency` deve ficar como `brl`. O backend valida a moeda do `Price` antes de abrir o checkout e ignora webhooks com `Price` fora dessa moeda.
 - `Stripe__FirstAccess__PriceId` e obrigatorio para o checkout inicial de 21 dias por `R$ 29,90`.
 - `Stripe__Renewal__PriceId` e obrigatorio se voce quiser vender a renovacao especial de `R$ 17,90`.
@@ -75,10 +85,26 @@ Observacoes:
 - `Stripe__Lifetime__PriceId` e obrigatorio se voce quiser habilitar o acesso vitalicio.
 - `Stripe__FirstAccess__PlanName`, `Stripe__Renewal__PlanName`, `Stripe__Monthly__PlanName`, `Stripe__Annual__PlanName` e `Stripe__Lifetime__PlanName` sao usados como rotulo interno no app, metadata do checkout e descricao da compra.
 - `Stripe__Monthly__PromotionCouponId` so e aplicado quando estiver preenchido.
-- o repasse para a connected account usa `transfer_data.destination` com `application_fee_percent`; por padrao, `2%` vira taxa da plataforma no Stripe e aparece em `Collected fees`.
+- toda Checkout Session envia tambem `app_id`, `app_name`, `tenant_id`, `seller_id`, `seller_name` e `order_id` na `Session.Metadata`. Quando o modo e `payment`, a API duplica esses mesmos campos em `PaymentIntentData.Metadata`.
+- para `connected accounts` BR, a API nao envia `transfer_data.destination`, `application_fee_amount`, `application_fee_percent`, `on_behalf_of` nem `Stripe-Account`; o pagamento vai 100% para a conta principal e o PaymentCore calcula o repasse.
+- para `connected accounts` de paises suportados como `CA`, o fluxo atual de Stripe Connect split continua usando `transfer_data.destination` e taxa da plataforma.
+- o PaymentCore depende dessa metadata para processar o webhook centralizado corretamente.
 - `Resend__Enabled` deve ficar `true` no ambiente que realmente vai enviar os e-mails.
 - `Resend__InboundWebhookSecret` e `Resend__InboundWebhookDisableVerification` ficam prontos para o momento em que voce adicionar um webhook inbound da Resend. O fluxo atual de liberacao de acesso usa apenas envio.
 - se `Resend` estiver habilitado sem `ApiKey` ou `From`, a API vai liberar o acesso mesmo assim, mas registrara um aviso e nao conseguira enviar o e-mail.
+
+## Metadata PaymentCore
+
+Todo checkout enviado ao Stripe inclui os campos abaixo para o webhook centralizado:
+
+- `app_id`: `codigo-judaico`
+- `app_name`: configurado em `Stripe__PaymentCoreAppName`
+- `tenant_id`: configurado em `Stripe__PaymentCoreTenantId`
+- `seller_id`: configurado em `Stripe__PaymentCoreSellerId`
+- `seller_name`: configurado em `Stripe__PaymentCoreSellerName`
+- `order_id`: gerado internamente pela API para cada checkout antes da chamada ao Stripe
+
+Esses campos acompanham tanto pagamentos com split quanto pagamentos sem split.
 
 ## Stripe
 
@@ -178,6 +204,11 @@ No servico `api`, se a string de conexao estiver no `appsettings.Production.json
 - `Stripe__ConnectedAccountId`
 - `Stripe__FrontendBaseUrl`
 - `Stripe__ApplicationKey`
+- `Stripe__PaymentCoreAppName`
+- `Stripe__PaymentCoreTenantId`
+- `Stripe__PaymentCoreSellerId`
+- `Stripe__PaymentCoreSellerName`
+- `Stripe__ConnectSplitSupportedCountries__0`
 - `Stripe__FirstAccess__PriceId`
 - `Stripe__Renewal__PriceId`
 - `Stripe__Monthly__PriceId`

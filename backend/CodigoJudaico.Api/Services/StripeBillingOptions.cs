@@ -10,6 +10,11 @@ public sealed class StripeBillingOptions
     public decimal PlatformRetentionPercent { get; set; } = 10m;
     public string FrontendBaseUrl { get; set; } = "http://localhost:5173";
     public string ApplicationKey { get; set; } = "codigo-judaico";
+    public string PaymentCoreAppName { get; set; } = "Codigo Judaico";
+    public string PaymentCoreTenantId { get; set; } = string.Empty;
+    public string PaymentCoreSellerId { get; set; } = string.Empty;
+    public string PaymentCoreSellerName { get; set; } = string.Empty;
+    public string[] ConnectSplitSupportedCountries { get; set; } = ["ca"];
     public string RequiredCurrency { get; set; } = "brl";
     public StripeCheckoutPlanOptions FirstAccess { get; set; } = new();
     public StripeCheckoutPlanOptions Renewal { get; set; } = new();

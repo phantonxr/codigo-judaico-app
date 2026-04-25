@@ -112,6 +112,23 @@ public static class MentorEndpoints
 
             var payload = fallbackService.BuildDailyFeedback(request.CurrentDay ?? 0);
 
+            return Results.Ok(new DailyFeedbackResponse(
+                payload.Summary,
+                payload.Correction,
+                payload.MacroLesson,
+                payload.Blindspot,
+                payload.JewishWisdom,
+                payload.Proverb,
+                payload.NextFocus,
+                payload.ExtraTask,
+                payload.TomorrowFocus));
+        });
+
+        // New endpoints requested (do not require premium filter; they manage limits internally).
+        var mentorGroup = app.MapGroup("/api/mentor")
+            .WithTags("Mentor")
+            .RequireAuthorization();
+
         mentorGroup.MapGet("/daily-feedback", async (
             ClaimsPrincipal userPrincipal,
             string? phase,
@@ -150,23 +167,6 @@ public static class MentorEndpoints
                 existing.PracticalAction,
                 existing.FeedbackText));
         });
-
-            return Results.Ok(new DailyFeedbackResponse(
-                payload.Summary,
-                payload.Correction,
-                payload.MacroLesson,
-                payload.Blindspot,
-                payload.JewishWisdom,
-                payload.Proverb,
-                payload.NextFocus,
-                payload.ExtraTask,
-                payload.TomorrowFocus));
-        });
-
-        // New endpoints requested (do not require premium filter; they manage limits internally).
-        var mentorGroup = app.MapGroup("/api/mentor")
-            .WithTags("Mentor")
-            .RequireAuthorization();
 
         mentorGroup.MapGet("/usage", async (
             ClaimsPrincipal userPrincipal,

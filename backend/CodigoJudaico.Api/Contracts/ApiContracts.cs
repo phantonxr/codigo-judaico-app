@@ -9,7 +9,33 @@ public sealed record UserDto(
     string Plan,
     string PlanStatus,
     string? NextChargeDate,
-    bool HasActiveAccess);
+    bool HasActiveAccess,
+    bool IsMasterUser);
+
+public sealed record AdminSubscriberDto(
+    Guid Id,
+    string Email,
+    string Name,
+    string Plan,
+    string PlanStatus,
+    string? NextChargeDate,
+    bool HasActiveAccess,
+    bool AccessEnabled,
+    int? DaysUntilExpiration,
+    string? AccessGrantedAt,
+    string CreatedAt,
+    string UpdatedAt,
+    string StripeCustomerId,
+    string StripeSubscriptionId,
+    string LastStripeCheckoutSessionId,
+    bool HasUsedRenewalOffer);
+
+public sealed record AdminSubscribersResponse(
+    int TotalSubscribers,
+    int ActiveSubscribers,
+    int ExpiredSubscribers,
+    int PendingSubscribers,
+    IReadOnlyList<AdminSubscriberDto> Subscribers);
 
 public sealed record DiagnosisDto(
     string TrackId,

@@ -1,3 +1,4 @@
+using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Models;
 using CodigoJudaico.Api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +9,14 @@ namespace CodigoJudaico.Api.Data;
 public sealed class AppDbInitializer(
     AppDbContext dbContext,
     CatalogSeedLoader catalogSeedLoader,
+    PasswordHashService passwordHashService,
+    IConfiguration configuration,
     ILogger<AppDbInitializer> logger)
 {
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         await dbContext.Database.MigrateAsync(cancellationToken);
+        await EnsureConfiguredMasterUserAsync(cancellationToken);
 
         if (await dbContext.Lessons.AnyAsync(cancellationToken))
         {
@@ -74,5 +78,55 @@ public sealed class AppDbInitializer(
             seed.Plans.Count,
             seed.Offers.Count,
             seed.WisdomSnippets.Count);
+    }
+
+    private async Task EnsureConfiguredMasterUserAsync(CancellationToken cancellationToken)
+    {
+        var email = ApiMappers.NormalizeEmail(configuration["MasterUser:Email"]);
+        var password = (configuration["MasterUser:Password"] ?? string.Empty).Trim();
+        var name = (configuration["MasterUser:Name"] ?? "Master").Trim();
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            return;
+        }
+
+        if (password.Length < 8)
+        {
+            logger.LogWarning(
+                "MasterUser configurado para {Email}, mas a senha tem menos de 8 caracteres. O usuario master nao foi criado.",
+                email);
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
+
+        if (user is null)
+        {
+            user = new AppUser
+            {
+                Id = Guid.NewGuid(),
+                Email = email,
+                Name = string.IsNullOrWhiteSpace(name) ? "Master" : name,
+                CreatedAt = now,
+            };
+
+            dbContext.Users.Add(user);
+        }
+        else if (!string.IsNullOrWhiteSpace(name))
+        {
+            user.Name = name;
+        }
+
+        user.IsMasterUser = true;
+        user.PasswordHash = passwordHashService.HashPassword(password);
+        user.PlanName = string.IsNullOrWhiteSpace(user.PlanName) ? "Master" : user.PlanName;
+        user.PlanStatus = string.IsNullOrWhiteSpace(user.PlanStatus) ? "Acesso master" : user.PlanStatus;
+        user.UpdatedAt = now;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Usuario master configurado para {Email}.", email);
     }
 }

@@ -253,12 +253,19 @@ textarea {
   grid-template-columns: 1fr;
 }
 
+.grid-4 {
+  grid-template-columns: 1fr;
+}
+
 @media (min-width: 860px) {
   .grid-2 {
     grid-template-columns: 1fr 1fr;
   }
   .grid-3 {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+  .grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -714,6 +721,89 @@ textarea {
 .input:focus {
   border-color: rgba(215, 178, 74, 0.45);
   box-shadow: 0 0 0 4px rgba(215, 178, 74, 0.12);
+}
+
+.admin-toolbar {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-search-field {
+  min-width: 0;
+}
+
+.admin-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-search-box svg {
+  position: absolute;
+  left: 12px;
+  color: rgba(255, 255, 255, 0.56);
+  pointer-events: none;
+}
+
+.admin-search-box .input {
+  padding-left: 38px;
+}
+
+.admin-toolbar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table code {
+  max-width: 190px;
+  display: inline-block;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.78);
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+@media (min-width: 760px) {
+  .admin-toolbar {
+    grid-template-columns: minmax(260px, 1fr) 180px auto;
+  }
 }
 
 /* Chat */

@@ -106,6 +106,10 @@ internal static class StripeCheckoutSessionBuilder
                 },
             ];
         }
+        else
+        {
+            sessionOptions.AllowPromotionCodes = true;
+        }
 
         return sessionOptions;
     }
@@ -162,6 +166,10 @@ internal static class StripeCheckoutSessionBuilder
                     Coupon = plan.PromotionCouponId,
                 },
             ];
+        }
+        else
+        {
+            sessionOptions.AllowPromotionCodes = true;
         }
 
         return sessionOptions;

@@ -12,7 +12,10 @@ internal sealed record PaymentCoreCheckoutMetadata(
 
 internal sealed record StripeConnectRouting(
     string ConnectedAccountCountry,
-    bool UseConnectSplit);
+    bool UseConnectSplit)
+{
+    internal static readonly StripeConnectRouting Direct = new(string.Empty, false);
+}
 
 internal static class StripeCheckoutSessionBuilder
 {

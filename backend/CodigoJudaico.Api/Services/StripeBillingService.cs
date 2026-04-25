@@ -35,7 +35,6 @@ public sealed class StripeBillingService(
     private readonly SessionService _checkoutSessions = new();
     private readonly SubscriptionService _subscriptions = new();
     private readonly PriceService _prices = new();
-    private readonly AccountService _accounts = new();
 
     public StripePlanDefinition GetPlan(string planId)
     {
@@ -143,18 +142,16 @@ public sealed class StripeBillingService(
             name,
             plan,
             paymentCoreMetadata);
-        var routing = await ResolveConnectRoutingAsync(cancellationToken);
+        var routing = StripeConnectRouting.Direct;
 
         _logger.LogInformation(
-            "Criando checkout Stripe para PaymentCore. PlanId={PlanId} OrderId={OrderId} AppId={AppId} TenantId={TenantId} SellerId={SellerId} SellerName={SellerName} SplitViaConnect={UseConnectSplit} ConnectedAccountCountry={ConnectedAccountCountry}",
+            "Criando checkout Stripe para PaymentCore. PlanId={PlanId} OrderId={OrderId} AppId={AppId} TenantId={TenantId} SellerId={SellerId} SellerName={SellerName}",
             plan.Id,
             paymentCoreMetadata.OrderId,
             paymentCoreMetadata.AppId,
             paymentCoreMetadata.TenantId,
             paymentCoreMetadata.SellerId,
-            paymentCoreMetadata.SellerName,
-            routing.UseConnectSplit,
-            routing.ConnectedAccountCountry);
+            paymentCoreMetadata.SellerName);
 
         Session session;
 
@@ -247,8 +244,6 @@ public sealed class StripeBillingService(
             ConnectedAccountId,
             routing);
 
-        LogSplitRoutingDecision(paymentCoreMetadata, routing, plan);
-
         return await _checkoutSessions.CreateAsync(
             sessionOptions,
             requestOptions: null,
@@ -281,8 +276,6 @@ public sealed class StripeBillingService(
             ConnectedAccountId,
             routing);
 
-        LogSplitRoutingDecision(paymentCoreMetadata, routing, plan);
-
         return await _checkoutSessions.CreateAsync(
             sessionOptions,
             requestOptions: null,
@@ -294,11 +287,6 @@ public sealed class StripeBillingService(
         if (string.IsNullOrWhiteSpace(_options.SecretKey))
         {
             throw new InvalidOperationException("Stripe:SecretKey nao configurada.");
-        }
-
-        if (string.IsNullOrWhiteSpace(_options.ConnectedAccountId))
-        {
-            throw new InvalidOperationException("Stripe:ConnectedAccountId nao configurada.");
         }
 
         if (string.IsNullOrWhiteSpace(_options.FrontendBaseUrl))
@@ -403,52 +391,6 @@ public sealed class StripeBillingService(
             : await GetSubscriptionAsync(subscription.Id, cancellationToken);
     }
 
-    private async Task<StripeConnectRouting> ResolveConnectRoutingAsync(CancellationToken cancellationToken)
-    {
-        var account = await _accounts.GetAsync(
-            ConnectedAccountId,
-            options: null,
-            requestOptions: null,
-            cancellationToken: cancellationToken);
-
-        var connectedAccountCountry = Normalize(account?.Country);
-
-        if (string.IsNullOrWhiteSpace(connectedAccountCountry))
-        {
-            throw new InvalidOperationException(
-                $"Stripe: nao foi possivel determinar o pais da connected account '{ConnectedAccountId}'.");
-        }
-
-        var useConnectSplit = !string.Equals(connectedAccountCountry, "br", StringComparison.OrdinalIgnoreCase)
-            && IsSplitSupportedCountry(connectedAccountCountry);
-
-        return new StripeConnectRouting(connectedAccountCountry, useConnectSplit);
-    }
-
-    private void LogSplitRoutingDecision(
-        PaymentCoreCheckoutMetadata paymentCoreMetadata,
-        StripeConnectRouting routing,
-        StripePlanDefinition plan)
-    {
-        if (routing.UseConnectSplit)
-        {
-            _logger.LogInformation(
-                "Checkout {OrderId} do plano {PlanId} mantera Stripe Connect split para a connected account {ConnectedAccountId} no pais {ConnectedAccountCountry}.",
-                paymentCoreMetadata.OrderId,
-                plan.Id,
-                ConnectedAccountId,
-                routing.ConnectedAccountCountry);
-            return;
-        }
-
-        _logger.LogInformation(
-            "Checkout {OrderId} do plano {PlanId} sera cobrado 100% na conta principal Stripe. Connected account {ConnectedAccountId} no pais {ConnectedAccountCountry} sem split; o PaymentCore calculara o repasse depois.",
-            paymentCoreMetadata.OrderId,
-            plan.Id,
-            ConnectedAccountId,
-            routing.ConnectedAccountCountry);
-    }
-
     private IEnumerable<StripePlanDefinition> GetConfiguredPlans()
     {
         var firstAccess = TryBuildPlan("primeiro-acesso", _options.FirstAccess, "Primeiro Acesso", isOneTime: true);
@@ -533,23 +475,6 @@ public sealed class StripeBillingService(
     private string BuildOrderId()
     {
         return $"{ApplicationKey}-{Guid.NewGuid():N}";
-    }
-
-    private bool IsSplitSupportedCountry(string countryCode)
-    {
-        return ResolveSplitSupportedCountries().Contains(countryCode, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private IReadOnlyList<string> ResolveSplitSupportedCountries()
-    {
-        var configuredCountries = _options.ConnectSplitSupportedCountries ?? [];
-        var normalizedCountries = configuredCountries
-            .Select(country => Normalize(country))
-            .Where(country => !string.IsNullOrWhiteSpace(country))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        return normalizedCountries.Length > 0 ? normalizedCountries : ["ca"];
     }
 
     private static string ReadMetadata(Dictionary<string, string>? metadata, string key)

@@ -14,6 +14,9 @@ public sealed class StripeWebhookProcessor(
     AccessEmailService accessEmailService,
     ILogger<StripeWebhookProcessor> logger)
 {
+    private const string MentorUnlimitedPlanId = "mentor-ilimitado";
+    private const string MentorUnlimitedPlanType = "mentor_unlimited";
+
     public async Task ProcessAsync(Event stripeEvent, CancellationToken cancellationToken)
     {
         if (ShouldIgnoreEvent(stripeEvent))
@@ -153,6 +156,33 @@ public sealed class StripeWebhookProcessor(
         var planName = ReadMetadata(session.Metadata, StripeBillingService.PlanNameMetadataKey);
         var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
         var now = DateTimeOffset.UtcNow;
+
+        if (string.Equals(matchedPlan.Id, MentorUnlimitedPlanId, StringComparison.OrdinalIgnoreCase))
+        {
+            user ??= new AppUser
+            {
+                Id = Guid.NewGuid(),
+                Email = email,
+                Name = string.IsNullOrWhiteSpace(name) ? "Aluno" : name,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+
+            if (dbContext.Entry(user).State == EntityState.Detached)
+            {
+                dbContext.Users.Add(user);
+            }
+
+            await UpsertMentorUnlimitedSubscriptionAsync(
+                user,
+                subscription,
+                string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName,
+                cancellationToken);
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
         var accessWasEnabled = user?.AccessEnabled ?? false;
         var lastCompletedCheckoutSessionId = user?.LastStripeCheckoutSessionId;
 
@@ -209,7 +239,57 @@ public sealed class StripeWebhookProcessor(
             return;
         }
 
+        if (string.Equals(matchedPlan.Id, MentorUnlimitedPlanId, StringComparison.OrdinalIgnoreCase))
+        {
+            var user = await FindUserAsync(subscription, null, cancellationToken);
+
+            if (user is null)
+            {
+                return;
+            }
+
+            await UpsertMentorUnlimitedSubscriptionAsync(user, subscription, matchedPlan.PlanName, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
         await ApplySubscriptionStateAsync(subscription, null, null, matchedPlan.PlanName, cancellationToken);
+    }
+
+    private async Task UpsertMentorUnlimitedSubscriptionAsync(
+        AppUser user,
+        Subscription? stripeSubscription,
+        string planName,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var stripeStatus = stripeSubscription?.Status ?? "active";
+        var status = stripeStatus is "active" or "trialing"
+            ? "active"
+            : ApiMappers.Clean(stripeStatus);
+
+        var existing = await dbContext.Subscriptions
+            .OrderByDescending(x => x.UpdatedAt)
+            .FirstOrDefaultAsync(
+                x => x.UserId == user.Id && x.PlanType == MentorUnlimitedPlanType,
+                cancellationToken);
+
+        if (existing is null)
+        {
+            existing = new UserSubscription
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                CreatedAt = now,
+            };
+
+            dbContext.Subscriptions.Add(existing);
+        }
+
+        existing.PlanName = planName;
+        existing.PlanType = MentorUnlimitedPlanType;
+        existing.Status = string.IsNullOrWhiteSpace(status) ? "active" : status;
+        existing.UpdatedAt = now;
     }
 
     private async Task ApplySubscriptionStateAsync(

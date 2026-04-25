@@ -155,12 +155,48 @@ function parseAIResponse(text) {
  * Gera feedback diario real via OpenAI (backend).
  */
 export async function generateDailyFeedback(payload) {
-  var prompt = buildDailyPrompt(payload)
-
   var controller = new AbortController()
   var timeout = setTimeout(function () { controller.abort() }, 25000)
 
   try {
+    // Prefer v2 endpoint (persists + returns structured fields)
+    try {
+      var dataV2 = await apiFetch('/api/mentor/daily-feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+          phase: payload.phase || (payload.currentDay >= 21 ? 'macro' : '21d'),
+          dayNumber: Number(payload.currentDay ?? 0) + 1,
+          completedTasks: payload.completedTasks || [],
+          partialTasks: payload.partialTasks || [],
+          notCompletedTasks: payload.notCompletedTasks || [],
+          reflectionText: payload.reflection || '',
+          emotionText: payload.howFelt || '',
+          triggerText: payload.emotionalTrigger || '',
+          currentTrack: payload.trailType || '',
+        }),
+        signal: controller.signal,
+      })
+
+      return {
+        detectedTrigger: dataV2.detectedTrigger || '',
+        emotionalPattern: dataV2.emotionalPattern || '',
+        financialRisk: dataV2.financialRisk || '',
+        jewishWisdom: dataV2.jewishWisdom || '',
+        practicalAction: dataV2.practicalAction || '',
+        feedbackText: dataV2.feedbackText || '',
+
+        // Legacy-compatible fields used in existing UI
+        summary: dataV2.feedbackText || '',
+        correction: dataV2.financialRisk || '',
+        proverb: '',
+        nextFocus: dataV2.practicalAction || '',
+      }
+    } catch {
+      // Fall back to legacy endpoint (does not persist)
+    }
+
+    var prompt = buildDailyPrompt(payload)
+
     var data = await apiFetch('/api/rabino-daily-feedback', {
       method: 'POST',
       body: JSON.stringify({
@@ -174,13 +210,13 @@ export async function generateDailyFeedback(payload) {
       }),
       signal: controller.signal,
     })
+
     var reply = data.reply || data.message || data.output || ''
 
     if (!reply && !data.summary && !data.macroLesson) {
       throw new Error('Resposta vazia')
     }
 
-    // Backend might return structured JSON directly
     if (data.summary || data.macroLesson) {
       return {
         summary: data.summary || '',
@@ -198,6 +234,30 @@ export async function generateDailyFeedback(payload) {
     return parseAIResponse(reply)
   } finally {
     clearTimeout(timeout)
+  }
+}
+
+export async function getSavedDailyFeedback(params) {
+  var phase = safeTrim(params?.phase)
+  var dayNumber = Number(params?.dayNumber ?? 0)
+  if (!phase || !dayNumber) throw new Error('Parametros invalidos')
+
+  var dataV2 = await apiFetch(
+    `/api/mentor/daily-feedback?phase=${encodeURIComponent(phase)}&dayNumber=${encodeURIComponent(String(dayNumber))}`,
+  )
+
+  return {
+    detectedTrigger: dataV2.detectedTrigger || '',
+    emotionalPattern: dataV2.emotionalPattern || '',
+    financialRisk: dataV2.financialRisk || '',
+    jewishWisdom: dataV2.jewishWisdom || '',
+    practicalAction: dataV2.practicalAction || '',
+    feedbackText: dataV2.feedbackText || '',
+
+    summary: dataV2.feedbackText || '',
+    correction: dataV2.financialRisk || '',
+    proverb: '',
+    nextFocus: dataV2.practicalAction || '',
   }
 }
 

@@ -21,6 +21,7 @@ public sealed class StripeBillingOptions
     public StripeCheckoutPlanOptions Monthly { get; set; } = new();
     public StripeCheckoutPlanOptions Annual { get; set; } = new();
     public StripeCheckoutPlanOptions Lifetime { get; set; } = new();
+    public StripeCheckoutPlanOptions MentorUnlimited { get; set; } = new();
 }
 
 public sealed class StripeCheckoutPlanOptions

@@ -1,13 +1,15 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   buildRabinoPayload,
   fallbackRabinoReply,
-  sendMessageToRabino,
+  getMentorUsage,
+  sendMessageToMentor,
 } from '../services/rabinoMentorService.js'
 import { readJson, mergeJson, remove } from '../utils/storage.js'
 import { readDiagnosis, readAssignedTrack } from './useFinancialDiagnosis.js'
 import { getCurrentDayIndex } from './useJourneyProgress.js'
 import { deleteMentorMessagesOnServer } from '../services/sessionSync.js'
+import { createMentorUnlimitedCheckoutSession } from '../services/payments.js'
 
 function chatKey(userId) {
   return `mentor_chat:${userId ?? 'anon'}`
@@ -26,6 +28,8 @@ export function useRabinoMentor(userProfile) {
   const storageKey = useMemo(() => chatKey(userProfile?.id), [userProfile?.id])
   const lastUserMessageRef = useRef('')
   const [lastError, setLastError] = useState('')
+  const [usage, setUsage] = useState(null)
+  const [blocked, setBlocked] = useState(null)
 
   const initial = useMemo(() => {
     const saved = readJson(storageKey, null)
@@ -34,8 +38,8 @@ export function useRabinoMentor(userProfile) {
     const diag = readDiagnosis()
     const track = readAssignedTrack()
     const greeting = diag && track
-      ? `Shalom. Vejo que sua trilha é "${diag.trackLabel}". Estou aqui para te orientar nessa jornada. Como posso te ajudar hoje?`
-      : 'Shalom. Vamos começar com clareza: qual é o seu objetivo financeiro para os próximos 30 dias?'
+      ? `Vejo que sua trilha é "${diag.trackLabel}". Estou aqui para te orientar nessa jornada. Como posso te ajudar hoje?`
+      : 'Vamos com clareza: qual é o seu objetivo financeiro para os próximos 30 dias?'
 
     return [
       {
@@ -49,6 +53,39 @@ export function useRabinoMentor(userProfile) {
 
   const [messages, setMessages] = useState(initial)
   const [isAsking, setIsAsking] = useState(false)
+
+  const refreshUsage = useCallback(async () => {
+    try {
+      const next = await getMentorUsage()
+      setUsage(next)
+      if (next?.canSendMessage === false) {
+        setBlocked({
+          code: 'mentor_usage_limit_reached',
+          message: 'Você atingiu o limite de interações de hoje no plano limitado.',
+          interactionsToday: next.interactionsToday,
+          dailyLimit: next.dailyLimit,
+          planType: next.planType,
+          ctaLabel: 'Desbloquear Rabino Mentor Ilimitado',
+          upsellName: 'Acompanhamento Rabínico Ilimitado',
+          upsellPrice: 'R$ 17,90/mês',
+        })
+      } else {
+        setBlocked(null)
+      }
+    } catch {
+      // Ignore usage failures; chat can still attempt.
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshUsage()
+  }, [refreshUsage, userProfile?.id])
+
+  const startMentorUnlimitedCheckout = useCallback(async () => {
+    const data = await createMentorUnlimitedCheckoutSession()
+    const url = String(data?.url ?? '')
+    if (url) window.location.href = url
+  }, [])
 
   const persist = useCallback((nextMessages) => {
     mergeJson(storageKey, { messages: nextMessages }, { messages: [] })
@@ -64,12 +101,13 @@ export function useRabinoMentor(userProfile) {
         id: makeId('a'),
         role: 'assistant',
         content:
-          'Shalom. Me diga: qual é o seu objetivo financeiro para os próximos 30 dias, em um número?',
+          'Me diga: qual é o seu objetivo financeiro para os próximos 30 dias, em um número?',
         timestamp: 'agora',
       },
     ]
     setMessages(reset)
     setLastError('')
+    setBlocked(null)
     persist(reset)
   }, [persist, storageKey, userProfile?.id])
 
@@ -115,6 +153,7 @@ export function useRabinoMentor(userProfile) {
       if (!trimmed) return
 
       setLastError('')
+      setBlocked(null)
       lastUserMessageRef.current = trimmed
 
       const userMsg = {
@@ -154,7 +193,14 @@ export function useRabinoMentor(userProfile) {
 
         let answer = ''
         try {
-          answer = await sendMessageToRabino(payload)
+          const result = await sendMessageToMentor(payload)
+
+          if (result.status === 'blocked') {
+            setBlocked(result.blocked)
+            answer = String(result.blocked?.message || 'Limite diario atingido.')
+          } else {
+            answer = result.reply
+          }
         } catch {
           setLastError(
             'Não consegui conectar ao mentor agora. Usei um modo offline (mockado) por enquanto.',
@@ -171,11 +217,14 @@ export function useRabinoMentor(userProfile) {
         })
 
         typeIntoMessage(pendingId, answer)
+
+        // Keep usage in sync after sending.
+        refreshUsage()
       } finally {
         setIsAsking(false)
       }
     },
-    [messages, persist, typeIntoMessage, userProfile],
+    [messages, persist, refreshUsage, typeIntoMessage, userProfile],
   )
 
   const retryLast = useCallback(async () => {
@@ -203,6 +252,10 @@ export function useRabinoMentor(userProfile) {
     retryLast,
     clear,
     exportHistory,
+    usage,
+    blocked,
+    refreshUsage,
+    startMentorUnlimitedCheckout,
   }
 }
 

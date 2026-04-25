@@ -58,8 +58,24 @@ function offlineFallbackAnswer(message, context = {}) {
  * - Integração real deve rodar no servidor (Vercel Functions / Supabase Edge / n8n).
  */
 export async function sendMessageToRabino(payload) {
+  const result = await sendMessageToMentor(payload)
+  if (result.status === 'blocked') {
+    const err = new Error(result.blocked?.message || 'Limite diario atingido.')
+    err.code = result.blocked?.code || 'mentor_blocked'
+    err.blocked = result.blocked
+    throw err
+  }
+
+  return result.reply
+}
+
+export async function getMentorUsage() {
+  return apiFetch('/api/mentor/usage')
+}
+
+export async function sendMessageToMentor(payload) {
   const message = safeTrim(payload?.message)
-  if (!message) return ''
+  if (!message) return { status: 'ok', reply: '' }
 
   const requestBody = {
     ...payload,
@@ -67,19 +83,20 @@ export async function sendMessageToRabino(payload) {
     systemPrompt: payload.contextualPrompt || systemPrompt,
   }
 
-  // TODO: integrar Supabase memory
-  // TODO: persistir progresso por usuário
-  // TODO: salvar memória do Rabino Mentor
-
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 20000)
 
   try {
-    const data = await apiFetch('/api/rabino-mentor', {
+    const data = await apiFetch('/api/mentor/chat', {
       method: 'POST',
       body: JSON.stringify(requestBody),
       signal: controller.signal,
     })
+
+    if (data?.code && data?.message && data?.ctaLabel) {
+      return { status: 'blocked', blocked: data }
+    }
+
     const reply =
       (typeof data?.reply === 'string' && data.reply) ||
       (typeof data?.message === 'string' && data.message) ||
@@ -87,7 +104,7 @@ export async function sendMessageToRabino(payload) {
       ''
 
     if (!reply) throw new Error('Resposta do backend vazia.')
-    return reply
+    return { status: 'ok', reply }
   } finally {
     clearTimeout(timeout)
   }

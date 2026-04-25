@@ -29,7 +29,7 @@ import {
   getDayStatusSummary,
 } from '../hooks/useJourneyProgress.js'
 import { challenges21Days, TRACK_LABELS, TRACK_DESCRIPTIONS } from '../data/challenges21Days.js'
-import { generateDailyFeedback, generateFallbackFeedback } from '../services/rabbiMentorAI.js'
+import { generateDailyFeedback, generateFallbackFeedback, getSavedDailyFeedback } from '../services/rabbiMentorAI.js'
 
 var STATUS_CYCLE = ['none', 'executed', 'partial', 'skipped']
 
@@ -141,6 +141,17 @@ function TwentyOneDayView({ assignedTrack }) {
     setWhatIDid(s?.whatIDid || '')
     setHowIFelt(s?.howIFelt || '')
     setTrigger(s?.trigger || '')
+
+    if (!s?.aiFeedback) {
+      getSavedDailyFeedback({ phase: '21d', dayNumber: idx + 1 })
+        .then(function (fb) {
+          saveDayAIFeedback(idx, fb)
+          setRefresh(function (r) { return r + 1 })
+        })
+        .catch(function () {
+          // No saved feedback yet; keep local state.
+        })
+    }
   }
 
   function handleCycleStatus(taskId) {
@@ -160,6 +171,8 @@ function TwentyOneDayView({ assignedTrack }) {
     saveReflections()
 
     var completedTasks = []
+    var partialTasks = []
+    var notCompletedTasks = []
     var labels = {
       oracao: 'Oracao e intencao financeira',
       manha: dayContent?.manha || 'Revisar gastos e decisoes',
@@ -172,15 +185,25 @@ function TwentyOneDayView({ assignedTrack }) {
     var statuses = getDayTaskStatuses(selectedDay)
     for (var id in labels) {
       var s = statuses[id] || 'none'
-      completedTasks.push(labels[id] + ' (' + (TASK_STATUSES[s]?.label || s) + ')')
+      var label = labels[id]
+      if (s === 'executed' || s === 'sent_ai') {
+        completedTasks.push(label)
+      } else if (s === 'partial') {
+        partialTasks.push(label)
+      } else {
+        notCompletedTasks.push(label)
+      }
     }
 
     var diag = readDiagnosis()
     var payload = {
       trailType: assignedTrack,
+      phase: '21d',
       currentDay: selectedDay,
       dayTitle: dayContent?.title || '',
       completedTasks: completedTasks,
+      partialTasks: partialTasks,
+      notCompletedTasks: notCompletedTasks,
       reflection: whatIDid,
       howFelt: howIFelt,
       emotionalTrigger: trigger,
@@ -218,6 +241,13 @@ function TwentyOneDayView({ assignedTrack }) {
   }
 
   var feedbackNow = getDayData(selectedDay)?.aiFeedback
+  var isMentorV2 = !!(feedbackNow && (
+    feedbackNow.feedbackText
+    || feedbackNow.detectedTrigger
+    || feedbackNow.emotionalPattern
+    || feedbackNow.financialRisk
+    || feedbackNow.practicalAction
+  ))
   var checklist = buildDayChecklist(dayContent)
 
   // Count statuses for progress display
@@ -253,6 +283,22 @@ function TwentyOneDayView({ assignedTrack }) {
           <span style={{ color: 'var(--gold-2)', fontWeight: 700 }}>{p21.percent}%</span>
         </div>
       </div>
+
+      {p21.completed >= 21 ? (
+        <div className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.55)' }}>
+          <div className="card-inner" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontWeight: 900 }}>Relatório Final liberado</div>
+              <div className="muted" style={{ fontSize: 13 }}>
+                Veja seus padrões, gatilhos e próximos passos.
+              </div>
+            </div>
+            <Link className="btn btn-primary" to="/relatorio-final">
+              Ver Relatório Final
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
       {/* Day navigation */}
       <div className="day-nav-scroll">
@@ -471,50 +517,116 @@ function TwentyOneDayView({ assignedTrack }) {
               </div>
             </div>
 
-            {feedbackNow.summary && (
-              <div className="ai-feedback-section">
-                <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
-                  <Target size={14} />
-                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Analise do dia</span>
-                </div>
-                <div className="ai-feedback-section-body">{feedbackNow.summary}</div>
-              </div>
-            )}
+            {isMentorV2 ? (
+              <>
+                {feedbackNow.detectedTrigger ? (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                      <Target size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Gatilho detectado</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.detectedTrigger}</div>
+                  </div>
+                ) : null}
 
-            {feedbackNow.correction && (
-              <div className="ai-feedback-section">
-                <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
-                  <AlertTriangle size={14} />
-                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Correcao de rota</span>
-                </div>
-                <div className="ai-feedback-section-body">{feedbackNow.correction}</div>
-              </div>
-            )}
+                {feedbackNow.emotionalPattern ? (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                      <Sparkles size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Padrao emocional</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.emotionalPattern}</div>
+                  </div>
+                ) : null}
 
-            {feedbackNow.jewishWisdom && (
-              <div className="ai-feedback-section">
-                <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
-                  <BookOpen size={14} />
-                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
-                </div>
-                <div className="ai-feedback-section-body">{feedbackNow.jewishWisdom}</div>
-              </div>
-            )}
+                {feedbackNow.financialRisk ? (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
+                      <AlertTriangle size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Risco financeiro</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.financialRisk}</div>
+                  </div>
+                ) : null}
 
-            {feedbackNow.proverb && (
-              <div className="ai-feedback-section" style={{ fontStyle: 'italic', color: '#f0d27a' }}>
-                <div className="ai-feedback-section-body">{feedbackNow.proverb}</div>
-              </div>
-            )}
+                {feedbackNow.jewishWisdom ? (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                      <BookOpen size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.jewishWisdom}</div>
+                  </div>
+                ) : null}
 
-            {feedbackNow.nextFocus && (
-              <div className="ai-feedback-section">
-                <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
-                  <Target size={14} />
-                  <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Foco para amanha</span>
-                </div>
-                <div className="ai-feedback-section-body">{feedbackNow.nextFocus}</div>
-              </div>
+                {feedbackNow.practicalAction ? (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
+                      <Target size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Micro-acao</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.practicalAction}</div>
+                  </div>
+                ) : null}
+
+                {feedbackNow.feedbackText ? (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                      <Star size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Feedback</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.feedbackText}</div>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <>
+                {feedbackNow.summary && (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                      <Target size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Analise do dia</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.summary}</div>
+                  </div>
+                )}
+
+                {feedbackNow.correction && (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
+                      <AlertTriangle size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Correcao de rota</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.correction}</div>
+                  </div>
+                )}
+
+                {feedbackNow.jewishWisdom && (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
+                      <BookOpen size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.jewishWisdom}</div>
+                  </div>
+                )}
+
+                {feedbackNow.proverb && (
+                  <div className="ai-feedback-section" style={{ fontStyle: 'italic', color: '#f0d27a' }}>
+                    <div className="ai-feedback-section-body">{feedbackNow.proverb}</div>
+                  </div>
+                )}
+
+                {feedbackNow.nextFocus && (
+                  <div className="ai-feedback-section">
+                    <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
+                      <Target size={14} />
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Foco para amanha</span>
+                    </div>
+                    <div className="ai-feedback-section-body">{feedbackNow.nextFocus}</div>
+                  </div>
+                )}
+              </>
             )}
 
             {feedbackNow.receivedAt && (

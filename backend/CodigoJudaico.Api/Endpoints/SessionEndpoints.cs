@@ -129,9 +129,23 @@ public static class SessionEndpoints
             }
 
             var rawToken = sessionTokenService.GenerateToken();
-            user.PasswordResetTokenHash = sessionTokenService.HashToken(rawToken);
-            user.PasswordResetTokenExpiresAt = DateTimeOffset.UtcNow.AddHours(2);
-            user.UpdatedAt = DateTimeOffset.UtcNow;
+            var now = DateTimeOffset.UtcNow;
+            var tokenHash = sessionTokenService.HashToken(rawToken);
+
+            // Persist as token row (preferred) + user columns (legacy compatibility)
+            dbContext.PasswordResetTokens.Add(new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = tokenHash,
+                ExpiresAt = now.AddHours(2),
+                UsedAt = null,
+                CreatedAt = now,
+            });
+
+            user.PasswordResetTokenHash = tokenHash;
+            user.PasswordResetTokenExpiresAt = now.AddHours(2);
+            user.UpdatedAt = now;
             await dbContext.SaveChangesAsync(cancellationToken);
 
             await accessEmailService.SendPasswordResetEmailAsync(user, rawToken, cancellationToken);
@@ -168,11 +182,16 @@ public static class SessionEndpoints
             var tokenHash = sessionTokenService.HashToken(token);
             var now = DateTimeOffset.UtcNow;
 
-            var user = await dbContext.Users.SingleOrDefaultAsync(
-                x => x.PasswordResetTokenHash == tokenHash && x.PasswordResetTokenExpiresAt != null,
-                cancellationToken);
+            var tokenRow = await dbContext.PasswordResetTokens
+                .Include(x => x.User)
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync(
+                    x => x.TokenHash == tokenHash && x.UsedAt == null,
+                    cancellationToken);
 
-            if (user is null || user.PasswordResetTokenExpiresAt < now)
+            var user = tokenRow?.User;
+
+            if (tokenRow is null || user is null || tokenRow.ExpiresAt < now)
             {
                 return Results.Problem(
                     title: "Link invalido ou expirado.",
@@ -184,6 +203,8 @@ public static class SessionEndpoints
             user.PasswordResetTokenHash = string.Empty;
             user.PasswordResetTokenExpiresAt = null;
             user.UpdatedAt = now;
+
+            tokenRow.UsedAt = now;
 
             await dbContext.SaveChangesAsync(cancellationToken);
             return Results.Ok();

@@ -14,3 +14,10 @@ export function getCheckoutSessionStatus(sessionId) {
 export function getAvailablePlans() {
   return apiFetch('/api/payments/available-plans')
 }
+
+export function createMentorUnlimitedCheckoutSession() {
+  return apiFetch('/api/payments/mentor-unlimited/checkout-sessions', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+}

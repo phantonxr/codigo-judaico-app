@@ -24,6 +24,73 @@ public sealed class MentorOpenAiClient
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(_options.ApiKey);
 
+    /// <summary>Generates daily feedback for the 21-day journey using structured JSON output.</summary>
+    public async Task<string?> CompleteMentorDailyFeedbackV2Async(
+        string systemPrompt,
+        string userPayload,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured)
+            return null;
+
+        var system = string.IsNullOrWhiteSpace(systemPrompt)
+            ? DefaultMentorSystem
+            : systemPrompt.Trim();
+
+        var payload = (userPayload ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(payload))
+            return null;
+
+        var messages = new List<object>
+        {
+            new { role = "system", content = system },
+            new
+            {
+                role = "system",
+                content =
+                    "Responda APENAS com JSON valido (sem markdown, sem bloco de codigo). "
+                    + "Nao use diagnostico clinico. Use termos como 'possivel padrao', 'sinal comportamental', 'tendencia observada'.",
+            },
+            new { role = "user", content = payload },
+        };
+
+        return await PostChatCompletionsAsync(messages, cancellationToken);
+    }
+
+    /// <summary>Generates a 21-day final report using structured JSON output.</summary>
+    public async Task<string?> CompleteMentorFinalReportAsync(
+        string systemPrompt,
+        string userPayload,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured)
+            return null;
+
+        var system = string.IsNullOrWhiteSpace(systemPrompt)
+            ? DefaultMentorSystem
+            : systemPrompt.Trim();
+
+        var payload = (userPayload ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(payload))
+            return null;
+
+        var messages = new List<object>
+        {
+            new { role = "system", content = system },
+            new
+            {
+                role = "system",
+                content =
+                    "Responda APENAS com JSON valido (sem markdown, sem bloco de codigo). "
+                    + "Mantenha tom de rabino sabio, firme, humano e acolhedor. "
+                    + "Nao prometa riqueza garantida.",
+            },
+            new { role = "user", content = payload },
+        };
+
+        return await PostChatCompletionsAsync(messages, cancellationToken);
+    }
+
     /// <summary>Mentor chat: system prompt + recent history (OpenAI chat format).</summary>
     public async Task<string?> CompleteMentorChatAsync(
         MentorChatRequest request,
@@ -158,13 +225,119 @@ public sealed class MentorOpenAiClient
     }
 
     private const string DefaultMentorSystem =
-        "Voce e o Rabino Mentor do app Codigo Judaico da Prosperidade. "
-        + "Alinhe-se ao metodo Seder HaKesef (ordem do dinheiro): dinheiro como espelho da consciencia; "
-        + "nomear gatilhos (impulso, emocao, FOMO, comparacao); rituais de pausa e intencao antes de gastar; "
-        + "Bitachon, Binah, Middot e construir antes de expandir (reserva e clareza). "
-        + "Ajude com sabedoria judaica, etica, autocontrole e construcao de patrimonio. "
-        + "Seja humano e pratico. Termine com uma micro-acao. "
-        + "Nao repita saudacoes em toda resposta.";
+        "Voce e o Rabino Mentor IA do Codigo Judaico da Prosperidade. "
+        + "Sua missao e ajudar o usuario a identificar gatilhos mentais, emocionais e comportamentais ligados ao dinheiro, "
+        + "com sabedoria judaica, prudencia, dominio proprio, construcao patrimonial, legado e disciplina diaria. "
+        + "Nao diagnostique clinicamente. Use linguagem como 'possivel padrao', 'sinal comportamental', 'tendencia observada'. "
+        + "Nao prometa riqueza garantida. Prosperidade nasce de consciencia, dominio emocional, repeticao diaria e base solida. "
+        + "Evite repetir sempre 'Shalom'. Seja firme, humano e acolhedor. "
+        + "Sempre que fizer sentido, termine com uma micro-acao pratica.";
+
+    public static MentorDailyFeedbackGenerateResponse? TryParseMentorDailyFeedbackV2(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+
+        var cleaned = CleanJsonFence(text);
+
+        try
+        {
+            var dto = JsonSerializer.Deserialize<MentorDailyFeedbackV2Dto>(
+                cleaned,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (dto is null)
+                return null;
+
+            var hasAny =
+                !string.IsNullOrWhiteSpace(dto.DetectedTrigger)
+                || !string.IsNullOrWhiteSpace(dto.FeedbackText)
+                || !string.IsNullOrWhiteSpace(dto.PracticalAction);
+
+            if (!hasAny)
+                return null;
+
+            return new MentorDailyFeedbackGenerateResponse(
+                DetectedTrigger: dto.DetectedTrigger ?? string.Empty,
+                EmotionalPattern: dto.EmotionalPattern ?? string.Empty,
+                FinancialRisk: dto.FinancialRisk ?? string.Empty,
+                JewishWisdom: dto.JewishWisdom ?? string.Empty,
+                PracticalAction: dto.PracticalAction ?? string.Empty,
+                FeedbackText: dto.FeedbackText ?? string.Empty);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static MentorFinalReportGenerateResponse? TryParseMentorFinalReport(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+
+        var cleaned = CleanJsonFence(text);
+
+        try
+        {
+            var dto = JsonSerializer.Deserialize<MentorFinalReportDto>(
+                cleaned,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (dto is null)
+                return null;
+
+            var hasAny = !string.IsNullOrWhiteSpace(dto.ReportText);
+            if (!hasAny)
+                return null;
+
+            return new MentorFinalReportGenerateResponse(
+                ReportText: dto.ReportText ?? string.Empty,
+                TopTriggers: dto.TopTriggers ?? Array.Empty<string>(),
+                EmotionalPattern: dto.EmotionalPattern ?? string.Empty,
+                FinancialRiskPattern: dto.FinancialRiskPattern ?? string.Empty,
+                NextStepRecommendation: dto.NextStepRecommendation ?? string.Empty,
+                OfferBlock: dto.OfferBlock ?? string.Empty);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string CleanJsonFence(string text)
+    {
+        var cleaned = text.Trim();
+        if (cleaned.StartsWith("```", StringComparison.Ordinal))
+        {
+            var firstNl = cleaned.IndexOf('\n');
+            var close = cleaned.LastIndexOf("```", StringComparison.Ordinal);
+            if (firstNl >= 0 && close > firstNl)
+                cleaned = cleaned.Substring(firstNl + 1, close - firstNl - 1).Trim();
+        }
+
+        return cleaned;
+    }
+
+    private sealed class MentorDailyFeedbackV2Dto
+    {
+        public string? DetectedTrigger { get; set; }
+        public string? EmotionalPattern { get; set; }
+        public string? FinancialRisk { get; set; }
+        public string? JewishWisdom { get; set; }
+        public string? PracticalAction { get; set; }
+        public string? FeedbackText { get; set; }
+    }
+
+    private sealed class MentorFinalReportDto
+    {
+        public string? ReportText { get; set; }
+        public string[]? TopTriggers { get; set; }
+        public string? EmotionalPattern { get; set; }
+        public string? FinancialRiskPattern { get; set; }
+        public string? NextStepRecommendation { get; set; }
+        public string? OfferBlock { get; set; }
+    }
 
     /// <summary>Parses JSON returned by the model for daily feedback (both 21-day and macro formats).</summary>
     public static DailyFeedbackResponse? TryParseDailyFeedback(string? text)

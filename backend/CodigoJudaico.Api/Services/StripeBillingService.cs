@@ -48,6 +48,7 @@ public sealed class StripeBillingService(
             "mensal" => BuildPlan("mensal", _options.Monthly, "Premium Mensal"),
             "anual" => BuildPlan("anual", _options.Annual, "Premium Anual"),
             "vitalicio" => BuildPlan("vitalicio", _options.Lifetime, "Acesso Vitalicio", isOneTime: true),
+            "mentor-ilimitado" => BuildPlan("mentor-ilimitado", _options.MentorUnlimited, "Acompanhamento Rabinico Ilimitado"),
             _ => throw new InvalidOperationException("Plano do checkout nao reconhecido."),
         };
     }

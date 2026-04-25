@@ -85,6 +85,62 @@ public sealed record WisdomDto(
 
 public sealed record MentorChatResponse(string Reply);
 
+public sealed record MentorUsageResponse(
+    int InteractionsToday,
+    int DailyLimit,
+    bool CanSendMessage,
+    string PlanType);
+
+public sealed record MentorChatBlockedResponse(
+    string Code,
+    string Message,
+    int InteractionsToday,
+    int DailyLimit,
+    string PlanType,
+    string CtaLabel,
+    string UpsellName,
+    string UpsellPrice);
+
+public sealed record MentorDailyFeedbackGenerateRequest
+{
+    public string? UserId { get; init; }
+    public string? Phase { get; init; }
+    public int DayNumber { get; init; }
+    public IReadOnlyList<string> CompletedTasks { get; init; } = [];
+    public IReadOnlyList<string> PartialTasks { get; init; } = [];
+    public IReadOnlyList<string> NotCompletedTasks { get; init; } = [];
+    public string? ReflectionText { get; init; }
+    public string? EmotionText { get; init; }
+    public string? TriggerText { get; init; }
+    public string? CurrentTrack { get; init; }
+}
+
+public sealed record MentorDailyFeedbackGenerateResponse(
+    string DetectedTrigger,
+    string EmotionalPattern,
+    string FinancialRisk,
+    string JewishWisdom,
+    string PracticalAction,
+    string FeedbackText);
+
+public sealed record MentorFinalReportGenerateRequest
+{
+    public string? UserId { get; init; }
+    public JsonElement? AllDaysProgress { get; init; }
+    public JsonElement? DailyFeedbacks { get; init; }
+    public JsonElement? Reflections { get; init; }
+    public JsonElement? Triggers { get; init; }
+    public JsonElement? Emotions { get; init; }
+}
+
+public sealed record MentorFinalReportGenerateResponse(
+    string ReportText,
+    IReadOnlyList<string> TopTriggers,
+    string EmotionalPattern,
+    string FinancialRiskPattern,
+    string NextStepRecommendation,
+    string OfferBlock);
+
 public sealed record DailyFeedbackResponse(
     string Summary,
     string Correction,

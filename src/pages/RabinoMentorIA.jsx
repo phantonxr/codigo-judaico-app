@@ -29,6 +29,9 @@ export default function RabinoMentorIA() {
     retryLast,
     clear,
     exportHistory,
+    usage,
+    blocked,
+    startMentorUnlimitedCheckout,
   } = useRabinoMentor(mentorProfile)
   const [text, setText] = useState('')
   const endRef = useRef(null)
@@ -66,7 +69,14 @@ export default function RabinoMentorIA() {
               flexWrap: 'wrap',
             }}
           >
-            <span className="badge">Online agora</span>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span className="badge">Online agora</span>
+              {usage ? (
+                <span className="badge" style={{ opacity: 0.9 }}>
+                  Interações hoje: {usage.interactionsToday}/{usage.dailyLimit}
+                </span>
+              ) : null}
+            </div>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-soft" onClick={exportHistory}>
@@ -97,6 +107,25 @@ export default function RabinoMentorIA() {
                   disabled={isAsking}
                 >
                   Retry
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {blocked ? (
+            <div className="card" style={{ padding: 12, borderColor: 'rgba(215, 178, 74, 0.55)' }}>
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ fontWeight: 900 }}>Limite diário atingido</div>
+                <div className="muted" style={{ lineHeight: 1.6 }}>
+                  {blocked.message}
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={startMentorUnlimitedCheckout}
+                  disabled={isAsking}
+                >
+                  {blocked.ctaLabel} — {blocked.upsellPrice}
                 </button>
               </div>
             </div>
@@ -149,8 +178,9 @@ export default function RabinoMentorIA() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Escreva sua mensagem…"
                 aria-label="Mensagem"
+                disabled={isAsking || blocked}
               />
-              <button className="btn btn-primary" type="submit" disabled={isAsking}>
+              <button className="btn btn-primary" type="submit" disabled={isAsking || blocked}>
                 Enviar
               </button>
             </form>

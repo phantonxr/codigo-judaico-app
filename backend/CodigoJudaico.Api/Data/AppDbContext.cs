@@ -11,6 +11,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<UserJourneyState> UserJourneyStates => Set<UserJourneyState>();
     public DbSet<UserLessonProgress> UserLessonProgressEntries => Set<UserLessonProgress>();
     public DbSet<MentorChatMessage> MentorChatMessages => Set<MentorChatMessage>();
+    public DbSet<MentorDailyFeedback> MentorDailyFeedbacks => Set<MentorDailyFeedback>();
+    public DbSet<MentorFinalReport> MentorFinalReports => Set<MentorFinalReport>();
+    public DbSet<MentorUsage> MentorUsages => Set<MentorUsage>();
+    public DbSet<UserSubscription> Subscriptions => Set<UserSubscription>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Offer> Offers => Set<Offer>();
@@ -93,6 +98,81 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.Content).HasColumnType("text");
             entity.HasOne(x => x.User)
                 .WithMany(x => x.MentorMessages)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MentorDailyFeedback>(entity =>
+        {
+            entity.ToTable("mentor_daily_feedbacks");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.Phase, x.DayNumber });
+            entity.Property(x => x.Phase).HasMaxLength(80);
+            entity.Property(x => x.DetectedTrigger).HasMaxLength(500);
+            entity.Property(x => x.EmotionalPattern).HasMaxLength(700);
+            entity.Property(x => x.FinancialRisk).HasMaxLength(700);
+            entity.Property(x => x.JewishWisdom).HasColumnType("text");
+            entity.Property(x => x.PracticalAction).HasColumnType("text");
+            entity.Property(x => x.FeedbackText).HasColumnType("text");
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MentorFinalReport>(entity =>
+        {
+            entity.ToTable("mentor_final_reports");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.CreatedAt });
+            entity.Property(x => x.ReportText).HasColumnType("text");
+            entity.Property(x => x.TopTriggersJson).HasColumnType("jsonb");
+            entity.Property(x => x.EmotionalPattern).HasColumnType("text");
+            entity.Property(x => x.FinancialRiskPattern).HasColumnType("text");
+            entity.Property(x => x.NextStepRecommendation).HasColumnType("text");
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MentorUsage>(entity =>
+        {
+            entity.ToTable("mentor_usage");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.Date }).IsUnique();
+            entity.Property(x => x.PlanType).HasMaxLength(60);
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserSubscription>(entity =>
+        {
+            entity.ToTable("subscriptions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.PlanType, x.Status });
+            entity.Property(x => x.PlanName).HasMaxLength(160);
+            entity.Property(x => x.PlanType).HasMaxLength(60);
+            entity.Property(x => x.Status).HasMaxLength(40);
+            entity.Property(x => x.Price).HasMaxLength(80);
+            entity.Property(x => x.CheckoutUrl).HasMaxLength(800);
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.ToTable("password_reset_tokens");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TokenHash).IsUnique();
+            entity.HasIndex(x => new { x.UserId, x.ExpiresAt });
+            entity.Property(x => x.TokenHash).HasMaxLength(128);
+            entity.HasOne(x => x.User)
+                .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

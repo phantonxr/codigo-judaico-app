@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Mail;
 using CodigoJudaico.Api.Models;
 using Microsoft.Extensions.Options;
 
@@ -110,6 +111,31 @@ Se nao encontrar este e-mail depois, confira sua caixa de spam.
         string resetToken,
         CancellationToken cancellationToken)
     {
+        var displayName = string.IsNullOrWhiteSpace(user.Name) ? "Aluno" : user.Name;
+        var frontendUrl = ResolveFrontendBaseUrl();
+        var resetUrl = $"{frontendUrl.TrimEnd('/')}/reset-password?token={WebUtility.UrlEncode(resetToken)}";
+        var subject = "Redefinicao de senha — Codigo Judaico da Prosperidade";
+        var plainTextBody = $"""
+Recebemos uma solicitacao para redefinir sua senha.
+
+Clique no link abaixo para criar uma nova senha:
+{resetUrl}
+
+Se voce nao solicitou isso, ignore este e-mail.
+""";
+
+        var htmlBody = $"""
+<p>Recebemos uma solicitacao para redefinir sua senha.</p>
+<p><a href="{WebUtility.HtmlEncode(resetUrl)}">Clique no link para criar uma nova senha</a>.</p>
+<p>Se voce nao solicitou isso, ignore este e-mail.</p>
+""";
+
+        if (IsSmtpConfigured())
+        {
+            await SendEmailViaSmtpAsync(user.Email, subject, htmlBody, plainTextBody, cancellationToken);
+            return;
+        }
+
         if (!_resendOptions.Enabled)
         {
             logger.LogInformation("Envio de e-mail desabilitado; recuperacao de senha nao enviada para {Email}.", user.Email);
@@ -117,29 +143,73 @@ Se nao encontrar este e-mail depois, confira sua caixa de spam.
         }
 
         EnsureConfigured();
-
-        var displayName = string.IsNullOrWhiteSpace(user.Name) ? "Aluno" : user.Name;
-        var resetUrl = $"{_stripeOptions.FrontendBaseUrl.TrimEnd('/')}/reset-password?token={WebUtility.UrlEncode(resetToken)}";
-        var subject = "Redefinicao de senha - Metodo Judaico";
-        var plainTextBody = $"""
-Shalom, {displayName}.
-
-Recebemos um pedido para redefinir sua senha.
-
-Use este link para criar uma nova senha:
-{resetUrl}
-
-Se voce nao pediu essa alteracao, ignore este e-mail.
-""";
-
-        var htmlBody = $"""
-<p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
-<p>Recebemos um pedido para redefinir sua senha.</p>
-<p><a href="{WebUtility.HtmlEncode(resetUrl)}">Clique aqui para criar uma nova senha</a>.</p>
-<p>Se voce nao pediu essa alteracao, ignore este e-mail.</p>
-""";
-
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "recuperacao de senha", cancellationToken);
+    }
+
+    private string ResolveFrontendBaseUrl()
+    {
+        var fromEnv = Environment.GetEnvironmentVariable("FRONTEND_URL");
+        if (!string.IsNullOrWhiteSpace(fromEnv))
+            return fromEnv.Trim();
+
+        return _stripeOptions.FrontendBaseUrl;
+    }
+
+    private static bool IsSmtpConfigured()
+    {
+        return !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SMTP_HOST"))
+            && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SMTP_FROM"));
+    }
+
+    private async Task SendEmailViaSmtpAsync(
+        string recipientEmail,
+        string subject,
+        string htmlBody,
+        string plainTextBody,
+        CancellationToken cancellationToken)
+    {
+        var host = (Environment.GetEnvironmentVariable("SMTP_HOST") ?? string.Empty).Trim();
+        var portRaw = (Environment.GetEnvironmentVariable("SMTP_PORT") ?? string.Empty).Trim();
+        var user = (Environment.GetEnvironmentVariable("SMTP_USER") ?? string.Empty).Trim();
+        var password = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? string.Empty;
+        var from = (Environment.GetEnvironmentVariable("SMTP_FROM") ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+        {
+            throw new InvalidOperationException("SMTP nao configurado corretamente (SMTP_HOST/SMTP_FROM).");
+        }
+
+        var port = 587;
+        if (int.TryParse(portRaw, out var parsedPort) && parsedPort > 0)
+            port = parsedPort;
+
+        using var message = new MailMessage();
+        message.From = new MailAddress(from);
+        message.To.Add(new MailAddress(recipientEmail));
+        message.Subject = subject;
+        message.Body = htmlBody;
+        message.IsBodyHtml = true;
+
+        if (!string.IsNullOrWhiteSpace(plainTextBody))
+        {
+            message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(plainTextBody, null, "text/plain"));
+            message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(htmlBody, null, "text/html"));
+        }
+
+        using var client = new SmtpClient(host, port)
+        {
+            EnableSsl = true,
+        };
+
+        if (!string.IsNullOrWhiteSpace(user))
+        {
+            client.Credentials = new NetworkCredential(user, password);
+        }
+
+        logger.LogInformation("Enviando e-mail via SMTP para {Email}.", recipientEmail);
+
+        // SmtpClient doesn't support CancellationToken; best-effort.
+        await client.SendMailAsync(message);
     }
 
     private void EnsureConfigured()

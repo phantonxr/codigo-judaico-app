@@ -19,6 +19,7 @@ import Mais from './pages/Mais.jsx'
 import Assinatura from './pages/Assinatura.jsx'
 import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
 import Calendario from './pages/Calendario.jsx'
+import RelatorioFinal from './pages/RelatorioFinal.jsx'
 import { hasAuthToken } from './services/authStorage.js'
 import useCurrentUser from './hooks/useCurrentUser.js'
 
@@ -130,6 +131,7 @@ function AppLayout() {
     '/assinatura': 'Assinatura',
     '/avaliacao': 'Avaliação Financeira',
     '/calendario': 'Calendário',
+    '/relatorio-final': 'Relatório Final',
   }
   const title = titleMap[pathname] ?? 'Código Judaico da Prosperidade'
 
@@ -170,6 +172,7 @@ export default function App() {
             <Route path="/mais" element={<Mais />} />
             <Route path="/avaliacao" element={<AvaliacaoFinanceira />} />
             <Route path="/calendario" element={<Calendario />} />
+            <Route path="/relatorio-final" element={<RelatorioFinal />} />
           </Route>
         </Route>
       </Route>

@@ -17,6 +17,84 @@ public static class PaymentEndpoints
     {
         var group = app.MapGroup("/api/payments").WithTags("Payments");
 
+        group.MapPost("/mentor-unlimited/checkout-sessions", async (
+            ClaimsPrincipal userPrincipal,
+            AppDbContext dbContext,
+            StripeBillingService stripeBillingService,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = userPrincipal.GetRequiredUserId();
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return Results.Unauthorized();
+            }
+
+            StripePlanDefinition plan;
+
+            try
+            {
+                plan = await stripeBillingService.GetValidatedPlanAsync("mentor-ilimitado", cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                return Results.Problem(
+                    title: "Checkout indisponivel.",
+                    detail: "O plano Mentor Ilimitado ainda nao foi configurado com PriceId no Stripe.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+            catch (StripeException)
+            {
+                return Results.Problem(
+                    title: "Falha ao validar o plano.",
+                    detail: "Nao consegui validar esse plano no Stripe agora. Tente novamente em instantes.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
+
+            CheckoutSessionCreateResponse response;
+
+            try
+            {
+                response = await stripeBillingService.CreateCheckoutSessionAsync(
+                    new CheckoutSessionCreateRequest
+                    {
+                        Email = user.Email,
+                        Name = user.Name,
+                        PlanId = plan.Id,
+                        Password = string.Empty,
+                    },
+                    plan,
+                    cancellationToken);
+            }
+            catch (StripeException)
+            {
+                return Results.Problem(
+                    title: "Nao consegui abrir o checkout.",
+                    detail: "O Stripe nao aceitou a criacao desta sessao agora. Tente novamente em instantes.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            dbContext.Subscriptions.Add(new UserSubscription
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                PlanName = plan.PlanName,
+                PlanType = "mentor_unlimited",
+                Status = "checkout_pending",
+                Price = string.Empty,
+                CheckoutUrl = response.Url,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return Results.Ok(response);
+        })
+        .RequireAuthorization()
+        .WithName("CreateMentorUnlimitedCheckoutSession");
+
         group.MapGet("/available-plans", async (
             ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,

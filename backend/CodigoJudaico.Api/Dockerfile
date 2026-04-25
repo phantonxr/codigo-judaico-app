@@ -10,7 +10,10 @@ RUN dotnet publish "backend/CodigoJudaico.Api/CodigoJudaico.Api.csproj" -c Relea
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# This API only uses Npgsql/PostgreSQL, so the extra Kerberos package is unnecessary.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_URLS=http://+:8080

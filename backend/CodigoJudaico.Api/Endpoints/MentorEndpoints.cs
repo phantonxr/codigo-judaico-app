@@ -21,7 +21,7 @@ public static class MentorEndpoints
             .RequireAuthorization()
             .AddEndpointFilter<RequirePremiumAccessEndpointFilter>();
 
-        group.MapPost("/rabino-mentor", async (
+        group.MapPost("/rabino-mentor", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             MentorChatRequest request,
             AppDbContext dbContext,
@@ -86,7 +86,7 @@ public static class MentorEndpoints
             return Results.Ok(new MentorChatResponse(reply));
         });
 
-        group.MapPost("/rabino-daily-feedback", async (
+        group.MapPost("/rabino-daily-feedback", async Task<IResult> (
             DailyFeedbackRequest request,
             MentorFallbackService fallbackService,
             MentorOpenAiClient openAiClient,
@@ -112,7 +112,24 @@ public static class MentorEndpoints
 
             var payload = fallbackService.BuildDailyFeedback(request.CurrentDay ?? 0);
 
-        mentorGroup.MapGet("/daily-feedback", async (
+            return Results.Ok(new DailyFeedbackResponse(
+                payload.Summary,
+                payload.Correction,
+                payload.MacroLesson,
+                payload.Blindspot,
+                payload.JewishWisdom,
+                payload.Proverb,
+                payload.NextFocus,
+                payload.ExtraTask,
+                payload.TomorrowFocus));
+        });
+
+        // New endpoints requested (do not require premium filter; they manage limits internally).
+        var mentorGroup = app.MapGroup("/api/mentor")
+            .WithTags("Mentor")
+            .RequireAuthorization();
+
+        mentorGroup.MapGet("/daily-feedback", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             string? phase,
             int dayNumber,
@@ -151,24 +168,7 @@ public static class MentorEndpoints
                 existing.FeedbackText));
         });
 
-            return Results.Ok(new DailyFeedbackResponse(
-                payload.Summary,
-                payload.Correction,
-                payload.MacroLesson,
-                payload.Blindspot,
-                payload.JewishWisdom,
-                payload.Proverb,
-                payload.NextFocus,
-                payload.ExtraTask,
-                payload.TomorrowFocus));
-        });
-
-        // New endpoints requested (do not require premium filter; they manage limits internally).
-        var mentorGroup = app.MapGroup("/api/mentor")
-            .WithTags("Mentor")
-            .RequireAuthorization();
-
-        mentorGroup.MapGet("/usage", async (
+        mentorGroup.MapGet("/usage", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
@@ -187,7 +187,7 @@ public static class MentorEndpoints
             return Results.Ok(new MentorUsageResponse(interactionsToday, dailyLimit, canSend, planType));
         });
 
-        mentorGroup.MapPost("/chat", async (
+        mentorGroup.MapPost("/chat", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             MentorChatRequest request,
             AppDbContext dbContext,
@@ -294,7 +294,7 @@ public static class MentorEndpoints
             return Results.Ok(new MentorChatResponse(reply));
         });
 
-        mentorGroup.MapPost("/daily-feedback", async (
+        mentorGroup.MapPost("/daily-feedback", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             MentorDailyFeedbackGenerateRequest request,
             AppDbContext dbContext,
@@ -383,7 +383,7 @@ public static class MentorEndpoints
             return Results.Ok(parsed);
         });
 
-        mentorGroup.MapGet("/final-report", async (
+        mentorGroup.MapGet("/final-report", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
@@ -409,7 +409,7 @@ public static class MentorEndpoints
                 OfferBlock: BuildDefaultOfferBlock()));
         });
 
-        mentorGroup.MapPost("/final-report", async (
+        mentorGroup.MapPost("/final-report", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             MentorFinalReportGenerateRequest request,
             AppDbContext dbContext,

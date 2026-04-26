@@ -168,7 +168,7 @@ public static class MentorEndpoints
                 existing.FeedbackText));
         });
 
-        mentorGroup.MapGet("/usage", async Task<IResult> (
+            mentorGroup.MapGet("/usage", async Task<IResult> (
             ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,
             CancellationToken cancellationToken) =>
@@ -400,13 +400,15 @@ public static class MentorEndpoints
             }
 
             var topTriggers = SafeParseStringList(existing.TopTriggersJson);
-            return Results.Ok(new MentorFinalReportGenerateResponse(
+            var dto = new MentorFinalReportGenerateResponse(
                 existing.ReportText,
                 topTriggers,
                 existing.EmotionalPattern,
                 existing.FinancialRiskPattern,
                 existing.NextStepRecommendation,
-                OfferBlock: BuildDefaultOfferBlock()));
+                OfferBlock: BuildDefaultOfferBlock());
+
+            return Results.Ok(BuildFinalReportPublicResponse(dto));
         });
 
         mentorGroup.MapPost("/final-report", async Task<IResult> (
@@ -425,13 +427,15 @@ public static class MentorEndpoints
             if (existing is not null)
             {
                 var topTriggers = SafeParseStringList(existing.TopTriggersJson);
-                return Results.Ok(new MentorFinalReportGenerateResponse(
+                var dto = new MentorFinalReportGenerateResponse(
                     existing.ReportText,
                     topTriggers,
                     existing.EmotionalPattern,
                     existing.FinancialRiskPattern,
                     existing.NextStepRecommendation,
-                    OfferBlock: BuildDefaultOfferBlock()));
+                    OfferBlock: BuildDefaultOfferBlock());
+
+                return Results.Ok(BuildFinalReportPublicResponse(dto));
             }
 
             MentorFinalReportGenerateResponse? parsed = null;
@@ -468,11 +472,75 @@ public static class MentorEndpoints
             });
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            return Results.Ok(parsed);
+            return Results.Ok(BuildFinalReportPublicResponse(parsed));
         });
 
         return app;
     }
+
+    private static MentorFinalReportPublicResponse BuildFinalReportPublicResponse(MentorFinalReportGenerateResponse report)
+    {
+        var top = report.TopTriggers ?? Array.Empty<string>();
+        var gatilhoPrincipal = top.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?? ApiMappers.Clean(report.EmotionalPattern)
+            ?? string.Empty;
+
+        var sabedoria = TryExtractBetweenMarkers(report.ReportText, "D)", "E)");
+        if (string.IsNullOrWhiteSpace(sabedoria))
+        {
+            sabedoria = report.ReportText;
+        }
+
+        var cta = "Desbloquear minha Trilha Chodesh HaMelech";
+        var recomendacao = ApiMappers.Clean(report.NextStepRecommendation) ?? string.Empty;
+
+        return new MentorFinalReportPublicResponse(
+            Analise: report.ReportText,
+            CorrecaoDeRota: recomendacao,
+            SabedoriaJudaica: sabedoria,
+            FocoProximoPasso: recomendacao,
+            GatilhoPrincipal: gatilhoPrincipal,
+            Recomendacao: recomendacao,
+            Cta: cta,
+            ReportText: report.ReportText,
+            TopTriggers: top,
+            EmotionalPattern: report.EmotionalPattern,
+            FinancialRiskPattern: report.FinancialRiskPattern,
+            NextStepRecommendation: report.NextStepRecommendation,
+            OfferBlock: report.OfferBlock);
+    }
+
+    private static string TryExtractBetweenMarkers(string? text, string startMarker, string endMarker)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        var start = text.IndexOf(startMarker, StringComparison.OrdinalIgnoreCase);
+        if (start < 0)
+            return string.Empty;
+
+        start += startMarker.Length;
+        var end = text.IndexOf(endMarker, start, StringComparison.OrdinalIgnoreCase);
+        if (end < 0)
+            end = text.Length;
+
+        return text[start..end].Trim();
+    }
+
+    private sealed record MentorFinalReportPublicResponse(
+        string Analise,
+        string CorrecaoDeRota,
+        string SabedoriaJudaica,
+        string FocoProximoPasso,
+        string GatilhoPrincipal,
+        string Recomendacao,
+        string Cta,
+        string ReportText,
+        IReadOnlyList<string> TopTriggers,
+        string EmotionalPattern,
+        string FinancialRiskPattern,
+        string NextStepRecommendation,
+        string OfferBlock);
 
     private static int ResolveDailyLimit(string planType)
     {
@@ -507,9 +575,11 @@ public static class MentorEndpoints
     private static string BuildMentorSystemForFinalReport()
     {
         return "Voce e o Rabino Mentor IA do Codigo Judaico da Prosperidade. "
-            + "Gere um relatorio final da jornada de 21 dias com sabedoria judaica aplicada e linguagem premium. "
-            + "Nao diagnostique clinicamente e nao prometa riqueza garantida. "
-            + "Evite repetir sempre 'Shalom'.";
+            + "Escreva como um rabino sabio, firme, humano e acolhedor (linguagem premium). "
+            + "Nao diagnostique clinicamente; use termos como 'possivel padrao', 'sinal comportamental', 'tendencia observada'. "
+            + "Nao prometa riqueza garantida. "
+            + "Evite repetir sempre 'Shalom'. "
+            + "No relatorio final, evite a palavra 'assinatura'; prefira 'proxima trilha', 'jornada de dominio' e 'continuacao do metodo'.";
     }
 
     private static string BuildDailyFeedbackPromptPayload(
@@ -602,9 +672,19 @@ public static class MentorEndpoints
 
         return string.Join("\n", new[]
         {
-            "Gere o 'Relatorio Rabinico da Sua Vida Financeira' ao final de 21 dias.",
-            "Baseie-se no progresso, tarefas, reflexoes, emocoes, gatilhos e feedbacks diarios.",
-            "Inclua as secoes A-G conforme pedido (abertura emocional, resumo, mapa de gatilhos, interpretacao, ponto de virada, proxima etapa, oferta natural).",
+            "Gere um relatorio especial ao concluir o dia 21.",
+            "Titulo do relatorio: 'Relatorio Rabinico da Sua Jornada Financeira'.",
+            "Esse relatorio NAO e o feedback diario comum: ele consolida 21 dias e revela padroes.",
+            "Analise obrigatoria (use o que estiver nos dados): rotina durante os 21 dias; tarefas executadas/parciais/nao executadas; reflexoes escritas; emocoes relatadas; gatilhos informados; feedbacks anteriores da IA; padrao mental dominante; principal gatilho financeiro que leva a gastar; risco de voltar ao padrao antigo se parar agora.",
+            "Escreva uma mensagem persuasiva e personalizada, elegante e humana, sem parecer venda direta.",
+            "Estrutura obrigatoria do texto (use marcadores A-F):",
+            "A) Abertura forte (use esta ideia central): 'Durante 21 dias, seus registros revelaram algo que muitas pessoas passam anos sem enxergar: o dinheiro nao e perdido apenas no caixa. Ele comeca a ser perdido nos impulsos, nas emocoes e nas decisoes automaticas.'",
+            "B) Diagnostico: aponte 1 padrao mental dominante (ex.: gasto por ansiedade, busca de status, recompensa imediata, medo de escassez, fuga emocional, culpa, comparacao, prazer instantaneo, desejo de aprovacao, desorganizacao financeira).",
+            "C) Gatilho principal: 'Seu principal gatilho observado foi: [gatilho]'.",
+            "D) Interpretacao judaica: conecte com dominio proprio, disciplina diaria, prudencia, legado, prosperidade como fruto de repeticao e riqueza em fases.",
+            "E) Virada: explique que os 21 dias mostraram o mapa e a proxima fase trata e domina o problema. Inclua: 'Os 21 dias mostraram o mapa. Agora comeca a fase em que voce deixa de apenas identificar seus impulsos e passa a governa-los.'",
+            "F) Oferta natural (sem palavra 'assinatura'): apresente 'Trilha Chodesh HaMelech — O Mes do Dominio Financeiro' como continuacao natural; finalize com CTA textual: 'Desbloquear minha Trilha Chodesh HaMelech'.",
+            "Nao use a palavra 'assinatura' no reportText nem no offerBlock.",
             "Responda APENAS com JSON com estas chaves:",
             "{",
             "  \"reportText\": \"...\",",
@@ -628,13 +708,12 @@ public static class MentorEndpoints
     {
         return new MentorFinalReportGenerateResponse(
             ReportText:
-                "A) Abertura emocional\nDurante 21 dias, voce expôs com honestidade sinais comportamentais e tendencias observadas na sua relacao com dinheiro.\n\n"
-                + "B) Resumo da jornada\nVoce concluiu a etapa inicial — agora enxerga seus gatilhos com mais clareza.\n\n"
-                + "C) Mapa dos gatilhos\nAnsiedade, recompensa imediata e comparacao social apareceram como possibilidades recorrentes.\n\n"
-                + "D) Interpretacao do Rabino Mentor\nO que se repete nao e azar: e padrao. E o padrao pode ser governado com disciplina e prudencia.\n\n"
-                + "E) Ponto de virada\nOs 21 dias foram o diagnostico. Agora voce sabe o que te puxa para o gasto — o proximo passo e dominar esse impulso.\n\n"
-                + "F) Proxima etapa natural\nTrilha Chodesh HaMelech — O Mes do Dominio Financeiro\nDepois de enxergar seus gatilhos, o proximo passo e aprender a governa-los.\n\n"
-                + "G) Oferta natural\n" + BuildDefaultOfferBlock(),
+                "A) Abertura forte\nDurante 21 dias, seus registros revelaram algo que muitas pessoas passam anos sem enxergar: o dinheiro nao e perdido apenas no caixa. Ele comeca a ser perdido nos impulsos, nas emocoes e nas decisoes automaticas.\n\n"
+                + "B) Diagnostico\nUm possivel padrao dominante observado e a busca de alivio rapido (recompensa imediata) quando ha pressao ou cansaco.\n\n"
+                + "C) Gatilho principal\nSeu principal gatilho observado foi: recompensa imediata.\n\n"
+                + "D) Interpretacao judaica\nNa sabedoria judaica, prosperidade nasce de governo sobre si: disciplina diaria, prudencia e construcao de base antes de expandir.\n\n"
+                + "E) Virada\nOs 21 dias mostraram o mapa. Agora comeca a fase em que voce deixa de apenas identificar seus impulsos e passa a governa-los.\n\n"
+                + "F) Oferta natural\n" + BuildDefaultOfferBlock(),
             TopTriggers: ["ansiedade", "recompensa imediata", "comparacao social"],
             EmotionalPattern: "Uma tendencia observada de buscar alivio rapido em dias de pressao.",
             FinancialRiskPattern: "Risco de gastos por impulso se o padrao nao for governado.",
@@ -644,9 +723,13 @@ public static class MentorEndpoints
 
     private static string BuildDefaultOfferBlock()
     {
-        return "Continuar com Chodesh HaMelech — R$ 37,90/mes\n"
-            + "Escolher jornada anual — R$ 297/ano\n"
-            + "(equivale a R$ 24,75/mes; economia de R$ 157,80 ao ano vs mensal)";
+        return "Trilha Chodesh HaMelech — O Mes do Dominio Financeiro\n"
+            + "Os 21 dias revelaram seus gatilhos. Agora voce entra na fase de tratamento e dominio, com rotina, pausas, limites e consistencia.\n\n"
+            + "Opcoes para continuar:\n"
+            + "- Acesso mensal a trilha: R$ 37,90\n"
+            + "- Jornada Anual Shnat HaKatzir: R$ 397,90 (economia de R$ 56,90 vs 12 meses do mensal; ~12,5% de desconto)\n"
+            + "- Legado Vitalicio Brit HaOsher: R$ 497,90 (melhor escolha para quem quer acesso definitivo)\n\n"
+            + "CTA: Desbloquear minha Trilha Chodesh HaMelech";
     }
 
     private static IReadOnlyList<string> SafeParseStringList(string json)

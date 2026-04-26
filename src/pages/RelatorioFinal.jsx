@@ -83,8 +83,8 @@ export default function RelatorioFinal() {
     return (
       <div className="container" style={{ display: 'grid', gap: 14, paddingTop: 12 }}>
         <SectionCard
-          title="Relatório Final"
-          description="Conclua os 21 dias para liberar seu relatório final com padrões, gatilhos e próximos passos."
+          title="Relatório Rabínico da Sua Jornada Financeira"
+          description="Conclua os 21 dias para liberar seu relatório final personalizado com padrões, gatilhos e a virada para a próxima trilha."
         >
           <Link className="btn btn-primary" to="/desafios">
             Ir para os Desafios
@@ -97,8 +97,8 @@ export default function RelatorioFinal() {
   return (
     <div className="container" style={{ display: 'grid', gap: 14, paddingTop: 12, paddingBottom: 90 }}>
       <SectionCard
-        title="Relatório Final dos 21 Dias"
-        description="Seu diagnóstico final: gatilhos, padrão emocional, risco financeiro e recomendações."
+        title="Relatório Rabínico da Sua Jornada Financeira"
+        description="Um fechamento dos 21 dias: padrão dominante, gatilho principal e a continuação natural da sua jornada."
       >
         {loading ? (
           <div className="card" style={{ padding: 12 }}>
@@ -132,7 +132,7 @@ export default function RelatorioFinal() {
                   </div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <Link className="btn btn-primary" to="/assinatura">
-                      Ver planos (Mensal/Anual)
+                      Desbloquear minha Trilha Chodesh HaMelech
                     </Link>
                     <button type="button" className="btn btn-soft" onClick={handleMentorUnlimited}>
                       Acompanhamento Rabínico Ilimitado — R$ 17,90/mês

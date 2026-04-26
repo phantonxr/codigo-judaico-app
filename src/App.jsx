@@ -17,6 +17,7 @@ import Desafios from './pages/Desafios.jsx'
 import Biblioteca from './pages/Biblioteca.jsx'
 import Mais from './pages/Mais.jsx'
 import Assinatura from './pages/Assinatura.jsx'
+import AdminAssinantes from './pages/AdminAssinantes.jsx'
 import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
 import Calendario from './pages/Calendario.jsx'
 import RelatorioFinal from './pages/RelatorioFinal.jsx'
@@ -129,6 +130,7 @@ function AppLayout() {
     '/biblioteca': 'Biblioteca',
     '/mais': 'Mais',
     '/assinatura': 'Assinatura',
+    '/admin/assinantes': 'Assinantes',
     '/avaliacao': 'Avaliação Financeira',
     '/calendario': 'Calendário',
     '/relatorio-final': 'Relatório Final',
@@ -164,6 +166,7 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/assinatura" element={<Assinatura />} />
+          <Route path="/admin/assinantes" element={<AdminAssinantes />} />
           <Route element={<RequireSubscriptionAccess />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/mentor" element={<RabinoMentorIA />} />

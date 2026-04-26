@@ -12,11 +12,18 @@ const navItems = [
   { label: 'Assinatura', to: '/assinatura' },
 ]
 
+const masterNavItems = [
+  { label: 'Assinantes', to: '/admin/assinantes' },
+]
+
 export default function Sidebar() {
   const currentUser = useCurrentUser()
   const name = currentUser?.name || 'Aluno'
   const plan = currentUser?.plan || '-'
   const hasActiveAccess = currentUser?.hasActiveAccess !== false
+  const visibleNavItems = currentUser?.isMasterUser
+    ? [...navItems, ...masterNavItems]
+    : navItems
   const initials = (name
     .split(/\s+/)
     .filter(Boolean)
@@ -50,7 +57,7 @@ export default function Sidebar() {
           </div>
         </Link>
         <nav className="nav" aria-label="Navegacao">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

@@ -50,6 +50,9 @@ services:
       Resend__From: ${Resend__From}
       Resend__InboundWebhookSecret: ${Resend__InboundWebhookSecret:-}
       Resend__InboundWebhookDisableVerification: ${Resend__InboundWebhookDisableVerification:-false}
+      MasterUser__Email: ${MasterUser__Email:-}
+      MasterUser__Password: ${MasterUser__Password:-}
+      MasterUser__Name: ${MasterUser__Name:-Master}
 
   frontend:
     build:

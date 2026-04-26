@@ -160,6 +160,14 @@ export default function Dashboard() {
           var Icon = PHASE_ICONS[ph.icon] || Star
           var benefit = PHASE_BENEFITS[idx]
 
+          var lockedCtaLabel = idx === 1
+            ? 'Liberar Chodesh HaMelech'
+            : idx === 2
+              ? 'Desbloquear Mahalach HaZera'
+              : idx === 3
+                ? 'Desbloquear Shnat HaKatzir'
+                : 'Desbloquear próxima fase'
+
           return (
             <div
               key={ph.id}
@@ -237,6 +245,22 @@ export default function Dashboard() {
                 <Trophy size={12} style={{ flexShrink: 0 }} />
                 <span style={{ fontWeight: 700 }}>{ph.reward}</span>
               </div>
+
+              {!unlocked ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  onClick={function () { navigate('/assinatura') }}
+                  style={{
+                    marginTop: 12,
+                    width: '100%',
+                    fontWeight: 900,
+                    boxShadow: 'var(--glow-gold)',
+                  }}
+                >
+                  {lockedCtaLabel}
+                </button>
+              ) : null}
             </div>
           )
         })}

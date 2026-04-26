@@ -72,6 +72,7 @@ builder.Services.AddScoped<StripeBillingService>();
 builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
 builder.Services.AddScoped<RequirePremiumAccessEndpointFilter>();
+builder.Services.AddScoped<RequireMasterUserEndpointFilter>();
 
 var app = builder.Build();
 
@@ -98,6 +99,7 @@ app.MapHealthChecks("/api/health");
 app.MapCatalogEndpoints();
 app.MapSessionEndpoints();
 app.MapPaymentEndpoints();
+app.MapAdminEndpoints();
 app.MapUserStateEndpoints();
 app.MapMentorEndpoints();
 

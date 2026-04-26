@@ -71,6 +71,10 @@ Resend__Enabled=true
 Resend__From=noreply@codigomilenarjudaico.com
 Resend__InboundWebhookSecret=
 Resend__InboundWebhookDisableVerification=false
+
+MasterUser__Email=admin@seu-dominio.com
+MasterUser__Password=senha-forte-com-8-ou-mais-caracteres
+MasterUser__Name=Master
 ```
 
 Observacoes:
@@ -92,6 +96,7 @@ Observacoes:
 - `Resend__Enabled` deve ficar `true` no ambiente que realmente vai enviar os e-mails.
 - `Resend__InboundWebhookSecret` e `Resend__InboundWebhookDisableVerification` ficam prontos para o momento em que voce adicionar um webhook inbound da Resend. O fluxo atual de liberacao de acesso usa apenas envio.
 - se `Resend` estiver habilitado sem `ApiKey` ou `From`, a API vai liberar o acesso mesmo assim, mas registrara um aviso e nao conseguira enviar o e-mail.
+- `MasterUser__Email` e `MasterUser__Password` criam ou atualizam o primeiro usuario master na inicializacao da API. Esse usuario entra pelo login normal e acessa `/admin/assinantes`.
 
 ## Metadata PaymentCore
 
@@ -220,6 +225,9 @@ No servico `api`, se a string de conexao estiver no `appsettings.Production.json
 - `Resend__From`
 - `Resend__InboundWebhookSecret`
 - `Resend__InboundWebhookDisableVerification`
+- `MasterUser__Email`
+- `MasterUser__Password`
+- `MasterUser__Name`
 
 ### Aplicar migration no banco de producao a partir do seu computador
 

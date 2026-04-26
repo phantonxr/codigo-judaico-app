@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Check, Lock, Loader, Star, AlertTriangle,
   BookOpen, Target, ChevronRight, Flame, Shield, Circle, CircleDot, Sparkles,
@@ -92,6 +92,7 @@ export default function Desafios() {
    ════════════════════════════════════════════════════ */
 
 function TwentyOneDayView({ assignedTrack }) {
+  var navigate = useNavigate()
   var track = challenges21Days[assignedTrack] || challenges21Days.trilha1
   var trackLabel = TRACK_LABELS[assignedTrack] || assignedTrack
 
@@ -234,9 +235,12 @@ function TwentyOneDayView({ assignedTrack }) {
 
   function handleCompleteDay() {
     completeDayFull(selectedDay)
-    if (selectedDay < 20) {
-      selectDay(selectedDay + 1)
+    if (selectedDay >= 20) {
+      navigate('/relatorio-final')
+      return
     }
+
+    selectDay(selectedDay + 1)
     setRefresh(function (r) { return r + 1 })
   }
 

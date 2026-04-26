@@ -8,38 +8,38 @@ const DEFAULT_PLAN_ID = 'primeiro-acesso'
 const PLAN_CATALOG = {
   'primeiro-acesso': {
     id: 'primeiro-acesso',
-    title: 'Primeiro Acesso',
+    title: 'Seder HaKesef — 21 Dias',
     price: 'R$ 29,90',
-    subtitle: '21 dias de acesso completo',
-    highlight: 'Primeira assinatura',
+    subtitle: 'A fase inicial para estabilizar sua vida financeira e revelar os gatilhos que controlam suas decisões.',
+    highlight: 'Etapa inicial',
   },
   renovacao: {
     id: 'renovacao',
-    title: 'Renovacao Especial',
-    price: 'R$ 17,90',
-    subtitle: '+ 21 dias de acesso, disponivel uma unica vez',
-    highlight: 'Oferta exclusiva',
+    title: 'Seder HaKesef — 21 Dias',
+    price: 'R$ 29,90',
+    subtitle: 'Condição especial para continuar a etapa inicial por mais 21 dias.',
+    highlight: 'Condição liberada',
   },
   mensal: {
     id: 'mensal',
-    title: 'Premium Mensal',
+    title: 'Trilha Chodesh HaMelech',
     price: 'R$ 37,90',
-    subtitle: 'Renovacao automatica mensal',
-    highlight: 'Plano recorrente',
+    subtitle: 'O mês do domínio financeiro — acesso mensal à trilha para tratar os gatilhos e governar seus impulsos.',
+    highlight: 'Próxima fase natural',
   },
   anual: {
     id: 'anual',
-    title: 'Premium Anual',
-    price: 'R$ 297,90',
-    subtitle: '12 meses de acesso',
-    highlight: 'Melhor custo-beneficio',
+    title: 'Jornada Anual Shnat HaKatzir',
+    price: 'R$ 397,90',
+    subtitle: '12 meses de jornada com economia de R$ 56,90 em relação ao mensal (12,5% de desconto).',
+    highlight: 'Melhor escolha',
   },
   vitalicio: {
     id: 'vitalicio',
-    title: 'Acesso Vitalicio',
+    title: 'Legado Vitalício Brit HaOsher',
     price: 'R$ 497,90',
-    subtitle: 'Pagamento unico, sem renovacao',
-    highlight: 'Para sempre',
+    subtitle: 'Acesso permanente ao método e às trilhas de prosperidade judaica. Ideal para quem quer acesso definitivo.',
+    highlight: 'Acesso definitivo',
   },
 }
 
@@ -115,8 +115,8 @@ export default function CheckoutPage() {
             <span className="badge" style={{ width: 'fit-content' }}>Checkout oficial via Stripe</span>
             <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05 }}>
               {existingAccountFlow
-                ? 'Finalize sua assinatura'
-                : 'Desbloqueie o Metodo Judaico da Prosperidade'}
+                ? 'Finalize sua continuação'
+                : 'Desbloqueie a continuação do método'}
             </h1>
             <div className="muted">
               {existingAccountFlow

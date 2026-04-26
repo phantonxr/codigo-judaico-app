@@ -9,6 +9,11 @@ public static class AppAccessEvaluator
 
     public static bool HasPremiumAccess(AppUser? user)
     {
+        if (user?.IsMasterUser == true)
+        {
+            return true;
+        }
+
         if (user is null || !user.AccessEnabled)
         {
             return false;

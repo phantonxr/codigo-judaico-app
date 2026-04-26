@@ -54,9 +54,26 @@ function buildFreshCheckoutPath(planId) {
   return `/checkout?plan=${encodeURIComponent(selectedPlan.id)}`
 }
 
+function resolveAccessLabel(planId) {
+  var pid = String(planId || '')
+  if (pid === 'mensal') return '1 mês de acesso completo'
+  if (pid === 'anual') return '12 meses de acesso completo'
+  if (pid === 'vitalicio') return 'Acesso vitalício ao método'
+  return '21 dias de acesso completo'
+}
+
+function resolvePhaseLabel(planTitle) {
+  var title = String(planTitle || '')
+  var parts = title.split('—')
+  var left = String(parts[0] || '').trim()
+  return left || title
+}
+
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
   const selectedPlan = resolvePlan(searchParams.get('plan'))
+  const accessLabel = resolveAccessLabel(selectedPlan.id)
+  const phaseLabel = resolvePhaseLabel(selectedPlan.title)
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -96,7 +113,7 @@ export default function CheckoutPage() {
     }
 
     if (!existingAccountFlow && password !== passwordConfirmation) {
-      setError('A confirmacao da senha nao confere.')
+      setError('A confirmação da senha não confere.')
       return
     }
 
@@ -167,6 +184,12 @@ export default function CheckoutPage() {
               </div>
               <div style={{ fontWeight: 900, fontSize: 28, color: 'var(--gold-2)' }}>
                 {selectedPlan.price}
+              </div>
+              <div className="muted" style={{ display: 'grid', gap: 4, lineHeight: 1.45 }}>
+                <div style={{ fontWeight: 900, color: 'rgba(255,255,255,0.85)' }}>{accessLabel}</div>
+                <div>
+                  Fase inicial: <strong style={{ color: 'var(--gold-2)' }}>{phaseLabel}</strong>
+                </div>
               </div>
               <div style={{
                 fontWeight: 900,
@@ -301,6 +324,7 @@ export default function CheckoutPage() {
               <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.6, fontSize: 13 }}>
                 <div>🔒 Pagamento 100% seguro via Stripe</div>
                 <div>✔ Liberação imediata após confirmação</div>
+                <div>🔑 Acesso com e-mail e senha</div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

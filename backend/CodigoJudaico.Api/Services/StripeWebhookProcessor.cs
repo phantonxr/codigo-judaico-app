@@ -12,6 +12,7 @@ public sealed class StripeWebhookProcessor(
     StripeBillingService stripeBillingService,
     PasswordHashService passwordHashService,
     AccessEmailService accessEmailService,
+    UtmfyService utmfyService,
     ILogger<StripeWebhookProcessor> logger)
 {
     private const string MentorUnlimitedPlanId = "mentor-ilimitado";
@@ -222,6 +223,57 @@ public sealed class StripeWebhookProcessor(
             accessWasEnabled,
             lastCompletedCheckoutSessionId,
             session.Id,
+            cancellationToken);
+
+        await TrackUtmfyPurchaseAsync(session, user, matchedPlan, cancellationToken);
+    }
+
+    private async Task TrackUtmfyPurchaseAsync(
+        Session session,
+        AppUser user,
+        StripePlanDefinition plan,
+        CancellationToken cancellationToken)
+    {
+        var orderId = ReadMetadata(session.Metadata, StripeBillingService.OrderIdMetadataKey);
+
+        if (string.IsNullOrWhiteSpace(orderId))
+        {
+            return;
+        }
+
+        var utmSource = ReadMetadata(session.Metadata, StripeBillingService.UtmSourceMetadataKey);
+        var utmMedium = ReadMetadata(session.Metadata, StripeBillingService.UtmMediumMetadataKey);
+        var utmCampaign = ReadMetadata(session.Metadata, StripeBillingService.UtmCampaignMetadataKey);
+        var utmTerm = ReadMetadata(session.Metadata, StripeBillingService.UtmTermMetadataKey);
+        var utmContent = ReadMetadata(session.Metadata, StripeBillingService.UtmContentMetadataKey);
+
+        // Fallback para UTMs salvos no usuário, caso a session não tenha
+        if (string.IsNullOrWhiteSpace(utmSource))
+        {
+            utmSource = user.UtmSource ?? string.Empty;
+            utmMedium = user.UtmMedium ?? string.Empty;
+            utmCampaign = user.UtmCampaign ?? string.Empty;
+            utmTerm = user.UtmTerm ?? string.Empty;
+            utmContent = user.UtmContent ?? string.Empty;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        await utmfyService.TrackAsync(new UtmfyConversionRequest(
+            OrderId: orderId,
+            Email: user.Email,
+            Name: user.Name,
+            PlanId: plan.Id,
+            PlanName: plan.PlanName,
+            AmountInCents: session.AmountTotal ?? 0,
+            Status: "paid",
+            CreatedAt: now,
+            ApprovedAt: now,
+            UtmSource: string.IsNullOrWhiteSpace(utmSource) ? null : utmSource,
+            UtmMedium: string.IsNullOrWhiteSpace(utmMedium) ? null : utmMedium,
+            UtmCampaign: string.IsNullOrWhiteSpace(utmCampaign) ? null : utmCampaign,
+            UtmTerm: string.IsNullOrWhiteSpace(utmTerm) ? null : utmTerm,
+            UtmContent: string.IsNullOrWhiteSpace(utmContent) ? null : utmContent),
             cancellationToken);
     }
 

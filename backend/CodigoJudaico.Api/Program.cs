@@ -27,6 +27,8 @@ builder.Services.Configure<ResendOptions>(
     builder.Configuration.GetSection(ResendOptions.SectionName));
 builder.Services.Configure<OpenAIOptions>(
     builder.Configuration.GetSection(OpenAIOptions.SectionName));
+builder.Services.Configure<UtmfyOptions>(
+    builder.Configuration.GetSection(UtmfyOptions.SectionName));
 builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 {
     var opts = sp.GetRequiredService<
@@ -34,6 +36,11 @@ builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
     client.BaseAddress = new Uri(OpenAIOptions.NormalizeBaseUrl(opts.BaseUrl));
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     client.Timeout = TimeSpan.FromSeconds(60);
+});
+builder.Services.AddHttpClient("Utmfy", client =>
+{
+    client.BaseAddress = new Uri("https://api.utmify.com.br/");
+    client.Timeout = TimeSpan.FromSeconds(10);
 });
 builder.Services.AddHttpClient("Resend", (serviceProvider, client) =>
 {
@@ -71,6 +78,7 @@ builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<StripeBillingService>();
 builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
+builder.Services.AddScoped<UtmfyService>();
 builder.Services.AddScoped<RequirePremiumAccessEndpointFilter>();
 builder.Services.AddScoped<RequireMasterUserEndpointFilter>();
 

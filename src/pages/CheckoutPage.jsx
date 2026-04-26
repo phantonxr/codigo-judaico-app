@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
+import { useUtmParams } from '../hooks/useUtmParams.js'
 import FloatingProof from '../components/FloatingProof.jsx'
 import { Zap, Clock } from 'lucide-react'
 
@@ -106,6 +107,8 @@ export default function CheckoutPage() {
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
   const existingAccountFlow = redirectedFromLogin && Boolean(email)
 
+  const utm = useUtmParams()
+
   const [secondsLeft, setSecondsLeft] = useState(10 * 60)
 
   useEffect(function () {
@@ -150,6 +153,11 @@ export default function CheckoutPage() {
         email,
         planId: selectedPlan.id,
         password,
+        utmSource: utm.utm_source ?? null,
+        utmMedium: utm.utm_medium ?? null,
+        utmCampaign: utm.utm_campaign ?? null,
+        utmTerm: utm.utm_term ?? null,
+        utmContent: utm.utm_content ?? null,
       })
 
       if (!response?.url) {

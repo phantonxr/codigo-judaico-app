@@ -29,6 +29,11 @@ public sealed class StripeBillingService(
     public const string SellerIdMetadataKey = "seller_id";
     public const string SellerNameMetadataKey = "seller_name";
     public const string OrderIdMetadataKey = "order_id";
+    public const string UtmSourceMetadataKey = "utm_source";
+    public const string UtmMediumMetadataKey = "utm_medium";
+    public const string UtmCampaignMetadataKey = "utm_campaign";
+    public const string UtmTermMetadataKey = "utm_term";
+    public const string UtmContentMetadataKey = "utm_content";
 
     private readonly StripeBillingOptions _options = options.Value;
     private readonly ILogger<StripeBillingService> _logger = logger;
@@ -141,7 +146,12 @@ public sealed class StripeBillingService(
             email,
             name,
             plan,
-            paymentCoreMetadata);
+            paymentCoreMetadata,
+            utmSource: ApiMappers.Clean(request.UtmSource),
+            utmMedium: ApiMappers.Clean(request.UtmMedium),
+            utmCampaign: ApiMappers.Clean(request.UtmCampaign),
+            utmTerm: ApiMappers.Clean(request.UtmTerm),
+            utmContent: ApiMappers.Clean(request.UtmContent));
         var routing = StripeConnectRouting.Direct;
 
         _logger.LogInformation(
@@ -184,7 +194,7 @@ public sealed class StripeBillingService(
             paymentCoreMetadata.OrderId,
             plan.Id);
 
-        return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty);
+        return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty, session.AmountTotal ?? 0);
     }
 
     public async Task<Session> GetCheckoutSessionAsync(string sessionId, CancellationToken cancellationToken)

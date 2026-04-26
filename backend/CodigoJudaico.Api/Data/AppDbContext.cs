@@ -37,6 +37,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.StripeCustomerId).HasMaxLength(120);
             entity.Property(x => x.StripeSubscriptionId).HasMaxLength(120);
             entity.Property(x => x.LastStripeCheckoutSessionId).HasMaxLength(120);
+            entity.Property(x => x.UtmSource).HasMaxLength(100);
+            entity.Property(x => x.UtmMedium).HasMaxLength(100);
+            entity.Property(x => x.UtmCampaign).HasMaxLength(200);
+            entity.Property(x => x.UtmTerm).HasMaxLength(200);
+            entity.Property(x => x.UtmContent).HasMaxLength(200);
         });
 
         modelBuilder.Entity<AppSession>(entity =>

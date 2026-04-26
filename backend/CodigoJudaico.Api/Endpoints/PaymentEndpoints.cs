@@ -131,6 +131,7 @@ public static class PaymentEndpoints
             PasswordHashService passwordHashService,
             StripeBillingService stripeBillingService,
             AccessEmailService accessEmailService,
+            UtmfyService utmfyService,
             ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
@@ -278,7 +279,37 @@ public static class PaymentEndpoints
             user.LastStripeCheckoutSessionId = response.SessionId;
             user.UpdatedAt = now;
 
+            // Salva UTMs no usuário (first-touch: só se ainda não tiver)
+            if (string.IsNullOrWhiteSpace(user.UtmSource) && !string.IsNullOrWhiteSpace(request.UtmSource))
+            {
+                user.UtmSource = request.UtmSource;
+                user.UtmMedium = request.UtmMedium;
+                user.UtmCampaign = request.UtmCampaign;
+                user.UtmTerm = request.UtmTerm;
+                user.UtmContent = request.UtmContent;
+            }
+
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            // Notifica UTMfy que o checkout foi iniciado (waiting_payment)
+            var orderId = response.SessionId;
+
+            await utmfyService.TrackAsync(new UtmfyConversionRequest(
+                OrderId: orderId,
+                Email: email,
+                Name: cleanedName,
+                PlanId: plan.Id,
+                PlanName: plan.PlanName,
+                AmountInCents: response.AmountInCents,
+                Status: "waiting_payment",
+                CreatedAt: now,
+                ApprovedAt: null,
+                UtmSource: request.UtmSource,
+                UtmMedium: request.UtmMedium,
+                UtmCampaign: request.UtmCampaign,
+                UtmTerm: request.UtmTerm,
+                UtmContent: request.UtmContent),
+                cancellationToken);
 
             if (shouldSendAccountCreatedEmail)
             {

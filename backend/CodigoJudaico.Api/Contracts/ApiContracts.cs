@@ -212,11 +212,17 @@ public sealed record CheckoutSessionCreateRequest
     public string? Name { get; init; }
     public string PlanId { get; init; } = string.Empty;
     public string Password { get; init; } = string.Empty;
+    public string? UtmSource { get; init; }
+    public string? UtmMedium { get; init; }
+    public string? UtmCampaign { get; init; }
+    public string? UtmTerm { get; init; }
+    public string? UtmContent { get; init; }
 }
 
 public sealed record CheckoutSessionCreateResponse(
     string SessionId,
-    string Url);
+    string Url,
+    long AmountInCents = 0);
 
 public sealed record LoginBlockedResponse(
     string Code,

@@ -26,7 +26,12 @@ internal static class StripeCheckoutSessionBuilder
         string email,
         string? name,
         StripePlanDefinition plan,
-        PaymentCoreCheckoutMetadata paymentCoreMetadata)
+        PaymentCoreCheckoutMetadata paymentCoreMetadata,
+        string? utmSource = null,
+        string? utmMedium = null,
+        string? utmCampaign = null,
+        string? utmTerm = null,
+        string? utmContent = null)
     {
         EnsureRequiredPaymentCoreMetadata(paymentCoreMetadata);
 
@@ -50,6 +55,17 @@ internal static class StripeCheckoutSessionBuilder
         {
             metadata[StripeBillingService.NameMetadataKey] = name;
         }
+
+        if (!string.IsNullOrWhiteSpace(utmSource))
+            metadata[StripeBillingService.UtmSourceMetadataKey] = utmSource;
+        if (!string.IsNullOrWhiteSpace(utmMedium))
+            metadata[StripeBillingService.UtmMediumMetadataKey] = utmMedium;
+        if (!string.IsNullOrWhiteSpace(utmCampaign))
+            metadata[StripeBillingService.UtmCampaignMetadataKey] = utmCampaign;
+        if (!string.IsNullOrWhiteSpace(utmTerm))
+            metadata[StripeBillingService.UtmTermMetadataKey] = utmTerm;
+        if (!string.IsNullOrWhiteSpace(utmContent))
+            metadata[StripeBillingService.UtmContentMetadataKey] = utmContent;
 
         return metadata;
     }

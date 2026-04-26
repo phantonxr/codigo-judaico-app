@@ -84,6 +84,9 @@ namespace CodigoJudaico.Api.Data.Migrations
                     b.Property<bool>("HasUsedRenewalOffer")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("HasCompletedAssessment")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsMasterUser")
                         .HasColumnType("boolean");
 
@@ -239,6 +242,21 @@ namespace CodigoJudaico.Api.Data.Migrations
 
                     b.Property<int>("DayNumber")
                         .HasColumnType("integer");
+
+                    b.Property<string>("DetectedEmotion")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("ObservedPattern")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("TriggerType")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
 
                     b.Property<string>("DetectedTrigger")
                         .IsRequired()

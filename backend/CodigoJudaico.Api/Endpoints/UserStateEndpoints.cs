@@ -117,6 +117,41 @@ public static class UserStateEndpoints
                 return Results.NotFound();
             }
 
+            // Assessment must not be redone once completed.
+            // Keep this endpoint idempotent for the frontend sync: if a diagnosis already exists,
+            // just return it and ensure journey state is consistent.
+            if (user.HasCompletedAssessment && user.Diagnosis is not null)
+            {
+                var nowLocked = DateTimeOffset.UtcNow;
+
+                var journeyLocked = user.JourneyState ?? new UserJourneyState
+                {
+                    UserId = userId,
+                    User = user,
+                    ProgressJson = "{}",
+                    CalendarJson = "{\"completedDays\":{}}",
+                    UpdatedAt = nowLocked,
+                };
+
+                if (string.IsNullOrWhiteSpace(journeyLocked.AssignedTrack))
+                {
+                    journeyLocked.AssignedTrack = user.Diagnosis.TrackId;
+                }
+
+                journeyLocked.JourneyStartDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
+                journeyLocked.UpdatedAt = nowLocked;
+
+                if (user.JourneyState is null)
+                {
+                    dbContext.UserJourneyStates.Add(journeyLocked);
+                }
+
+                user.UpdatedAt = nowLocked;
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                return Results.Ok(user.Diagnosis.ToDto());
+            }
+
             var now = DateTimeOffset.UtcNow;
             var diagnosis = user.Diagnosis ?? new UserDiagnosis
             {
@@ -157,6 +192,8 @@ public static class UserStateEndpoints
             {
                 dbContext.UserJourneyStates.Add(journeyState);
             }
+
+            user.HasCompletedAssessment = true;
 
             user.UpdatedAt = now;
             await dbContext.SaveChangesAsync(cancellationToken);

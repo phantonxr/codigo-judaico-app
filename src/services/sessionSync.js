@@ -9,6 +9,7 @@ const PLAN_STATUS_KEY = 'auth_user_plan_status'
 const NEXT_CHARGE_DATE_KEY = 'auth_user_next_charge_date'
 const HAS_ACTIVE_ACCESS_KEY = 'auth_user_has_active_access'
 const IS_MASTER_USER_KEY = 'auth_user_is_master_user'
+const HAS_COMPLETED_ASSESSMENT_KEY = 'auth_user_has_completed_assessment'
 
 const DIAGNOSIS_KEY = 'cj_financial_diagnosis'
 const TRACK_KEY = 'cj_assigned_track'
@@ -130,6 +131,7 @@ export function readStoredUserId() {
 export function readStoredCurrentUser() {
   const rawHasActiveAccess = safeTrim(localStorage.getItem(HAS_ACTIVE_ACCESS_KEY)).toLowerCase()
   const rawIsMasterUser = safeTrim(localStorage.getItem(IS_MASTER_USER_KEY)).toLowerCase()
+  const rawHasCompletedAssessment = safeTrim(localStorage.getItem(HAS_COMPLETED_ASSESSMENT_KEY)).toLowerCase()
 
   return {
     id: readStoredUserId(),
@@ -140,6 +142,7 @@ export function readStoredCurrentUser() {
     nextChargeDate: safeTrim(localStorage.getItem(NEXT_CHARGE_DATE_KEY)),
     hasActiveAccess: rawHasActiveAccess !== 'false',
     isMasterUser: rawIsMasterUser === 'true',
+    hasCompletedAssessment: rawHasCompletedAssessment === 'true',
   }
 }
 
@@ -156,6 +159,7 @@ export function clearSessionCache() {
     NEXT_CHARGE_DATE_KEY,
     HAS_ACTIVE_ACCESS_KEY,
     IS_MASTER_USER_KEY,
+    HAS_COMPLETED_ASSESSMENT_KEY,
     DIAGNOSIS_KEY,
     TRACK_KEY,
     JOURNEY_START_KEY,
@@ -180,6 +184,7 @@ export function hydrateSessionCache(session) {
   writeRaw(NEXT_CHARGE_DATE_KEY, user.nextChargeDate)
   writeRaw(HAS_ACTIVE_ACCESS_KEY, user.hasActiveAccess ? 'true' : 'false')
   writeRaw(IS_MASTER_USER_KEY, user.isMasterUser ? 'true' : 'false')
+  writeRaw(HAS_COMPLETED_ASSESSMENT_KEY, user.hasCompletedAssessment ? 'true' : 'false')
 
   if (session.diagnosis) {
     writeJson(DIAGNOSIS_KEY, {
@@ -307,6 +312,7 @@ export async function syncCurrentUserProfile(userInput) {
   writeRaw(NEXT_CHARGE_DATE_KEY, response?.nextChargeDate)
   writeRaw(HAS_ACTIVE_ACCESS_KEY, response?.hasActiveAccess ? 'true' : 'false')
   writeRaw(IS_MASTER_USER_KEY, response?.isMasterUser ? 'true' : 'false')
+  writeRaw(HAS_COMPLETED_ASSESSMENT_KEY, response?.hasCompletedAssessment ? 'true' : 'false')
   dispatch('auth_user_updated')
   return response
 }

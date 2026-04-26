@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SectionCard from '../components/SectionCard.jsx'
 import useFinancialDiagnosis from '../hooks/useFinancialDiagnosis.js'
+import useCurrentUser from '../hooks/useCurrentUser.js'
+import { TRACK_DESCRIPTIONS, TRACK_LABELS } from '../data/challenges21Days.js'
 
 const QUESTIONS = [
   {
@@ -139,10 +141,25 @@ function analyzeDiagnosis(answers) {
 
 export default function AvaliacaoFinanceira() {
   const navigate = useNavigate()
-  const { save } = useFinancialDiagnosis()
+  const currentUser = useCurrentUser()
+  const { save, diagnosis, assignedTrack } = useFinancialDiagnosis()
   const [step, setStep] = useState(0) // 0 = intro, 1..15 = questions, 16 = result
   const [answers, setAnswers] = useState({})
   const [result, setResult] = useState(null)
+
+  const hasCompletedAssessment = Boolean(currentUser?.hasCompletedAssessment)
+    || Boolean(diagnosis?.trackId)
+    || Boolean(assignedTrack)
+
+  const lockedTrackId = assignedTrack || diagnosis?.trackId || ''
+  const lockedTrackLabel = diagnosis?.trackLabel || TRACK_LABELS[lockedTrackId] || lockedTrackId
+  const lockedTrackDescription = TRACK_DESCRIPTIONS[lockedTrackId] || ''
+
+  const diagnosisText = String(diagnosis?.diagnostico || '').trim()
+  const triggerText = String(diagnosis?.gatilho || '').trim()
+  const diagnosisSummary = diagnosisText.length > 240
+    ? diagnosisText.slice(0, 240).trim() + '…'
+    : diagnosisText
 
   const questionIndex = step - 1
   const currentQuestion = QUESTIONS[questionIndex]
@@ -177,6 +194,65 @@ export default function AvaliacaoFinanceira() {
 
   function goToCalendario() {
     navigate('/calendario')
+  }
+
+  if (hasCompletedAssessment && lockedTrackId) {
+    return (
+      <div className="container" style={{ display: 'grid', gap: 14, paddingTop: 16, paddingBottom: 40 }}>
+        <SectionCard
+          title="Avaliação concluída"
+          description="Sua trilha foi definida e a jornada já está em andamento."
+        >
+          <div style={{ display: 'grid', gap: 14, maxWidth: 720 }}>
+            <div className="card" style={{ borderColor: 'rgba(215,178,74,0.35)' }}>
+              <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
+                <div className="muted" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Sua trilha
+                </div>
+                <div style={{ fontWeight: 900, fontSize: 22, color: 'var(--gold-2)', lineHeight: 1.25 }}>
+                  {lockedTrackLabel}
+                </div>
+                {lockedTrackDescription ? (
+                  <div className="muted" style={{ lineHeight: 1.7 }}>
+                    {lockedTrackDescription}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {diagnosisSummary ? (
+              <div className="card" style={{ borderColor: 'rgba(215,178,74,0.18)' }}>
+                <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Diagnóstico resumido
+                  </div>
+                  <div className="muted" style={{ lineHeight: 1.75 }}>
+                    {diagnosisSummary}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {triggerText ? (
+              <div className="card" style={{ borderColor: 'rgba(215,178,74,0.18)' }}>
+                <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Gatilho principal identificado
+                  </div>
+                  <div className="muted" style={{ lineHeight: 1.75 }}>
+                    {triggerText}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <button className="btn btn-primary" type="button" onClick={goToDesafios}>
+              Continuar minha jornada
+            </button>
+          </div>
+        </SectionCard>
+      </div>
+    )
   }
 
   // Intro

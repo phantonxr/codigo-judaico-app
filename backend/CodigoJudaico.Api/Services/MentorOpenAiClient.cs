@@ -263,7 +263,10 @@ public sealed class MentorOpenAiClient
                 FinancialRisk: dto.FinancialRisk ?? string.Empty,
                 JewishWisdom: dto.JewishWisdom ?? string.Empty,
                 PracticalAction: dto.PracticalAction ?? string.Empty,
-                FeedbackText: dto.FeedbackText ?? string.Empty);
+                FeedbackText: dto.FeedbackText ?? string.Empty,
+                DetectedEmotion: dto.DetectedEmotion ?? string.Empty,
+                TriggerType: dto.TriggerType ?? string.Empty,
+                ObservedPattern: dto.ObservedPattern ?? string.Empty);
         }
         catch
         {
@@ -327,6 +330,11 @@ public sealed class MentorOpenAiClient
         public string? JewishWisdom { get; set; }
         public string? PracticalAction { get; set; }
         public string? FeedbackText { get; set; }
+
+        // Progressive profile signals
+        public string? DetectedEmotion { get; set; }
+        public string? TriggerType { get; set; }
+        public string? ObservedPattern { get; set; }
     }
 
     private sealed class MentorFinalReportDto

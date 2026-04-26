@@ -108,6 +108,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.UserId, x.Phase, x.DayNumber });
             entity.Property(x => x.Phase).HasMaxLength(80);
+            entity.Property(x => x.DetectedEmotion).HasMaxLength(80);
+            entity.Property(x => x.TriggerType).HasMaxLength(120);
+            entity.Property(x => x.ObservedPattern).HasMaxLength(160);
             entity.Property(x => x.DetectedTrigger).HasMaxLength(500);
             entity.Property(x => x.EmotionalPattern).HasMaxLength(700);
             entity.Property(x => x.FinancialRisk).HasMaxLength(700);

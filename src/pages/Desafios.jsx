@@ -180,8 +180,8 @@ function TwentyOneDayView({ assignedTrack }) {
       tarde: dayContent?.tarde || 'Acao financeira consciente',
       noite: dayContent?.noite || 'Separar valor para reserva',
       reflexao: 'Estudar principio judaico do dia',
-      registro: 'Registrar gatilho emocional de compra',
-      gatilho: 'Identificar decisao financeira sabia',
+      registro: 'Registro emocional do dia (antes/depois do impulso)',
+      gatilho: 'Identificar o gatilho dominante de gasto',
     }
     var statuses = getDayTaskStatuses(selectedDay)
     for (var id in labels) {
@@ -489,15 +489,15 @@ function TwentyOneDayView({ assignedTrack }) {
           )}
           <div className="field">
             <label>O que fiz hoje</label>
-            <textarea className="input" rows={2} placeholder="Descreva o que executou..." value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
+            <textarea className="input" rows={2} placeholder="Descreva o que aconteceu (impulso, decisao, contexto, justificativa mental)..." value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
           </div>
           <div className="field">
             <label>Como me senti</label>
-            <textarea className="input" rows={2} placeholder="Descreva suas emocoes..." value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
+            <textarea className="input" rows={2} placeholder="Quais emocoes vieram antes e depois (ansiedade, culpa, alivio, comparacao, pressao, vazio)?" value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
           </div>
           <div className="field">
-            <label>Maior gatilho do dia</label>
-            <textarea className="input" rows={2} placeholder="Qual foi o maior desafio emocional..." value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
+            <label>Gatilho dominante do dia (possível)</label>
+            <textarea className="input" rows={2} placeholder="Ex.: recompensa imediata, ansiedade, validacao/status, comparacao social, escassez/FOMO, fuga emocional, culpa, desorganizacao..." value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
           </div>
         </div>
       </div>

@@ -15,7 +15,8 @@ public static class ApiMappers
             user.PlanStatus,
             user.NextChargeDate?.ToString("yyyy-MM-dd"),
             AppAccessEvaluator.HasPremiumAccess(user),
-            user.IsMasterUser);
+            user.IsMasterUser,
+            user.HasCompletedAssessment || user.Diagnosis is not null);
 
     public static DiagnosisDto? ToDto(this UserDiagnosis? diagnosis)
     {

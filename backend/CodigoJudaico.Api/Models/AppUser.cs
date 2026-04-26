@@ -7,6 +7,7 @@ public sealed class AppUser
     public string Name { get; set; } = "Aluno";
     public string PasswordHash { get; set; } = string.Empty;
     public bool IsMasterUser { get; set; }
+    public bool HasCompletedAssessment { get; set; }
     public bool AccessEnabled { get; set; }
     public DateTimeOffset? AccountCreatedEmailSentAt { get; set; }
     public DateTimeOffset? AccessGrantedAt { get; set; }

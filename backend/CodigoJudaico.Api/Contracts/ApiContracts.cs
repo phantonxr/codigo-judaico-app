@@ -10,7 +10,8 @@ public sealed record UserDto(
     string PlanStatus,
     string? NextChargeDate,
     bool HasActiveAccess,
-    bool IsMasterUser);
+    bool IsMasterUser,
+    bool HasCompletedAssessment);
 
 public sealed record AdminSubscriberDto(
     Guid Id,
@@ -147,7 +148,10 @@ public sealed record MentorDailyFeedbackGenerateResponse(
     string FinancialRisk,
     string JewishWisdom,
     string PracticalAction,
-    string FeedbackText);
+    string FeedbackText,
+    string DetectedEmotion,
+    string TriggerType,
+    string ObservedPattern);
 
 public sealed record MentorFinalReportGenerateRequest
 {

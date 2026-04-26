@@ -165,7 +165,10 @@ public static class MentorEndpoints
                 existing.FinancialRisk,
                 existing.JewishWisdom,
                 existing.PracticalAction,
-                existing.FeedbackText));
+                existing.FeedbackText,
+                existing.DetectedEmotion,
+                existing.TriggerType,
+                existing.ObservedPattern));
         });
 
             mentorGroup.MapGet("/usage", async Task<IResult> (
@@ -336,14 +339,22 @@ public static class MentorEndpoints
                     existing.FinancialRisk,
                     existing.JewishWisdom,
                     existing.PracticalAction,
-                    existing.FeedbackText));
+                    existing.FeedbackText,
+                    existing.DetectedEmotion,
+                    existing.TriggerType,
+                    existing.ObservedPattern));
             }
+
+            var history = await dbContext.MentorDailyFeedbacks
+                .Where(x => x.UserId == userId && x.Phase == phase && x.DayNumber > 0 && x.DayNumber < dayNumber)
+                .OrderBy(x => x.DayNumber)
+                .ToListAsync(cancellationToken);
 
             MentorDailyFeedbackGenerateResponse? parsed = null;
 
             if (openAiClient.IsConfigured)
             {
-                var userPayload = BuildDailyFeedbackPromptPayload(request, phase, dayNumber);
+                var userPayload = BuildDailyFeedbackPromptPayload(request, phase, dayNumber, history);
                 var system = BuildMentorSystemForDailyFeedback();
 
                 try
@@ -363,6 +374,8 @@ public static class MentorEndpoints
 
             parsed ??= BuildDailyFeedbackFallback(request, dayNumber);
 
+            parsed = EnsureDailyFeedbackSignals(parsed, request);
+
             var now = DateTimeOffset.UtcNow;
             dbContext.MentorDailyFeedbacks.Add(new MentorDailyFeedback
             {
@@ -370,6 +383,9 @@ public static class MentorEndpoints
                 UserId = userId,
                 Phase = phase,
                 DayNumber = dayNumber,
+                DetectedEmotion = parsed.DetectedEmotion,
+                TriggerType = parsed.TriggerType,
+                ObservedPattern = parsed.ObservedPattern,
                 DetectedTrigger = parsed.DetectedTrigger,
                 EmotionalPattern = parsed.EmotionalPattern,
                 FinancialRisk = parsed.FinancialRisk,
@@ -443,7 +459,8 @@ public static class MentorEndpoints
             if (openAiClient.IsConfigured)
             {
                 var system = BuildMentorSystemForFinalReport();
-                var payload = BuildFinalReportPromptPayload(request);
+                var progressiveProfileSummary = await BuildProgressiveProfileSummaryAsync(dbContext, userId, cancellationToken);
+                var payload = BuildFinalReportPromptPayload(request, progressiveProfileSummary);
                 try
                 {
                     var raw = await openAiClient.CompleteMentorFinalReportAsync(system, payload, cancellationToken);
@@ -565,10 +582,13 @@ public static class MentorEndpoints
 
     private static string BuildMentorSystemForDailyFeedback()
     {
-        return "Voce e o Rabino Mentor IA do Codigo Judaico da Prosperidade. "
-            + "Tonalidade: rabino sabio, firme, humano e acolhedor. "
+        return "Voce e um Rabino Mentor especialista em comportamento financeiro. "
+            + "Seu papel NAO e apenas responder — e identificar padroes ao longo do tempo (21 dias). "
+            + "Voce recebe respostas do dia atual e um historico de sinais detectados. "
+            + "Tonalidade: rabino sabio, firme, humano e acolhedor. Linguagem humana, direta, sem moralismo. "
             + "Nao diagnostique clinicamente. Use termos como 'possivel padrao', 'sinal comportamental', 'tendencia observada'. "
-            + "Conecte financas, dominio proprio, prudencia, legado e construcao patrimonial. "
+            + "Sempre: emocao dominante, gatilho do dia, padrao observado; compare com historico; destaque repeticao quando houver. "
+            + "Conecte com prudencia, dominio proprio, legado e construcao patrimonial. "
             + "Evite repetir sempre 'Shalom'.";
     }
 
@@ -585,17 +605,25 @@ public static class MentorEndpoints
     private static string BuildDailyFeedbackPromptPayload(
         MentorDailyFeedbackGenerateRequest request,
         string phase,
-        int dayNumber)
+        int dayNumber,
+        IReadOnlyList<MentorDailyFeedback> history)
     {
         var completed = request.CompletedTasks ?? Array.Empty<string>();
         var partial = request.PartialTasks ?? Array.Empty<string>();
         var notDone = request.NotCompletedTasks ?? Array.Empty<string>();
+
+        var stageFocus = dayNumber <= 7
+            ? "DIA 1-7: foco em identificar emocao dominante"
+            : dayNumber <= 14
+                ? "DIA 8-14: foco em padroes e repeticoes"
+                : "DIA 15-21: foco em confirmar gatilho raiz";
 
         var lines = new List<string>
         {
             "Contexto:",
             $"- Fase atual: {phase}",
             $"- Dia da jornada: {dayNumber}",
+            $"- Foco de hoje: {stageFocus}",
         };
 
         if (!string.IsNullOrWhiteSpace(request.CurrentTrack))
@@ -620,8 +648,47 @@ public static class MentorEndpoints
             lines.Add("Maior gatilho do dia (informado): " + ApiMappers.Clean(request.TriggerText));
 
         lines.Add(string.Empty);
+        lines.Add("Historico (sinais detectados ate agora):");
+        lines.Add(BuildHistorySignalsBlock(history));
+
+        lines.Add(string.Empty);
+        lines.Add("Sua missao:");
+        lines.Add("1) analisar o comportamento atual");
+        lines.Add("2) comparar com padroes anteriores");
+        lines.Add("3) identificar repeticoes");
+        lines.Add("4) apontar evolucao ou regressao");
+        lines.Add("5) sugerir direcao pratica");
+
+        lines.Add(string.Empty);
+        lines.Add("Voce deve SEMPRE:");
+        lines.Add("- identificar emocao dominante");
+        lines.Add("- identificar gatilho do dia");
+        lines.Add("- verificar se ja apareceu antes");
+        lines.Add("- indicar se e padrao recorrente");
+        lines.Add("Se houver repeticao: destaque isso com clareza. Se nao houver: trate como sinal inicial.");
+
+        lines.Add(string.Empty);
+        lines.Add("Classificacoes obrigatorias (use EXATAMENTE 1 opcao de cada lista):");
+        lines.Add("EMOCOES: ansiedade | carencia | estresse | frustracao | tedio | necessidade de recompensa");
+        lines.Add("TIPOS DE GATILHO: validacao social | fuga emocional | impulso imediato | escassez falsa | recompensa emocional | comparacao social | medo de perder oportunidade | descontrole financeiro");
+        lines.Add("PADROES: compra para aliviar emocao | ciclo: emocao -> gasto -> alivio -> culpa | busca de identidade/status | consumo automatico");
+
+        lines.Add(string.Empty);
+        lines.Add("Estrutura obrigatoria do texto dentro de feedbackText:");
+        lines.Add("ANALISE DO DIA:");
+        lines.Add("PADRAO OBSERVADO:");
+        lines.Add("EVOLUCAO DO COMPORTAMENTO:");
+        lines.Add("GATILHO IDENTIFICADO:");
+        lines.Add("CONSEQUENCIA:");
+        lines.Add("SABEDORIA JUDAICA:");
+        lines.Add("DIRECAO PRATICA:");
+
+        lines.Add(string.Empty);
         lines.Add("Retorne JSON com exatamente estas chaves:");
         lines.Add("{");
+        lines.Add("  \"detectedEmotion\": \"...\",");
+        lines.Add("  \"triggerType\": \"...\",");
+        lines.Add("  \"observedPattern\": \"...\",");
         lines.Add("  \"detectedTrigger\": \"...\",");
         lines.Add("  \"emotionalPattern\": \"...\",");
         lines.Add("  \"financialRisk\": \"...\",");
@@ -632,7 +699,9 @@ public static class MentorEndpoints
 
         lines.Add(string.Empty);
         lines.Add("Regras: nao use linguagem clinica; use 'possivel', 'tendencia observada'. "
-            + "Inclua no feedbackText uma frase final de reforco do Rabino Mentor.");
+            + "detectedTrigger deve ser curto (3-8 palavras). "
+            + "practicalAction deve ser 1 acao concreta e pequena para as proximas 24h. "
+            + "feedbackText deve ser humano, estrategico, sem moralismo, e terminar com 1 frase final do Rabino Mentor.");
 
         return string.Join("\n", lines);
     }
@@ -658,10 +727,228 @@ public static class MentorEndpoints
             FeedbackText:
                 $"Dia {dayNumber}: voce esta aprendendo a nomear o impulso sem se condenar. Isso ja e dominio proprio. "
                 + "O dinheiro segue a consciencia: onde ha clareza, ha governo.\n\n"
-                + "Frase do Rabino Mentor: 'A disciplina de hoje e o legado de amanha.'");
+                + "Frase do Rabino Mentor: 'A disciplina de hoje e o legado de amanha.'",
+            DetectedEmotion: string.Empty,
+            TriggerType: string.Empty,
+            ObservedPattern: string.Empty);
     }
 
-    private static string BuildFinalReportPromptPayload(MentorFinalReportGenerateRequest request)
+    private static MentorDailyFeedbackGenerateResponse EnsureDailyFeedbackSignals(
+        MentorDailyFeedbackGenerateResponse parsed,
+        MentorDailyFeedbackGenerateRequest request)
+    {
+        var detectedEmotion = NormalizeSignal(parsed.DetectedEmotion);
+        var triggerType = NormalizeSignal(parsed.TriggerType);
+        var observedPattern = NormalizeSignal(parsed.ObservedPattern);
+
+        if (string.IsNullOrWhiteSpace(detectedEmotion))
+            detectedEmotion = InferEmotion(ApiMappers.Clean(request.EmotionText), ApiMappers.Clean(request.TriggerText), ApiMappers.Clean(request.ReflectionText));
+        if (string.IsNullOrWhiteSpace(triggerType))
+            triggerType = InferTriggerType(ApiMappers.Clean(request.TriggerText), ApiMappers.Clean(request.EmotionText), ApiMappers.Clean(request.ReflectionText));
+        if (string.IsNullOrWhiteSpace(observedPattern))
+            observedPattern = InferObservedPattern(ApiMappers.Clean(request.EmotionText), ApiMappers.Clean(request.TriggerText), ApiMappers.Clean(request.ReflectionText));
+
+        detectedEmotion = ConstrainToAllowedEmotion(detectedEmotion);
+        triggerType = ConstrainToAllowedTriggerType(triggerType);
+        observedPattern = ConstrainToAllowedPattern(observedPattern);
+
+        return new MentorDailyFeedbackGenerateResponse(
+            parsed.DetectedTrigger,
+            parsed.EmotionalPattern,
+            parsed.FinancialRisk,
+            parsed.JewishWisdom,
+            parsed.PracticalAction,
+            parsed.FeedbackText,
+            detectedEmotion,
+            triggerType,
+            observedPattern);
+    }
+
+    private static string BuildHistorySignalsBlock(IReadOnlyList<MentorDailyFeedback> history)
+    {
+        if (history.Count == 0)
+            return "(sem historico ainda; trate como sinal inicial)";
+
+        var emotionCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var triggerCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var patternCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var h in history)
+        {
+            AddCount(emotionCounts, NormalizeSignal(h.DetectedEmotion));
+            AddCount(triggerCounts, NormalizeSignal(h.TriggerType));
+            AddCount(patternCounts, NormalizeSignal(h.ObservedPattern));
+        }
+
+        var last = history
+            .OrderByDescending(x => x.DayNumber)
+            .Take(7)
+            .OrderBy(x => x.DayNumber)
+            .Select(x => new { dia = x.DayNumber, emocao = x.DetectedEmotion, gatilho = x.TriggerType, padrao = x.ObservedPattern })
+            .ToArray();
+
+        var summary = new
+        {
+            totalDias = history.Count,
+            topEmocoes = Top3(emotionCounts),
+            topGatilhos = Top3(triggerCounts),
+            topPadroes = Top3(patternCounts),
+            ultimos7Dias = last,
+        };
+
+        return JsonSerializer.Serialize(summary);
+    }
+
+    private static void AddCount(Dictionary<string, int> map, string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return;
+        map.TryGetValue(key, out var cur);
+        map[key] = cur + 1;
+    }
+
+    private static string[] Top3(Dictionary<string, int> map)
+    {
+        return map
+            .OrderByDescending(x => x.Value)
+            .ThenBy(x => x.Key)
+            .Take(3)
+            .Select(x => $"{x.Key} ({x.Value})")
+            .ToArray();
+    }
+
+    private static string NormalizeSignal(string? value) => (value ?? string.Empty).Trim();
+
+    private static string InferEmotion(string? emotionText, string? triggerText, string? reflectionText)
+    {
+        var text = string.Join(" ", new[] { emotionText, triggerText, reflectionText }).ToLowerInvariant();
+        if (text.Contains("ansied") || text.Contains("apreens") || text.Contains("nervos")) return "ansiedade";
+        if (text.Contains("carenc") || text.Contains("sozinh") || text.Contains("vazio") || text.Contains("aband")) return "carencia";
+        if (text.Contains("stress") || text.Contains("estress") || text.Contains("cansad") || text.Contains("pressa")) return "estresse";
+        if (text.Contains("frustra") || text.Contains("raiva") || text.Contains("irrit") || text.Contains("injust")) return "frustracao";
+        if (text.Contains("tedio") || text.Contains("entedi")) return "tedio";
+        if (text.Contains("recomp") || text.Contains("merec") || text.Contains("premiar") || text.Contains("prazer")) return "necessidade de recompensa";
+        return string.Empty;
+    }
+
+    private static string InferTriggerType(string? triggerText, string? emotionText, string? reflectionText)
+    {
+        var text = string.Join(" ", new[] { triggerText, emotionText, reflectionText }).ToLowerInvariant();
+        if (text.Contains("status") || text.Contains("impress") || text.Contains("valid") || text.Contains("aprov")) return "validacao social";
+        if (text.Contains("fuga") || text.Contains("escapar") || text.Contains("anestes") || text.Contains("evitar")) return "fuga emocional";
+        if (text.Contains("impuls") || text.Contains("na hora") || text.Contains("agora") || text.Contains("nao resist")) return "impulso imediato";
+        if (text.Contains("escasse") || text.Contains("promo") || text.Contains("so hoje") || text.Contains("ultima") || text.Contains("sair do ar")) return "escassez falsa";
+        if (text.Contains("recomp") || text.Contains("merec") || text.Contains("me dar") || text.Contains("me present")) return "recompensa emocional";
+        if (text.Contains("compar") || text.Contains("instagram") || text.Contains("outros")) return "comparacao social";
+        if (text.Contains("fomo") || text.Contains("perder") || text.Contains("oportun") || text.Contains("chance")) return "medo de perder oportunidade";
+        if (text.Contains("descontrol") || text.Contains("bagunc") || text.Contains("sem limite") || text.Contains("sem plan")) return "descontrole financeiro";
+        return string.Empty;
+    }
+
+    private static string InferObservedPattern(string? emotionText, string? triggerText, string? reflectionText)
+    {
+        var text = string.Join(" ", new[] { emotionText, triggerText, reflectionText }).ToLowerInvariant();
+
+        if (text.Contains("culpa") || (text.Contains("aliv") && text.Contains("culp")))
+            return "ciclo: emocao -> gasto -> alivio -> culpa";
+
+        if (text.Contains("status") || text.Contains("identidade") || text.Contains("impress") || text.Contains("parecer"))
+            return "busca de identidade/status";
+
+        if (text.Contains("automatic") || text.Contains("sem pensar") || text.Contains("no piloto") || text.Contains("rotina"))
+            return "consumo automatico";
+
+        if (!string.IsNullOrWhiteSpace(emotionText) || !string.IsNullOrWhiteSpace(triggerText))
+            return "compra para aliviar emocao";
+
+        return string.Empty;
+    }
+
+    private static string ConstrainToAllowedEmotion(string value)
+    {
+        return value.ToLowerInvariant() switch
+        {
+            "ansiedade" => "ansiedade",
+            "carencia" => "carencia",
+            "estresse" => "estresse",
+            "frustracao" => "frustracao",
+            "tédio" => "tedio",
+            "tedio" => "tedio",
+            "necessidade de recompensa" => "necessidade de recompensa",
+            _ => string.Empty,
+        };
+    }
+
+    private static string ConstrainToAllowedTriggerType(string value)
+    {
+        var v = value.ToLowerInvariant();
+        return v switch
+        {
+            "validacao social" => "validacao social",
+            "validação social" => "validacao social",
+            "fuga emocional" => "fuga emocional",
+            "impulso imediato" => "impulso imediato",
+            "escassez falsa" => "escassez falsa",
+            "recompensa emocional" => "recompensa emocional",
+            "comparacao social" => "comparacao social",
+            "comparação social" => "comparacao social",
+            "medo de perder oportunidade" => "medo de perder oportunidade",
+            "descontrole financeiro" => "descontrole financeiro",
+            _ => string.Empty,
+        };
+    }
+
+    private static string ConstrainToAllowedPattern(string value)
+    {
+        var v = value.ToLowerInvariant();
+        return v switch
+        {
+            "compra para aliviar emocao" => "compra para aliviar emocao",
+            "ciclo: emocao -> gasto -> alivio -> culpa" => "ciclo: emocao -> gasto -> alivio -> culpa",
+            "busca de identidade/status" => "busca de identidade/status",
+            "consumo automatico" => "consumo automatico",
+            _ => string.Empty,
+        };
+    }
+
+    private static async Task<string> BuildProgressiveProfileSummaryAsync(
+        AppDbContext dbContext,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var rows = await dbContext.MentorDailyFeedbacks
+            .Where(x => x.UserId == userId && x.Phase == "21d")
+            .OrderBy(x => x.DayNumber)
+            .Take(21)
+            .ToListAsync(cancellationToken);
+
+        if (rows.Count == 0)
+            return "(sem sinais acumulados no banco)";
+
+        var emotionCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var triggerCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var patternCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var r in rows)
+        {
+            AddCount(emotionCounts, NormalizeSignal(r.DetectedEmotion));
+            AddCount(triggerCounts, NormalizeSignal(r.TriggerType));
+            AddCount(patternCounts, NormalizeSignal(r.ObservedPattern));
+        }
+
+        var summary = new
+        {
+            totalDias = rows.Count,
+            topEmocoes = Top3(emotionCounts),
+            topGatilhos = Top3(triggerCounts),
+            topPadroes = Top3(patternCounts),
+            sinaisPorDia = rows.Select(x => new { dia = x.DayNumber, emocao = x.DetectedEmotion, gatilho = x.TriggerType, padrao = x.ObservedPattern }).ToArray(),
+        };
+
+        return JsonSerializer.Serialize(summary);
+    }
+
+    private static string BuildFinalReportPromptPayload(MentorFinalReportGenerateRequest request, string progressiveProfileSignals)
     {
         // Keep payload compact; the AI can infer patterns from JSON blocks.
         var progress = request.AllDaysProgress?.GetRawText() ?? "null";
@@ -700,6 +987,7 @@ public static class MentorEndpoints
             "reflections=" + reflections,
             "triggers=" + triggers,
             "emotions=" + emotions,
+            "progressiveProfileSignals=" + (progressiveProfileSignals ?? "null"),
             "Importante: oferta deve soar como continuacao natural, nao venda agressiva.",
         });
     }

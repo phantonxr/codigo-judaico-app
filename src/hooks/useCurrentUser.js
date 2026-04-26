@@ -19,6 +19,7 @@ export function readCurrentUser() {
     nextChargeDate: cached.nextChargeDate,
     hasActiveAccess: cached.hasActiveAccess,
     isMasterUser: cached.isMasterUser,
+    hasCompletedAssessment: cached.hasCompletedAssessment,
   }
 }
 

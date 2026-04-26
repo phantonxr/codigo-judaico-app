@@ -159,6 +159,7 @@ export default function Dashboard() {
           var isCompleted = pp.percent >= 100
           var Icon = PHASE_ICONS[ph.icon] || Star
           var benefit = PHASE_BENEFITS[idx]
+          var isMahalachRewardCta = String(ph.reward || '').indexOf('Desbloqueia Mahalach HaZera') >= 0
 
           var lockedCtaLabel = idx === 1
             ? 'Liberar Chodesh HaMelech'
@@ -234,28 +235,42 @@ export default function Dashboard() {
               )}
 
               {/* Reward / Next level */}
-              <div style={{
-                fontSize: 11, lineHeight: 1.5, marginTop: 2,
-                padding: '8px 12px', borderRadius: 10,
-                background: unlocked ? 'rgba(215,178,74,0.06)' : 'rgba(255,255,255,0.02)',
-                border: '1px solid ' + (unlocked ? 'rgba(215,178,74,0.15)' : 'rgba(255,255,255,0.05)'),
-                display: 'flex', alignItems: 'center', gap: 6,
-                color: unlocked ? 'var(--gold-2)' : 'rgba(255,255,255,0.3)',
-              }}>
-                <Trophy size={12} style={{ flexShrink: 0 }} />
-                <span style={{ fontWeight: 700 }}>{ph.reward}</span>
-              </div>
+              {isMahalachRewardCta ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block btn-mentor-glow"
+                  onClick={function () { navigate('/assinatura') }}
+                  style={{
+                    marginTop: 10,
+                    width: '100%',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {ph.reward}
+                </button>
+              ) : (
+                <div style={{
+                  fontSize: 11, lineHeight: 1.5, marginTop: 2,
+                  padding: '8px 12px', borderRadius: 10,
+                  background: unlocked ? 'rgba(215,178,74,0.06)' : 'rgba(255,255,255,0.02)',
+                  border: '1px solid ' + (unlocked ? 'rgba(215,178,74,0.15)' : 'rgba(255,255,255,0.05)'),
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  color: unlocked ? 'var(--gold-2)' : 'rgba(255,255,255,0.3)',
+                }}>
+                  <Trophy size={12} style={{ flexShrink: 0 }} />
+                  <span style={{ fontWeight: 700 }}>{ph.reward}</span>
+                </div>
+              )}
 
               {!unlocked ? (
                 <button
                   type="button"
-                  className="btn btn-primary btn-block"
+                  className="btn btn-primary btn-block btn-mentor-glow"
                   onClick={function () { navigate('/assinatura') }}
                   style={{
                     marginTop: 12,
                     width: '100%',
                     fontWeight: 900,
-                    boxShadow: 'var(--glow-gold)',
                   }}
                 >
                   {lockedCtaLabel}

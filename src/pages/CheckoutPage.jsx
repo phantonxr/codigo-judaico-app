@@ -232,10 +232,10 @@ export default function CheckoutPage() {
 
               <div className="checkout-window-alert">
                 <div className="checkout-window-alert__title">
-                  ⚠️ Este valor está disponível <span className="checkout-window-alert__em">somente nesta janela</span> de acesso.
+                  ⚠️ ESTE VALOR ESTÁ DISPONÍVEL SOMENTE NESTA JANELA DE ACESSO.
                 </div>
                 <div className="checkout-window-alert__sub">
-                  Após o encerramento, a próxima liberação pode voltar com outro valor.
+                  APÓS O ENCERRAMENTO, A PRÓXIMA LIBERAÇÃO PODE VOLTAR COM OUTRO VALOR.
                 </div>
               </div>
 
@@ -245,14 +245,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="checkout-timer__content">
                   <div className="checkout-timer__title">
-                    {isUrgentWindow ? '⚠️ Últimos minutos para manter esse valor' : '⚡ Janela de acesso com valor reduzido'}
+                    {isUrgentWindow ? '⚠️ ÚLTIMOS MINUTOS PARA MANTER ESSE VALOR' : '⚡ JANELA DE ACESSO COM VALOR REDUZIDO'}
                   </div>
-                  <div className="checkout-timer__row">
-                    <span className="checkout-timer__label">
-                      {isUrgentWindow ? 'Tempo restante:' : 'Esse valor fica reservado por:'}
-                    </span>
-                    <span className="checkout-timer__time">{countdownLabel}</span>
+                  <div className="checkout-timer__label">
+                    {isUrgentWindow ? 'TEMPO RESTANTE:' : 'ESSE VALOR FICA RESERVADO POR:'}
                   </div>
+                  <div className="checkout-timer__time" aria-label={`Tempo restante ${countdownLabel}`}>{countdownLabel}</div>
                 </div>
               </div>
             </div>

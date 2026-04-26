@@ -650,6 +650,49 @@ function TwentyOneDayView({ assignedTrack }) {
         </div>
       </div>
 
+      {p21.completed >= 21 ? (
+        <div
+          className="card"
+          style={{
+            borderColor: 'rgba(215, 178, 74, 0.65)',
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.70), rgba(215,178,74,0.06))',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
+          }}
+        >
+          <div className="card-inner" style={{ display: 'grid', gap: 12, textAlign: 'center' }}>
+            <div style={{ fontWeight: 950, fontSize: 18, color: 'var(--gold-2)', letterSpacing: '-0.01em' }}>
+              Parabéns, você concluiu os 21 dias
+            </div>
+            <div
+              className="muted"
+              style={{
+                lineHeight: 1.75,
+                maxWidth: 70 * 16,
+                marginInline: 'auto',
+              }}
+            >
+              Você chegou ao fim da primeira etapa. Agora seus registros revelam padrões, gatilhos e decisões que podem estar controlando sua vida financeira.
+              O próximo passo é entender o que o Rabino Mentor identificou sobre você.
+            </div>
+            <div style={{ display: 'grid', gap: 10, justifyItems: 'center' }}>
+              <Link
+                className="btn btn-primary btn-block btn-mentor-glow"
+                to="/relatorio-final"
+                style={{
+                  width: '100%',
+                  maxWidth: 520,
+                  justifyContent: 'center',
+                  padding: '14px 18px',
+                  fontSize: 15,
+                }}
+              >
+                Ver meu Relatório Final
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Fixed bottom bar with AI + Complete buttons */}
       <div className="desafios-bottom-bar">
         {!feedbackNow && (

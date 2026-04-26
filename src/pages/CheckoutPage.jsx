@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
+import FloatingProof from '../components/FloatingProof.jsx'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 const DEFAULT_PLAN_ID = 'primeiro-acesso'
@@ -65,6 +66,26 @@ export default function CheckoutPage() {
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
   const existingAccountFlow = redirectedFromLogin && Boolean(email)
 
+  const [secondsLeft, setSecondsLeft] = useState(10 * 60)
+
+  useEffect(function () {
+    var timer = setInterval(function () {
+      setSecondsLeft(function (s) {
+        return s > 0 ? s - 1 : 0
+      })
+    }, 1000)
+
+    return function () {
+      clearInterval(timer)
+    }
+  }, [])
+
+  const countdownLabel = useMemo(function () {
+    var mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
+    var ss = String(secondsLeft % 60).padStart(2, '0')
+    return mm + ':' + ss
+  }, [secondsLeft])
+
   async function onSubmit(event) {
     event.preventDefault()
     setError('')
@@ -109,24 +130,27 @@ export default function CheckoutPage() {
 
   return (
     <div className="container" style={{ padding: '40px 0 72px' }}>
-      <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 18 }}>
+      <FloatingProof />
+
+      <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 22 }}>
         <div className="card">
           <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
             <span className="badge" style={{ width: 'fit-content' }}>Checkout oficial via Stripe</span>
             <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05 }}>
-              {existingAccountFlow
-                ? 'Finalize sua continuação'
-                : 'Desbloqueie a continuação do método'}
+              Desbloqueie o Método Judaico da Prosperidade
             </h1>
-            <div className="muted">
+            <div style={{ fontWeight: 900, color: 'var(--gold-2)', lineHeight: 1.35 }}>
+              Mais de 1.247 pessoas já iniciaram essa jornada
+            </div>
+            <div className="muted" style={{ lineHeight: 1.7 }}>
               {existingAccountFlow
-                ? 'Sua conta ja foi encontrada. Agora falta so concluir o pagamento para liberar o acesso.'
-                : 'Crie sua conta agora com e-mail e senha. Assim que o pagamento for confirmado, liberamos o login no mesmo instante.'}
+                ? 'Sua conta já foi encontrada. Falta só concluir o pagamento para liberar o acesso.'
+                : 'Crie sua conta agora. Assim que o Stripe confirmar, a liberação acontece imediatamente.'}
             </div>
           </div>
         </div>
 
-        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 18 }}>
+        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 22 }}>
           <div className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.85)' }}>
             <div
               className="card-inner"
@@ -143,6 +167,18 @@ export default function CheckoutPage() {
               </div>
               <div style={{ fontWeight: 900, fontSize: 28, color: 'var(--gold-2)' }}>
                 {selectedPlan.price}
+              </div>
+              <div style={{
+                fontWeight: 900,
+                color: 'var(--danger)',
+                fontSize: 12,
+                lineHeight: 1.4,
+              }}>
+                ⚠️ Esse valor pode mudar a qualquer momento
+              </div>
+
+              <div className="muted" style={{ fontSize: 12, lineHeight: 1.4 }}>
+                Oferta disponível por: <strong style={{ color: 'var(--gold-2)' }}>{countdownLabel}</strong>
               </div>
               <div className="muted">{selectedPlan.subtitle}</div>
             </div>
@@ -256,13 +292,16 @@ export default function CheckoutPage() {
                 </div>
               ) : null}
 
-              <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
+              <button className="btn btn-primary btn-block btn-mentor-glow" type="submit" disabled={loading} style={{ padding: '14px 16px', fontSize: 16 }}>
                 {loading
                   ? 'Abrindo checkout...'
-                  : existingAccountFlow
-                    ? `Finalizar ${selectedPlan.title}`
-                    : 'Continuar para o pagamento'}
+                  : 'Quero acessar agora'}
               </button>
+
+              <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.6, fontSize: 13 }}>
+                <div>🔒 Pagamento 100% seguro via Stripe</div>
+                <div>✔ Liberação imediata após confirmação</div>
+              </div>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <Link className="btn" to="/">

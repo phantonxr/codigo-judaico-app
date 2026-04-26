@@ -16,7 +16,7 @@ const masterNavItems = [
   { label: 'Assinantes', to: '/admin/assinantes' },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose = function () {} }) {
   const currentUser = useCurrentUser()
   const name = currentUser?.name || 'Aluno'
   const plan = currentUser?.plan || '-'
@@ -32,9 +32,15 @@ export default function Sidebar() {
     .join('') || 'CJ')
 
   return (
-    <aside className="sidebar" aria-label="Menu lateral">
-      <div className="sidebar-inner">
-        <Link to="/" className="brand" aria-label="Ir para a landing page">
+    <>
+      <div
+        className={'sidebar-overlay' + (open ? ' sidebar-overlay--open' : '')}
+        role="presentation"
+        onClick={onClose}
+      />
+      <aside className={'sidebar' + (open ? ' sidebar--open' : '')} aria-label="Menu lateral">
+        <div className="sidebar-inner">
+        <Link to="/" className="brand" aria-label="Ir para a landing page" onClick={onClose}>
           <div className="brand-mark" aria-hidden="true">
             <svg
               width="18"
@@ -63,6 +69,7 @@ export default function Sidebar() {
               to={item.to}
               end
               className={({ isActive }) => (isActive ? 'active' : undefined)}
+              onClick={onClose}
             >
               {item.label}
             </NavLink>
@@ -82,7 +89,8 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
-      </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   )
 }

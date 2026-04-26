@@ -8,7 +8,7 @@ function clampPct(value) {
   return Math.max(0, Math.min(100, value))
 }
 
-export default function Topbar({ title }) {
+export default function Topbar({ title, onMenuToggle = function () {} }) {
   const navigate = useNavigate()
   const currentUser = useCurrentUser()
   const greetingName = currentUser?.name || 'Aluno'
@@ -51,6 +51,19 @@ export default function Topbar({ title }) {
     <header className="topbar" role="banner">
       <div className="topbar-inner">
         <div className="topbar-left">
+          <button
+            className="icon-btn topbar-menu-btn"
+            type="button"
+            aria-label="Abrir menu"
+            onClick={onMenuToggle}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+          <Link className="topbar-brand" to="/dashboard" aria-label="Ir para o dashboard">
+            Codigo Judaico
+          </Link>
           <div className="topbar-greeting">
             <div className="topbar-hello">Shalom, {greetingName}</div>
             <h1>{title}</h1>

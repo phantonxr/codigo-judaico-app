@@ -122,6 +122,11 @@ function RequireSubscriptionAccess() {
 function AppLayout() {
   const location = useLocation()
   const pathname = location.pathname
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  useEffect(() => {
+    setMobileNavOpen(false)
+  }, [location.pathname])
 
   const titleMap = {
     '/dashboard': 'Dashboard',
@@ -139,9 +144,9 @@ function AppLayout() {
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
       <div className="app-main">
-        <Topbar title={title} user={null} />
+        <Topbar title={title} user={null} onMenuToggle={() => setMobileNavOpen((s) => !s)} />
         <main className="app-content" role="main">
           <div key={location.pathname} className="page-transition">
             <Outlet />

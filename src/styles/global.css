@@ -30,6 +30,8 @@ body {
 
 body {
   margin: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
   color: var(--text);
   background: radial-gradient(
       1200px 700px at 15% -10%,
@@ -71,6 +73,10 @@ a {
 button,
 input,
 textarea {
+  font: inherit;
+}
+
+select {
   font: inherit;
 }
 
@@ -143,6 +149,7 @@ textarea {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
   cursor: pointer;
+  min-height: 44px;
   transition: background 180ms ease, border-color 180ms ease,
     transform 180ms ease, box-shadow 180ms ease;
 }
@@ -283,6 +290,10 @@ textarea {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(7, 6, 10, 0.78);
   backdrop-filter: blur(10px);
+}
+
+.sidebar-overlay {
+  display: none;
 }
 
 .sidebar-inner {
@@ -433,6 +444,21 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.topbar-menu-btn {
+  display: none;
+}
+
+.topbar-brand {
+  display: none;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  color: var(--gold-2);
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(215,178,74,0.22);
+  background: rgba(215,178,74,0.07);
 }
 
 @media (min-width: 860px) {
@@ -710,6 +736,7 @@ textarea {
 
 .input {
   width: 100%;
+  min-height: 48px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);
@@ -1469,6 +1496,148 @@ textarea {
 
 /* Spin animation for loader */
 .spin {
+
+@media (max-width: 768px) {
+  .container {
+    width: min(1280px, calc(100% - 24px));
+  }
+
+  .app-content {
+    padding: 14px 12px 22px;
+  }
+
+  .topbar {
+    top: 0;
+  }
+
+  .topbar-inner {
+    padding: 10px 12px;
+  }
+
+  .topbar-left {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-greeting {
+    gap: 0;
+  }
+
+  .topbar-menu-btn {
+    display: grid;
+  }
+
+  .topbar-brand {
+    display: inline-flex;
+  }
+
+  .topbar-stats,
+  .topbar-hello {
+    display: none;
+  }
+
+  .topbar h1 {
+    font-size: 12px;
+  }
+
+  .topbar-actions .btn.btn-soft {
+    padding: 10px 12px;
+    min-height: 40px;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+    z-index: 60;
+  }
+
+  .sidebar-overlay--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(290px, calc(100vw - 70px));
+    height: 100dvh;
+    border-right: 1px solid rgba(255, 255, 255, 0.10);
+    border-bottom: none;
+    background: rgba(7, 6, 10, 0.92);
+    backdrop-filter: blur(14px);
+    transform: translateX(-110%);
+    transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 70;
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  .sidebar-inner {
+    height: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 14px 14px;
+    gap: 12px;
+    overflow: auto;
+  }
+
+  .nav {
+    flex-direction: column;
+    overflow: visible;
+    gap: 6px;
+  }
+
+  .nav a {
+    border-radius: 14px;
+    padding: 12px 12px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+  }
+
+  .chat-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 170px);
+  }
+
+  .chat-log {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(1280px, calc(100% - 20px));
+  }
+
+  .card-inner {
+    padding: 16px;
+  }
+
+  .app-content .btn {
+    width: 100%;
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+}
   animation: spin 1s linear infinite;
 }
 

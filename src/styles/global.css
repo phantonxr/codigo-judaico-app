@@ -1640,6 +1640,147 @@ textarea {
 }
 
 /* ═══════════════════════════════════════════════
+   CHECKOUT (PREMIUM CRO)
+   ═══════════════════════════════════════════════ */
+
+.checkout-promise {
+  font-weight: 900;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.86);
+  font-size: 13px;
+}
+
+.checkout-benefits {
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(215,178,74,0.22);
+  background: rgba(0,0,0,0.34);
+}
+
+.checkout-benefit {
+  font-weight: 850;
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.82);
+}
+
+.checkout-window-alert {
+  border-radius: 16px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 92, 92, 0.28);
+  background: rgba(255, 92, 92, 0.08);
+}
+
+.checkout-window-alert__title {
+  font-weight: 950;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.9);
+}
+
+.checkout-window-alert__em {
+  color: rgba(255,255,255,0.96);
+  text-decoration: underline;
+  text-decoration-color: rgba(215,178,74,0.55);
+  text-underline-offset: 3px;
+}
+
+.checkout-window-alert__sub {
+  margin-top: 6px;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.72);
+}
+
+.checkout-timer {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(215,178,74,0.36);
+  background: linear-gradient(135deg, rgba(0,0,0,0.56), rgba(215,178,74,0.06));
+  box-shadow: 0 18px 55px rgba(0,0,0,0.45);
+}
+
+.checkout-timer__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(215,178,74,0.10);
+  border: 1px solid rgba(215,178,74,0.22);
+  color: var(--gold-2);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.checkout-timer__content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+}
+
+.checkout-timer__title {
+  font-weight: 950;
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(255,255,255,0.92);
+}
+
+.checkout-timer__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.checkout-timer__label {
+  font-weight: 850;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.74);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkout-timer__time {
+  font-weight: 950;
+  font-size: 16px;
+  color: var(--gold-2);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.checkout-timer--urgent {
+  border-color: rgba(255, 92, 92, 0.35);
+  background: linear-gradient(135deg, rgba(0,0,0,0.58), rgba(255, 92, 92, 0.10));
+  animation: checkoutTimerPulse 1.15s ease-in-out infinite;
+}
+
+.checkout-timer--urgent .checkout-timer__icon {
+  background: rgba(255, 92, 92, 0.12);
+  border-color: rgba(255, 92, 92, 0.26);
+  color: rgba(255, 210, 210, 0.92);
+}
+
+.checkout-timer--urgent .checkout-timer__time {
+  color: var(--danger);
+  text-shadow: 0 0 14px rgba(255, 92, 92, 0.28);
+}
+
+@keyframes checkoutTimerPulse {
+  0%, 100% { box-shadow: 0 18px 55px rgba(0,0,0,0.45); }
+  50% { box-shadow: 0 22px 70px rgba(0,0,0,0.55), 0 0 26px rgba(255, 92, 92, 0.14); }
+}
+
+/* ═══════════════════════════════════════════════
    FLOATING PROOF (CHECKOUT)
    ═══════════════════════════════════════════════ */
 
@@ -1717,17 +1858,17 @@ textarea {
 
 @media (max-width: 560px) {
   .floating-proof {
-    top: auto;
+    top: calc(12px + env(safe-area-inset-top));
     right: auto;
-    left: 12px;
-    width: auto;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    transform: translateY(10px);
+    left: 50%;
+    bottom: auto;
+    width: min(420px, calc(100vw - 24px));
+    transform: translate(-50%, -10px);
     max-width: none;
   }
 
   .floating-proof--visible {
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
 
   .floating-proof__inner {
@@ -1741,6 +1882,20 @@ textarea {
 
   .floating-proof-subtitle {
     font-size: 11.5px;
+  }
+
+  .checkout-timer__label {
+    white-space: normal;
+  }
+
+  .checkout-timer__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .checkout-timer__time {
+    font-size: 18px;
   }
 }
 

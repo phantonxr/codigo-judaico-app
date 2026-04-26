@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Zap, ShieldCheck, Star, CheckCircle2 } from 'lucide-react'
+import { Zap, ShieldCheck, Users, Sparkles, Target, Eye, TrendingUp } from 'lucide-react'
 
 function randomBetween(minMs, maxMs) {
   return Math.floor(minMs + Math.random() * (maxMs - minMs + 1))
@@ -8,45 +8,45 @@ function randomBetween(minMs, maxMs) {
 var NOTIFICATIONS = [
   {
     id: 'movement',
-    icon: Zap,
+    icon: Users,
     title: '17 pessoas acessaram esta etapa nos últimos minutos',
-    subtitle: 'A liberação acontece após a confirmação segura do Stripe.',
+    subtitle: 'A maioria começou pela fase Seder HaKesef para identificar seus gatilhos financeiros.',
   },
   {
     id: 'value',
-    icon: Star,
-    title: 'Últimas liberações no valor atual',
-    subtitle: 'O acesso de 21 dias está disponível agora por R$ 29,90.',
+    icon: Zap,
+    title: 'Valor reservado por poucos minutos',
+    subtitle: 'Depois que a janela encerra, a próxima liberação pode voltar com outro valor.',
+  },
+  {
+    id: 'started',
+    icon: Sparkles,
+    title: 'Nova jornada iniciada agora',
+    subtitle: 'Mais uma pessoa começou os 21 dias para entender por que o dinheiro escapa.',
   },
   {
     id: 'stripe',
     icon: ShieldCheck,
-    title: 'Pagamento seguro via Stripe',
-    subtitle: 'Seus dados são protegidos e o acesso é liberado após confirmação.',
+    title: 'Acesso seguro via Stripe',
+    subtitle: 'Crie sua conta e use o mesmo e-mail no pagamento para liberação automática.',
   },
   {
-    id: 'started',
-    icon: CheckCircle2,
-    title: 'Uma nova jornada foi iniciada agora',
-    subtitle: 'Mais pessoas estão desbloqueando os gatilhos que travam a prosperidade.',
+    id: 'root',
+    icon: Target,
+    title: 'Comece pela raiz do problema',
+    subtitle: 'Antes de prosperar, você precisa enxergar o padrão que controla suas decisões.',
   },
   {
-    id: 'window',
-    icon: Zap,
-    title: 'Oferta ativa por tempo limitado',
-    subtitle: 'Esse valor pode mudar quando a janela atual encerrar.',
+    id: 'phase',
+    icon: Eye,
+    title: 'A primeira fase revela o gatilho',
+    subtitle: 'Os 21 dias mostram onde seu dinheiro está sendo perdido sem perceber.',
   },
   {
-    id: 'account',
-    icon: ShieldCheck,
-    title: 'Acesso liberado após confirmação',
-    subtitle: 'Crie sua conta agora e use o mesmo e-mail no pagamento.',
-  },
-  {
-    id: 'social',
-    icon: Star,
-    title: 'Mais de 1.247 pessoas já iniciaram essa jornada',
-    subtitle: 'Comece pela fase Seder HaKesef e descubra seus gatilhos financeiros.',
+    id: 'not-cuts',
+    icon: TrendingUp,
+    title: 'Não é corte de gastos',
+    subtitle: 'É domínio financeiro: viver melhor, decidir melhor e construir com consciência.',
   },
 ]
 

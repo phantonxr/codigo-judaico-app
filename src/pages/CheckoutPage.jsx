@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
 import FloatingProof from '../components/FloatingProof.jsx'
+import { Zap, Clock } from 'lucide-react'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 const DEFAULT_PLAN_ID = 'primeiro-acesso'
@@ -69,11 +70,33 @@ function resolvePhaseLabel(planTitle) {
   return left || title
 }
 
+function resolvePromise(planId) {
+  var pid = String(planId || '')
+  if (pid === 'mensal') {
+    return 'Você continua avançando: identifica o impulso, corrige o padrão e sustenta decisões financeiras mais conscientes.'
+  }
+  if (pid === 'anual') {
+    return 'Você consolida o domínio financeiro por 12 meses, reforçando hábitos e eliminando recaídas de impulso.'
+  }
+  if (pid === 'vitalicio') {
+    return 'Você garante acesso permanente ao método para evoluir no seu ritmo e voltar sempre que precisar recalibrar.'
+  }
+  return 'Em 21 dias, você começa a enxergar os gatilhos invisíveis que fazem seu dinheiro escapar — e inicia o domínio sobre suas decisões financeiras.'
+}
+
+function resolveCtaLabel(planId) {
+  var pid = String(planId || '')
+  if (pid === 'primeiro-acesso' || pid === 'renovacao') return 'Liberar meu acesso de 21 dias agora'
+  return 'Liberar meu acesso agora'
+}
+
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
   const selectedPlan = resolvePlan(searchParams.get('plan'))
   const accessLabel = resolveAccessLabel(selectedPlan.id)
   const phaseLabel = resolvePhaseLabel(selectedPlan.title)
+  const promise = resolvePromise(selectedPlan.id)
+  const ctaLabel = resolveCtaLabel(selectedPlan.id)
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -102,6 +125,8 @@ export default function CheckoutPage() {
     var ss = String(secondsLeft % 60).padStart(2, '0')
     return mm + ':' + ss
   }, [secondsLeft])
+
+  const isUrgentWindow = secondsLeft > 0 && secondsLeft <= 5 * 60
 
   async function onSubmit(event) {
     event.preventDefault()
@@ -174,7 +199,7 @@ export default function CheckoutPage() {
               style={{
                 background: 'linear-gradient(180deg, rgba(215, 178, 74, 0.14), rgba(255,255,255,0.04))',
                 display: 'grid',
-                gap: 10,
+                gap: 12,
                 borderRadius: 'inherit',
               }}
             >
@@ -182,28 +207,54 @@ export default function CheckoutPage() {
                 <strong style={{ fontSize: 18 }}>{selectedPlan.title}</strong>
                 <span className="badge">{selectedPlan.highlight}</span>
               </div>
+
+              <div className="checkout-promise">
+                {promise}
+              </div>
+
               <div style={{ fontWeight: 900, fontSize: 28, color: 'var(--gold-2)' }}>
                 {selectedPlan.price}
               </div>
-              <div className="muted" style={{ display: 'grid', gap: 4, lineHeight: 1.45 }}>
+
+              <div className="checkout-benefits">
+                <div className="checkout-benefit">✔ Identifique seus gatilhos de gasto</div>
+                <div className="checkout-benefit">✔ Receba orientação do Rabino Mentor IA</div>
+                <div className="checkout-benefit">✔ Comece sua jornada de domínio financeiro</div>
+              </div>
+
+              <div className="muted" style={{ display: 'grid', gap: 4, lineHeight: 1.5 }}>
                 <div style={{ fontWeight: 900, color: 'rgba(255,255,255,0.85)' }}>{accessLabel}</div>
                 <div>
                   Fase inicial: <strong style={{ color: 'var(--gold-2)' }}>{phaseLabel}</strong>
                 </div>
-              </div>
-              <div style={{
-                fontWeight: 900,
-                color: 'var(--danger)',
-                fontSize: 12,
-                lineHeight: 1.4,
-              }}>
-                ⚠️ Esse valor pode mudar a qualquer momento
+                <div style={{ maxWidth: 640 }}>{selectedPlan.subtitle}</div>
               </div>
 
-              <div className="muted" style={{ fontSize: 12, lineHeight: 1.4 }}>
-                Oferta disponível por: <strong style={{ color: 'var(--gold-2)' }}>{countdownLabel}</strong>
+              <div className="checkout-window-alert">
+                <div className="checkout-window-alert__title">
+                  ⚠️ Este valor está disponível <span className="checkout-window-alert__em">somente nesta janela</span> de acesso.
+                </div>
+                <div className="checkout-window-alert__sub">
+                  Após o encerramento, a próxima liberação pode voltar com outro valor.
+                </div>
               </div>
-              <div className="muted">{selectedPlan.subtitle}</div>
+
+              <div className={'checkout-timer' + (isUrgentWindow ? ' checkout-timer--urgent' : '')}>
+                <div className="checkout-timer__icon" aria-hidden="true">
+                  {isUrgentWindow ? <Clock size={16} /> : <Zap size={16} />}
+                </div>
+                <div className="checkout-timer__content">
+                  <div className="checkout-timer__title">
+                    {isUrgentWindow ? '⚠️ Últimos minutos para manter esse valor' : '⚡ Janela de acesso com valor reduzido'}
+                  </div>
+                  <div className="checkout-timer__row">
+                    <span className="checkout-timer__label">
+                      {isUrgentWindow ? 'Tempo restante:' : 'Esse valor fica reservado por:'}
+                    </span>
+                    <span className="checkout-timer__time">{countdownLabel}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -318,8 +369,12 @@ export default function CheckoutPage() {
               <button className="btn btn-primary btn-block btn-mentor-glow" type="submit" disabled={loading} style={{ padding: '14px 16px', fontSize: 16 }}>
                 {loading
                   ? 'Abrindo checkout...'
-                  : 'Quero acessar agora'}
+                  : ctaLabel}
               </button>
+
+              <div className="muted" style={{ textAlign: 'center', fontSize: 12, lineHeight: 1.5 }}>
+                Seu acesso começa após a confirmação segura do pagamento.
+              </div>
 
               <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.6, fontSize: 13 }}>
                 <div>🔒 Pagamento 100% seguro via Stripe</div>

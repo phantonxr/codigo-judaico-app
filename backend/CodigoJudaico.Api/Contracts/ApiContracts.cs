@@ -217,6 +217,29 @@ public sealed record CheckoutSessionCreateRequest
     public string? UtmCampaign { get; init; }
     public string? UtmTerm { get; init; }
     public string? UtmContent { get; init; }
+    public IReadOnlyList<string> BookIds { get; init; } = [];
+}
+
+public sealed record BookCatalogDto(
+    string Id,
+    string Title,
+    string Description,
+    string PriceLabel,
+    string CoverImageUrl,
+    bool IsPurchasable);
+
+public sealed record BookLibraryDto(
+    string Id,
+    string Title,
+    string Description,
+    string PriceLabel,
+    string CoverImageUrl,
+    bool IsPurchased,
+    bool IsPurchasable);
+
+public sealed record BookCheckoutRequest
+{
+    public IReadOnlyList<string> BookIds { get; init; } = [];
 }
 
 public sealed record CheckoutSessionCreateResponse(

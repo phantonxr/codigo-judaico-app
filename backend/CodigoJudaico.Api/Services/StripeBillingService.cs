@@ -5,6 +5,8 @@ using Stripe.Checkout;
 
 namespace CodigoJudaico.Api.Services;
 
+public sealed record StripeBookLineItem(string BookId, string PriceId);
+
 public sealed record StripePlanDefinition(
     string Id,
     string PlanName,
@@ -34,6 +36,7 @@ public sealed class StripeBillingService(
     public const string UtmCampaignMetadataKey = "utm_campaign";
     public const string UtmTermMetadataKey = "utm_term";
     public const string UtmContentMetadataKey = "utm_content";
+    public const string BookIdsMetadataKey = "book_ids";
 
     private readonly StripeBillingOptions _options = options.Value;
     private readonly ILogger<StripeBillingService> _logger = logger;
@@ -128,10 +131,103 @@ public sealed class StripeBillingService(
             : null;
     }
 
+    public IReadOnlyList<StripeBookLineItem> ResolveBookLineItems(IReadOnlyList<string>? bookIds)
+    {
+        if (bookIds is null || bookIds.Count == 0)
+        {
+            return [];
+        }
+
+        var result = new List<StripeBookLineItem>();
+
+        foreach (var bookId in bookIds)
+        {
+            var normalizedId = ApiMappers.Clean(bookId).ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(normalizedId))
+            {
+                continue;
+            }
+
+            if (!_options.BookPriceIds.TryGetValue(normalizedId, out var priceId) || string.IsNullOrWhiteSpace(priceId))
+            {
+                _logger.LogWarning("Livro '{BookId}' sem PriceId configurado — ignorado no checkout.", normalizedId);
+                continue;
+            }
+
+            result.Add(new StripeBookLineItem(normalizedId, ApiMappers.Clean(priceId)));
+        }
+
+        return result;
+    }
+
+    public IReadOnlyList<BookDefinition> GetPurchasableBooks() =>
+        BookCatalog.All
+            .Where(b => _options.BookPriceIds.ContainsKey(b.Id) && !string.IsNullOrWhiteSpace(_options.BookPriceIds[b.Id]))
+            .ToList();
+
+    public async Task<CheckoutSessionCreateResponse> CreateBookOnlyCheckoutSessionAsync(
+        string email,
+        string? name,
+        IReadOnlyList<StripeBookLineItem> books,
+        CancellationToken cancellationToken)
+    {
+        EnsureConfigured();
+
+        if (books.Count == 0)
+        {
+            throw new InvalidOperationException("Selecione ao menos um livro para continuar.");
+        }
+
+        var baseUrl = _options.FrontendBaseUrl.TrimEnd('/');
+        var bookIdsJoined = string.Join(",", books.Select(b => b.BookId));
+        var orderId = BuildOrderId();
+
+        var metadata = new Dictionary<string, string>
+        {
+            [AppKeyMetadataKey] = ApplicationKey,
+            [ConnectedAccountMetadataKey] = ConnectedAccountId,
+            [CurrencyMetadataKey] = RequiredCurrency,
+            [EmailMetadataKey] = email,
+            [BookIdsMetadataKey] = bookIdsJoined,
+            [AppIdMetadataKey] = ApplicationKey,
+            [AppNameMetadataKey] = PaymentCoreAppName,
+            [TenantIdMetadataKey] = PaymentCoreTenantId,
+            [SellerIdMetadataKey] = PaymentCoreSellerId,
+            [SellerNameMetadataKey] = PaymentCoreSellerName,
+            [OrderIdMetadataKey] = orderId,
+        };
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            metadata[NameMetadataKey] = name;
+        }
+
+        var sessionOptions = new SessionCreateOptions
+        {
+            Mode = "payment",
+            SuccessUrl = $"{baseUrl}/livros?session_id={{CHECKOUT_SESSION_ID}}&type=books",
+            CancelUrl = $"{baseUrl}/livros",
+            CustomerEmail = email,
+            ClientReferenceId = email,
+            Metadata = metadata,
+            PaymentIntentData = new SessionPaymentIntentDataOptions { Metadata = metadata },
+            LineItems = books.Select(b => new SessionLineItemOptions { Price = b.PriceId, Quantity = 1 }).ToList(),
+            AllowPromotionCodes = true,
+        };
+
+        var session = await _checkoutSessions.CreateAsync(sessionOptions, requestOptions: null, cancellationToken: cancellationToken);
+
+        _logger.LogInformation("Checkout de livros {SessionId} criado para {Email}. Livros: {BookIds}", session.Id, email, bookIdsJoined);
+
+        return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty, session.AmountTotal ?? 0);
+    }
+
     public async Task<CheckoutSessionCreateResponse> CreateCheckoutSessionAsync(
         CheckoutSessionCreateRequest request,
         StripePlanDefinition plan,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<StripeBookLineItem>? books = null)
     {
         EnsureConfigured();
 
@@ -151,7 +247,8 @@ public sealed class StripeBillingService(
             utmMedium: ApiMappers.Clean(request.UtmMedium),
             utmCampaign: ApiMappers.Clean(request.UtmCampaign),
             utmTerm: ApiMappers.Clean(request.UtmTerm),
-            utmContent: ApiMappers.Clean(request.UtmContent));
+            utmContent: ApiMappers.Clean(request.UtmContent),
+            bookIds: books is { Count: > 0 } ? string.Join(",", books.Select(b => b.BookId)) : null);
         var routing = StripeConnectRouting.Direct;
 
         _logger.LogInformation(
@@ -174,6 +271,7 @@ public sealed class StripeBillingService(
                 paymentCoreMetadata,
                 routing,
                 plan,
+                books ?? [],
                 cancellationToken);
         }
         else
@@ -185,6 +283,7 @@ public sealed class StripeBillingService(
                 paymentCoreMetadata,
                 routing,
                 plan,
+                books ?? [],
                 cancellationToken);
         }
 
@@ -243,6 +342,7 @@ public sealed class StripeBillingService(
         PaymentCoreCheckoutMetadata paymentCoreMetadata,
         StripeConnectRouting routing,
         StripePlanDefinition plan,
+        IReadOnlyList<StripeBookLineItem> books,
         CancellationToken cancellationToken)
     {
         var sessionOptions = StripeCheckoutSessionBuilder.BuildSubscriptionSessionOptions(
@@ -250,6 +350,7 @@ public sealed class StripeBillingService(
             baseUrl,
             metadata,
             plan,
+            books,
             _options.PlatformRetentionPercent,
             ConnectedAccountId,
             routing);
@@ -267,6 +368,7 @@ public sealed class StripeBillingService(
         PaymentCoreCheckoutMetadata paymentCoreMetadata,
         StripeConnectRouting routing,
         StripePlanDefinition plan,
+        IReadOnlyList<StripeBookLineItem> books,
         CancellationToken cancellationToken)
     {
         var price = await _prices.GetAsync(
@@ -282,6 +384,7 @@ public sealed class StripeBillingService(
             baseUrl,
             metadata,
             plan,
+            books,
             feeAmount,
             ConnectedAccountId,
             routing);

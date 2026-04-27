@@ -21,6 +21,7 @@ import AdminAssinantes from './pages/AdminAssinantes.jsx'
 import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
 import Calendario from './pages/Calendario.jsx'
 import RelatorioFinal from './pages/RelatorioFinal.jsx'
+import Livros from './pages/Livros.jsx'
 import { hasAuthToken } from './services/authStorage.js'
 import useCurrentUser from './hooks/useCurrentUser.js'
 
@@ -139,6 +140,7 @@ function AppLayout() {
     '/avaliacao': 'Avaliação Financeira',
     '/calendario': 'Calendário',
     '/relatorio-final': 'Relatório Final',
+    '/livros': 'Livros',
   }
   const title = titleMap[pathname] ?? 'Código Judaico da Prosperidade'
 
@@ -172,6 +174,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/assinatura" element={<Assinatura />} />
           <Route path="/admin/assinantes" element={<AdminAssinantes />} />
+          <Route path="/livros" element={<Livros />} />
           <Route element={<RequireSubscriptionAccess />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/mentor" element={<RabinoMentorIA />} />

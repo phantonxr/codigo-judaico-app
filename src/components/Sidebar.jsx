@@ -8,6 +8,7 @@ const navItems = [
   { label: 'Desafios', to: '/desafios' },
   { label: 'Calendario', to: '/calendario' },
   { label: 'Biblioteca', to: '/biblioteca' },
+  { label: 'Livros', to: '/livros' },
   { label: 'Mais', to: '/mais' },
   { label: 'Assinatura', to: '/assinatura' },
 ]

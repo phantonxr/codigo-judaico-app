@@ -214,6 +214,7 @@ public static class PaymentEndpoints
             }
 
             var cleanedName = ApiMappers.Clean(request.Name);
+            var books = stripeBillingService.ResolveBookLineItems(request.BookIds);
             CheckoutSessionCreateResponse response;
 
             try
@@ -226,7 +227,8 @@ public static class PaymentEndpoints
                         Password = string.Empty,
                     },
                     plan,
-                    cancellationToken);
+                    cancellationToken,
+                    books);
             }
             catch (InvalidOperationException ex)
             {

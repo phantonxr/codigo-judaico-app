@@ -1,9 +1,10 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { createCheckoutSession } from '../services/payments.js'
+import { getBookCatalog } from '../services/books.js'
 import { useUtmParams } from '../hooks/useUtmParams.js'
 import FloatingProof from '../components/FloatingProof.jsx'
-import { Zap, Clock } from 'lucide-react'
+import { Zap, Clock, BookOpen } from 'lucide-react'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 const DEFAULT_PLAN_ID = 'primeiro-acesso'
@@ -104,8 +105,18 @@ export default function CheckoutPage() {
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [availableBooks, setAvailableBooks] = useState([])
+  const [selectedBookIds, setSelectedBookIds] = useState([])
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
   const existingAccountFlow = redirectedFromLogin && Boolean(email)
+
+  useEffect(function () {
+    getBookCatalog()
+      .then(function (data) {
+        setAvailableBooks((data || []).filter(function (b) { return b.isPurchasable }))
+      })
+      .catch(function () {})
+  }, [])
 
   const utm = useUtmParams()
 
@@ -158,6 +169,7 @@ export default function CheckoutPage() {
         utmCampaign: utm.utm_campaign ?? null,
         utmTerm: utm.utm_term ?? null,
         utmContent: utm.utm_content ?? null,
+        bookIds: selectedBookIds,
       })
 
       if (!response?.url) {
@@ -263,6 +275,70 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
+
+          {availableBooks.length > 0 && (
+            <div className="card">
+              <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <BookOpen size={18} style={{ color: 'var(--gold-2)', flexShrink: 0 }} />
+                  <div style={{ fontWeight: 900, fontSize: 16 }}>
+                    Adicione livros ao seu pedido
+                  </div>
+                </div>
+                <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                  Livros físicos com sabedoria judaica — adquira junto com seu plano e economize na entrega.
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {availableBooks.map(function (book) {
+                    const isSelected = selectedBookIds.includes(book.id)
+                    return (
+                      <label
+                        key={book.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 12,
+                          cursor: 'pointer',
+                          padding: '12px 14px',
+                          borderRadius: 12,
+                          border: `1px solid ${isSelected ? 'rgba(215, 178, 74, 0.6)' : 'rgba(255,255,255,0.1)'}`,
+                          background: isSelected ? 'rgba(215, 178, 74, 0.08)' : 'transparent',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={function (e) {
+                            if (e.target.checked) {
+                              setSelectedBookIds(function (prev) { return [...prev, book.id] })
+                            } else {
+                              setSelectedBookIds(function (prev) { return prev.filter(function (id) { return id !== book.id }) })
+                            }
+                          }}
+                          style={{ marginTop: 2, accentColor: 'var(--gold-2)', width: 16, height: 16, flexShrink: 0 }}
+                        />
+                        <div style={{ display: 'flex', gap: 10, flex: 1, alignItems: 'flex-start' }}>
+                          {book.coverImageUrl && (
+                            <img
+                              src={book.coverImageUrl}
+                              alt={book.title}
+                              style={{ width: 44, height: 60, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                            />
+                          )}
+                          <div style={{ display: 'grid', gap: 3 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{book.title}</div>
+                            <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>{book.description}</div>
+                            <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 14 }}>+ {book.priceLabel}</div>
+                          </div>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 14 }}>

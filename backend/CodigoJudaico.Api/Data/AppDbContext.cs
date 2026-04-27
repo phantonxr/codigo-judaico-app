@@ -20,6 +20,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<WisdomSnippet> WisdomSnippets => Set<WisdomSnippet>();
+    public DbSet<UserBookPurchase> UserBookPurchases => Set<UserBookPurchase>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -224,6 +225,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).HasMaxLength(120);
             entity.Property(x => x.Source).HasMaxLength(160);
+        });
+
+        modelBuilder.Entity<UserBookPurchase>(entity =>
+        {
+            entity.ToTable("user_book_purchases");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.BookId }).IsUnique();
+            entity.Property(x => x.BookId).HasMaxLength(120);
+            entity.Property(x => x.StripeSessionId).HasMaxLength(120);
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

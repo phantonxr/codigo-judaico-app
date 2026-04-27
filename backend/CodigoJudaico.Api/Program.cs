@@ -110,6 +110,7 @@ app.MapPaymentEndpoints();
 app.MapAdminEndpoints();
 app.MapUserStateEndpoints();
 app.MapMentorEndpoints();
+app.MapBookEndpoints();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {

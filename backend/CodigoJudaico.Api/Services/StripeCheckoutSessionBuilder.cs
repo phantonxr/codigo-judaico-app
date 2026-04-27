@@ -31,7 +31,8 @@ internal static class StripeCheckoutSessionBuilder
         string? utmMedium = null,
         string? utmCampaign = null,
         string? utmTerm = null,
-        string? utmContent = null)
+        string? utmContent = null,
+        string? bookIds = null)
     {
         EnsureRequiredPaymentCoreMetadata(paymentCoreMetadata);
 
@@ -67,6 +68,9 @@ internal static class StripeCheckoutSessionBuilder
         if (!string.IsNullOrWhiteSpace(utmContent))
             metadata[StripeBillingService.UtmContentMetadataKey] = utmContent;
 
+        if (!string.IsNullOrWhiteSpace(bookIds))
+            metadata[StripeBillingService.BookIdsMetadataKey] = bookIds;
+
         return metadata;
     }
 
@@ -75,10 +79,21 @@ internal static class StripeCheckoutSessionBuilder
         string baseUrl,
         Dictionary<string, string> metadata,
         StripePlanDefinition plan,
+        IReadOnlyList<StripeBookLineItem> books,
         decimal platformRetentionPercent,
         string connectedAccountId,
         StripeConnectRouting routing)
     {
+        var lineItems = new List<SessionLineItemOptions>
+        {
+            new() { Price = plan.PriceId, Quantity = 1 },
+        };
+
+        foreach (var book in books)
+        {
+            lineItems.Add(new SessionLineItemOptions { Price = book.PriceId, Quantity = 1 });
+        }
+
         var sessionOptions = new SessionCreateOptions
         {
             Mode = "subscription",
@@ -88,14 +103,7 @@ internal static class StripeCheckoutSessionBuilder
             ClientReferenceId = email,
             BillingAddressCollection = "required",
             Metadata = metadata,
-            LineItems =
-            [
-                new SessionLineItemOptions
-                {
-                    Price = plan.PriceId,
-                    Quantity = 1,
-                },
-            ],
+            LineItems = lineItems,
             SubscriptionData = new SessionSubscriptionDataOptions
             {
                 Description = plan.PlanName,
@@ -135,6 +143,7 @@ internal static class StripeCheckoutSessionBuilder
         string baseUrl,
         Dictionary<string, string> metadata,
         StripePlanDefinition plan,
+        IReadOnlyList<StripeBookLineItem> books,
         long feeAmount,
         string connectedAccountId,
         StripeConnectRouting routing)
@@ -153,6 +162,16 @@ internal static class StripeCheckoutSessionBuilder
             };
         }
 
+        var lineItems = new List<SessionLineItemOptions>
+        {
+            new() { Price = plan.PriceId, Quantity = 1 },
+        };
+
+        foreach (var book in books)
+        {
+            lineItems.Add(new SessionLineItemOptions { Price = book.PriceId, Quantity = 1 });
+        }
+
         var sessionOptions = new SessionCreateOptions
         {
             Mode = "payment",
@@ -162,14 +181,7 @@ internal static class StripeCheckoutSessionBuilder
             ClientReferenceId = email,
             BillingAddressCollection = "required",
             Metadata = metadata,
-            LineItems =
-            [
-                new SessionLineItemOptions
-                {
-                    Price = plan.PriceId,
-                    Quantity = 1,
-                },
-            ],
+            LineItems = lineItems,
             PaymentIntentData = paymentIntentData,
         };
 

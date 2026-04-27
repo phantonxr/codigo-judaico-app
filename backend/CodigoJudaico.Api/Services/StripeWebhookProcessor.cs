@@ -136,8 +136,9 @@ public sealed class StripeWebhookProcessor(
     {
         var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
         var matchedPlan = await ResolveTrackedPlanAsync(session, subscription, cancellationToken);
+        var bookIds = ParseBookIds(ReadMetadata(session.Metadata, StripeBillingService.BookIdsMetadataKey));
 
-        if (matchedPlan is null)
+        if (matchedPlan is null && (bookIds.Count == 0 || !stripeBillingService.HasExpectedMetadata(session.Metadata)))
         {
             logger.LogInformation(
                 "Ignorando checkout Stripe {SessionId} porque nao pertence a este app ou nao usa os PriceIds configurados.",
@@ -158,74 +159,129 @@ public sealed class StripeWebhookProcessor(
         var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        if (string.Equals(matchedPlan.Id, MentorUnlimitedPlanId, StringComparison.OrdinalIgnoreCase))
+        if (matchedPlan is not null)
         {
-            user ??= new AppUser
+            if (string.Equals(matchedPlan.Id, MentorUnlimitedPlanId, StringComparison.OrdinalIgnoreCase))
             {
-                Id = Guid.NewGuid(),
-                Email = email,
-                Name = string.IsNullOrWhiteSpace(name) ? "Aluno" : name,
-                CreatedAt = now,
-                UpdatedAt = now,
-            };
+                user ??= new AppUser
+                {
+                    Id = Guid.NewGuid(),
+                    Email = email,
+                    Name = string.IsNullOrWhiteSpace(name) ? "Aluno" : name,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                };
 
-            if (dbContext.Entry(user).State == EntityState.Detached)
-            {
-                dbContext.Users.Add(user);
+                if (dbContext.Entry(user).State == EntityState.Detached)
+                {
+                    dbContext.Users.Add(user);
+                }
+
+                await UpsertMentorUnlimitedSubscriptionAsync(
+                    user,
+                    subscription,
+                    string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName,
+                    cancellationToken);
+
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
-
-            await UpsertMentorUnlimitedSubscriptionAsync(
-                user,
-                subscription,
-                string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName,
-                cancellationToken);
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
-        var accessWasEnabled = user?.AccessEnabled ?? false;
-        var lastCompletedCheckoutSessionId = user?.LastStripeCheckoutSessionId;
-
-        if (user is null)
-        {
-            user = new AppUser
+            else
             {
-                Id = Guid.NewGuid(),
-                Email = email,
-                Name = string.IsNullOrWhiteSpace(name) ? "Aluno" : name,
-                CreatedAt = now,
-                UpdatedAt = now,
-            };
+                var accessWasEnabled = user?.AccessEnabled ?? false;
+                var lastCompletedCheckoutSessionId = user?.LastStripeCheckoutSessionId;
 
-            dbContext.Users.Add(user);
+                if (user is null)
+                {
+                    user = new AppUser
+                    {
+                        Id = Guid.NewGuid(),
+                        Email = email,
+                        Name = string.IsNullOrWhiteSpace(name) ? "Aluno" : name,
+                        CreatedAt = now,
+                        UpdatedAt = now,
+                    };
+
+                    dbContext.Users.Add(user);
+                }
+                else if (!string.IsNullOrWhiteSpace(name))
+                {
+                    user.Name = name;
+                }
+
+                ApplySubscriptionState(
+                    user,
+                    subscription,
+                    string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
+
+                if (matchedPlan.IsOneTimePayment)
+                {
+                    ApplyOneTimeAccessState(user, matchedPlan);
+                }
+
+                user.LastStripeCheckoutSessionId = session.Id;
+                user.UpdatedAt = now;
+
+                await PersistUserAndMaybeSendAccessEmailAsync(
+                    user,
+                    accessWasEnabled,
+                    lastCompletedCheckoutSessionId,
+                    session.Id,
+                    cancellationToken);
+
+                await TrackUtmfyPurchaseAsync(session, user, matchedPlan, cancellationToken);
+            }
         }
-        else if (!string.IsNullOrWhiteSpace(name))
+
+        if (bookIds.Count > 0)
         {
-            user.Name = name;
+            if (user is null)
+            {
+                logger.LogWarning("Checkout {SessionId} com livros mas usuario {Email} nao encontrado.", session.Id, email);
+            }
+            else
+            {
+                await GrantBookPurchasesAsync(user.Id, bookIds, session.Id, cancellationToken);
+            }
         }
+    }
 
-        ApplySubscriptionState(
-            user,
-            subscription,
-            string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
-
-        if (matchedPlan.IsOneTimePayment)
+    private async Task GrantBookPurchasesAsync(
+        Guid userId,
+        IReadOnlyList<string> bookIds,
+        string sessionId,
+        CancellationToken cancellationToken)
+    {
+        foreach (var bookId in bookIds)
         {
-            ApplyOneTimeAccessState(user, matchedPlan);
+            var exists = await dbContext.UserBookPurchases
+                .AnyAsync(x => x.UserId == userId && x.BookId == bookId, cancellationToken);
+
+            if (!exists)
+            {
+                dbContext.UserBookPurchases.Add(new UserBookPurchase
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BookId = bookId,
+                    StripeSessionId = sessionId,
+                    PurchasedAt = DateTimeOffset.UtcNow,
+                });
+            }
         }
 
-        user.LastStripeCheckoutSessionId = session.Id;
-        user.UpdatedAt = now;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
 
-        await PersistUserAndMaybeSendAccessEmailAsync(
-            user,
-            accessWasEnabled,
-            lastCompletedCheckoutSessionId,
-            session.Id,
-            cancellationToken);
+    private static IReadOnlyList<string> ParseBookIds(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [];
+        }
 
-        await TrackUtmfyPurchaseAsync(session, user, matchedPlan, cancellationToken);
+        return raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToList();
     }
 
     private async Task TrackUtmfyPurchaseAsync(

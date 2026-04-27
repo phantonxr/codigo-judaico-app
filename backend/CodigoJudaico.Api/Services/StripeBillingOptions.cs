@@ -22,6 +22,8 @@ public sealed class StripeBillingOptions
     public StripeCheckoutPlanOptions Annual { get; set; } = new();
     public StripeCheckoutPlanOptions Lifetime { get; set; } = new();
     public StripeCheckoutPlanOptions MentorUnlimited { get; set; } = new();
+    public Dictionary<string, string> BookPriceIds { get; set; } = new();
+    public string BooksPdfPath { get; set; } = "./Books";
 }
 
 public sealed class StripeCheckoutPlanOptions

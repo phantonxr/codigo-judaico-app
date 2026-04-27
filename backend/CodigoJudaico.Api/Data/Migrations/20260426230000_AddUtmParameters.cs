@@ -1,13 +1,9 @@
-using CodigoJudaico.Api.Data;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace CodigoJudaico.Api.Data.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260426230000_AddUtmParameters")]
     public partial class AddUtmParameters : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -81,7 +81,7 @@ public sealed class UtmfyService(
             var client = httpClientFactory.CreateClient("Utmfy");
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "api-credentials/orders");
-            httpRequest.Headers.Add("x-auth-token", _options.ApiKey);
+            httpRequest.Headers.Add("x-api-token", _options.ApiKey);
             httpRequest.Content = JsonContent.Create(body);
 
             var response = await client.SendAsync(httpRequest, cancellationToken);

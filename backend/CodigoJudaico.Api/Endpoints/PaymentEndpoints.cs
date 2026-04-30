@@ -401,13 +401,13 @@ public static class PaymentEndpoints
         if (string.Equals(plan.Id, "primeiro-acesso", StringComparison.OrdinalIgnoreCase)
             && user?.AccessGrantedAt is not null)
         {
-            return "Voce ja utilizou o Primeiro Acesso. Escolha outro plano para continuar.";
+            return "Você já ativou o Primeiro Acesso anteriormente. Para continuar, escolha um dos outros planos disponíveis.";
         }
 
         if (string.Equals(plan.Id, "renovacao", StringComparison.OrdinalIgnoreCase)
             && (user is null || user.HasUsedRenewalOffer))
         {
-            return "A Renovacao Especial ja foi utilizada ou nao esta disponivel para este e-mail.";
+            return "A oferta de Renovação Especial já foi utilizada ou não está disponível para este e-mail.";
         }
 
         return null;

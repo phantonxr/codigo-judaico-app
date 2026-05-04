@@ -23,7 +23,7 @@ public static class SessionEndpoints
         {
             var email = ApiMappers.NormalizeEmail(request.Email);
 
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Password))
+            if (!ApiMappers.IsValidEmail(email) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {

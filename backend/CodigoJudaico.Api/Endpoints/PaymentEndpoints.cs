@@ -140,7 +140,7 @@ public static class PaymentEndpoints
             var password = request.Password ?? string.Empty;
             var trimmedPassword = password.Trim();
 
-            if (string.IsNullOrWhiteSpace(email))
+            if (!ApiMappers.IsValidEmail(email))
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {

@@ -94,6 +94,20 @@ public static class ApiMappers
     public static string NormalizeEmail(string? email) =>
         string.IsNullOrWhiteSpace(email) ? string.Empty : email.Trim().ToLowerInvariant();
 
+    public static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return false;
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return string.Equals(addr.Address, email, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public static string Clean(string? value) => (value ?? string.Empty).Trim();
 
     public static string Serialize(JsonElement? value, string fallbackJson)

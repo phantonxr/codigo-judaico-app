@@ -7,7 +7,10 @@
       "Bash(git commit -m ' *)",
       "Bash(xargs grep *)",
       "Bash(dotnet build *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(cd /d D:\\\\Estudo\\\\codigo-judaico-app)",
+      "Bash(Get-ChildItem -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

@@ -3,8 +3,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createCheckoutSession } from '../services/payments.js'
 import { getBookCatalog } from '../services/books.js'
+import {
+  LEGAL_DOCUMENT_TYPES,
+  buildLegalAcceptancePayload,
+  findLegalDocument,
+  getActiveLegalDocuments,
+  getLegalDocumentLabel,
+  normalizeLegalLanguage,
+} from '../services/legal.js'
 import { useUtmParams } from '../hooks/useUtmParams.js'
 import FloatingProof from '../components/FloatingProof.jsx'
+import DisclaimerBanner from '../components/legal/DisclaimerBanner.jsx'
+import LegalDocumentModal from '../components/legal/LegalDocumentModal.jsx'
 import { Zap, Clock, BookOpen } from 'lucide-react'
 
 const MINIMUM_PASSWORD_LENGTH = 8
@@ -84,7 +94,8 @@ function resolveCtaLabel(planId, t) {
 }
 
 export default function CheckoutPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const legalLanguage = normalizeLegalLanguage(i18n.language)
   const [searchParams] = useSearchParams()
   const selectedPlan = resolvePlan(searchParams.get('plan'))
   const planTitle = t('checkout.plans.titles.' + selectedPlan.id, { defaultValue: selectedPlan.title })
@@ -102,6 +113,11 @@ export default function CheckoutPage() {
   const [error, setError] = useState('')
   const [availableBooks, setAvailableBooks] = useState([])
   const [selectedBookIds, setSelectedBookIds] = useState([])
+  const [acceptedLegal, setAcceptedLegal] = useState(false)
+  const [legalData, setLegalData] = useState(null)
+  const [legalLoading, setLegalLoading] = useState(true)
+  const [legalError, setLegalError] = useState('')
+  const [selectedLegalDocument, setSelectedLegalDocument] = useState(null)
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
   const existingAccountFlow = redirectedFromLogin && Boolean(email)
 
@@ -112,6 +128,30 @@ export default function CheckoutPage() {
       })
       .catch(function () {})
   }, [])
+
+  useEffect(function () {
+    let alive = true
+    setLegalLoading(true)
+    setLegalError('')
+    setAcceptedLegal(false)
+
+    getActiveLegalDocuments(legalLanguage)
+      .then(function (data) {
+        if (!alive) return
+        setLegalData(data)
+      })
+      .catch(function (caught) {
+        if (!alive) return
+        setLegalError(String(caught?.message ?? 'Could not load legal documents.').replace(/^API \d+:\s*/u, ''))
+      })
+      .finally(function () {
+        if (alive) setLegalLoading(false)
+      })
+
+    return function () {
+      alive = false
+    }
+  }, [legalLanguage])
 
   const utm = useUtmParams()
 
@@ -151,6 +191,16 @@ export default function CheckoutPage() {
       return
     }
 
+    if (legalLoading || legalError || !legalData?.activeVersions) {
+      setError(legalError || 'Legal documents are not available yet. Please try again in a moment.')
+      return
+    }
+
+    if (!acceptedLegal) {
+      setError('Please agree to the Terms of Service, Privacy Policy, and Disclaimer before continuing.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -165,6 +215,7 @@ export default function CheckoutPage() {
         utmTerm: utm.utm_term ?? null,
         utmContent: utm.utm_content ?? null,
         bookIds: selectedBookIds,
+        legalAcceptance: buildLegalAcceptancePayload(legalData.activeVersions, legalLanguage),
       })
 
       if (!response?.url) {
@@ -188,8 +239,15 @@ export default function CheckoutPage() {
   return (
     <div className="container" style={{ padding: '40px 0 72px' }}>
       <FloatingProof />
+      <LegalDocumentModal
+        document={selectedLegalDocument}
+        open={Boolean(selectedLegalDocument)}
+        onClose={() => setSelectedLegalDocument(null)}
+      />
 
       <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 22 }}>
+        <DisclaimerBanner compact />
+
         <div className="card">
           <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
             <span className="badge" style={{ width: 'fit-content' }}>{t('checkout.badge')}</span>
@@ -425,6 +483,54 @@ export default function CheckoutPage() {
                   <Link to={buildFreshCheckoutPath(selectedPlan.id)}>{t('checkout.other_account_link')}</Link>.
                 </div>
               ) : null}
+
+              <div className="legal-consents" aria-label="Legal acknowledgements">
+                {legalLoading ? (
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    Loading legal documents...
+                  </div>
+                ) : null}
+
+                {legalError ? (
+                  <div className="muted" style={{ color: '#f3b0b0', fontSize: 13 }}>
+                    {legalError}
+                  </div>
+                ) : null}
+
+                {!legalLoading && legalData ? (
+                  <div className="legal-doc-links">
+                    {LEGAL_DOCUMENT_TYPES.map((type) => {
+                      const document = findLegalDocument(legalData.documents, type)
+                      return (
+                        <button
+                          key={type}
+                          className="legal-link"
+                          type="button"
+                          onClick={() => setSelectedLegalDocument(document)}
+                          disabled={!document}
+                        >
+                          {getLegalDocumentLabel(type)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : null}
+
+                <div className="legal-consent-row">
+                  <input
+                    id="checkout-legal-terms"
+                    type="checkbox"
+                    checked={acceptedLegal}
+                    onChange={(event) => setAcceptedLegal(event.target.checked)}
+                    disabled={legalLoading || Boolean(legalError)}
+                  />
+                  <div className="legal-consent-copy">
+                    <label htmlFor="checkout-legal-terms">
+                      I agree to the Terms of Service, Privacy Policy, and Disclaimer.
+                    </label>
+                  </div>
+                </div>
+              </div>
 
               {error ? (
                 <div className="muted" style={{ color: '#f3b0b0' }}>

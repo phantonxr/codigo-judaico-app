@@ -108,6 +108,7 @@ app.MapCatalogEndpoints();
 app.MapSessionEndpoints();
 app.MapPaymentEndpoints();
 app.MapAdminEndpoints();
+app.MapLegalEndpoints();
 app.MapUserStateEndpoints();
 app.MapMentorEndpoints();
 app.MapBookEndpoints();

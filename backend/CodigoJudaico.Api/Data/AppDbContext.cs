@@ -21,6 +21,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<WisdomSnippet> WisdomSnippets => Set<WisdomSnippet>();
     public DbSet<UserBookPurchase> UserBookPurchases => Set<UserBookPurchase>();
+    public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
+    public DbSet<UserLegalAcceptance> UserLegalAcceptances => Set<UserLegalAcceptance>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -236,6 +238,38 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.StripeSessionId).HasMaxLength(120);
             entity.HasOne(x => x.User)
                 .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LegalDocument>(entity =>
+        {
+            entity.ToTable("legal_documents");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.Type, x.Language, x.Version }).IsUnique();
+            entity.HasIndex(x => new { x.Type, x.Language, x.IsActive });
+            entity.Property(x => x.Type).HasMaxLength(32);
+            entity.Property(x => x.Language).HasMaxLength(16);
+            entity.Property(x => x.Version).HasMaxLength(40);
+            entity.Property(x => x.Title).HasMaxLength(220);
+            entity.Property(x => x.Content).HasColumnType("text");
+            entity.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<UserLegalAcceptance>(entity =>
+        {
+            entity.ToTable("user_legal_acceptances");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.AcceptedAt });
+            entity.Property(x => x.TermsVersion).HasMaxLength(40);
+            entity.Property(x => x.PrivacyVersion).HasMaxLength(40);
+            entity.Property(x => x.DisclaimerVersion).HasMaxLength(40);
+            entity.Property(x => x.Language).HasMaxLength(16);
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.LegalAcceptances)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

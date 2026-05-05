@@ -80,6 +80,28 @@ public static class ApiMappers
     public static WisdomDto ToDto(this WisdomSnippet wisdom) =>
         new(wisdom.Id, wisdom.Source, wisdom.Teaching);
 
+    public static LegalDocumentDto ToDto(this LegalDocument document) =>
+        new(
+            document.Id,
+            document.Type,
+            document.Language,
+            document.Version,
+            document.Title,
+            document.Content,
+            document.IsActive,
+            document.CreatedAt.ToString("O"),
+            document.UpdatedAt.ToString("O"),
+            document.CreatedBy);
+
+    public static UserLegalAcceptanceDto ToDto(this UserLegalAcceptance acceptance) =>
+        new(
+            acceptance.Id,
+            acceptance.TermsVersion,
+            acceptance.PrivacyVersion,
+            acceptance.DisclaimerVersion,
+            acceptance.Language,
+            acceptance.AcceptedAt.ToString("O"));
+
     public static SessionBootstrapResponse ToBootstrap(
         this AppUser user,
         IReadOnlyList<UserLessonProgress> lessonProgress,

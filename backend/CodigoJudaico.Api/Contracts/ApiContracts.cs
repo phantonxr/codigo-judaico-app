@@ -44,6 +44,68 @@ public sealed record AdminSubscribersResponse(
     int PendingSubscribers,
     IReadOnlyList<AdminSubscriberDto> Subscribers);
 
+public sealed record LegalDocumentDto(
+    Guid Id,
+    string Type,
+    string Language,
+    string Version,
+    string Title,
+    string Content,
+    bool IsActive,
+    string CreatedAt,
+    string UpdatedAt,
+    Guid? CreatedBy);
+
+public sealed record LegalVersionSetDto(
+    string TermsVersion,
+    string PrivacyVersion,
+    string DisclaimerVersion);
+
+public sealed record UserLegalAcceptanceDto(
+    Guid Id,
+    string TermsVersion,
+    string PrivacyVersion,
+    string DisclaimerVersion,
+    string Language,
+    string AcceptedAt);
+
+public sealed record ActiveLegalDocumentsResponse(
+    string RequestedLanguage,
+    string ResolvedLanguage,
+    LegalVersionSetDto ActiveVersions,
+    IReadOnlyList<LegalDocumentDto> Documents);
+
+public sealed record LegalAcceptanceStatusResponse(
+    bool RequiresAcceptance,
+    string RequestedLanguage,
+    string ResolvedLanguage,
+    LegalVersionSetDto ActiveVersions,
+    UserLegalAcceptanceDto? Acceptance,
+    IReadOnlyList<LegalDocumentDto> Documents);
+
+public sealed record LegalDocumentSaveRequest
+{
+    public string Type { get; init; } = string.Empty;
+    public string Language { get; init; } = string.Empty;
+    public string Version { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Content { get; init; } = string.Empty;
+    public bool IsActive { get; init; }
+}
+
+public sealed record LegalDocumentStatusRequest
+{
+    public bool IsActive { get; init; }
+}
+
+public sealed record LegalAcceptanceRequest
+{
+    public string TermsVersion { get; init; } = string.Empty;
+    public string PrivacyVersion { get; init; } = string.Empty;
+    public string DisclaimerVersion { get; init; } = string.Empty;
+    public string Language { get; init; } = string.Empty;
+}
+
 public sealed record DiagnosisDto(
     string TrackId,
     string TrackLabel,
@@ -224,6 +286,7 @@ public sealed record CheckoutSessionCreateRequest
     public string? UtmTerm { get; init; }
     public string? UtmContent { get; init; }
     public IReadOnlyList<string> BookIds { get; init; } = [];
+    public LegalAcceptanceRequest? LegalAcceptance { get; init; }
 }
 
 public sealed record BookCatalogDto(

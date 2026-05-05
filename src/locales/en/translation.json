@@ -9,7 +9,8 @@
     "books": "Books",
     "more": "More",
     "subscription": "Subscription",
-    "subscribers": "Subscribers"
+    "subscribers": "Subscribers",
+    "legal": "Legal"
   },
   "brand": {
     "name": "Jewish Code",
@@ -168,6 +169,7 @@
     "/mais": "More",
     "/assinatura": "Subscription",
     "/admin/assinantes": "Subscribers",
+    "/admin/legal": "Legal settings",
     "/avaliacao": "Financial Assessment",
     "/calendario": "Calendar",
     "/relatorio-final": "Final Report",

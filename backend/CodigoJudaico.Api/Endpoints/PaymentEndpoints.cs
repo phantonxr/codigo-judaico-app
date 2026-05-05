@@ -156,6 +156,14 @@ public static class PaymentEndpoints
                 });
             }
 
+            if (!await LegalEndpoints.IsCurrentLegalAcceptanceAsync(dbContext, request.LegalAcceptance, cancellationToken))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["legalAcceptance"] = ["Revise e aceite os Termos, a Politica de Privacidade e o Aviso Legal antes de continuar."]
+                });
+            }
+
             var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
             StripePlanDefinition plan;
 
@@ -280,6 +288,12 @@ public static class PaymentEndpoints
 
             user.LastStripeCheckoutSessionId = response.SessionId;
             user.UpdatedAt = now;
+
+            await LegalEndpoints.TryRecordCheckoutAcceptanceAsync(
+                dbContext,
+                user.Id,
+                request.LegalAcceptance,
+                cancellationToken);
 
             // Salva UTMs no usuário (first-touch: só se ainda não tiver)
             if (string.IsNullOrWhiteSpace(user.UtmSource) && !string.IsNullOrWhiteSpace(request.UtmSource))

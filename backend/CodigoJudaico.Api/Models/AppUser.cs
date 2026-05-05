@@ -33,4 +33,5 @@ public sealed class AppUser
     public List<UserLessonProgress> LessonProgressEntries { get; set; } = [];
     public List<MentorChatMessage> MentorMessages { get; set; } = [];
     public List<AppSession> Sessions { get; set; } = [];
+    public List<UserLegalAcceptance> LegalAcceptances { get; set; } = [];
 }

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import Sidebar from './components/Sidebar.jsx'
 import Topbar from './components/Topbar.jsx'
+import RequiredLegalAcceptanceModal from './components/legal/RequiredLegalAcceptanceModal.jsx'
 
 import LandingPage from './pages/LandingPage.jsx'
 import Login from './pages/Login.jsx'
@@ -19,6 +20,7 @@ import Biblioteca from './pages/Biblioteca.jsx'
 import Mais from './pages/Mais.jsx'
 import Assinatura from './pages/Assinatura.jsx'
 import AdminAssinantes from './pages/AdminAssinantes.jsx'
+import AdminLegal from './pages/AdminLegal.jsx'
 import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
 import Calendario from './pages/Calendario.jsx'
 import RelatorioFinal from './pages/RelatorioFinal.jsx'
@@ -100,14 +102,11 @@ function SubscriptionRequiredNotice() {
 
 function RequireSubscriptionAccess() {
   const currentUser = useCurrentUser()
-  const [subscriptionRequired, setSubscriptionRequired] = useState(() => currentUser?.hasActiveAccess === false)
+  const [subscriptionRequiredByEvent, setSubscriptionRequiredByEvent] = useState(false)
+  const subscriptionRequired = currentUser?.hasActiveAccess === false || subscriptionRequiredByEvent
 
   useEffect(() => {
-    setSubscriptionRequired(currentUser?.hasActiveAccess === false)
-  }, [currentUser?.hasActiveAccess])
-
-  useEffect(() => {
-    const onSubscriptionRequired = () => setSubscriptionRequired(true)
+    const onSubscriptionRequired = () => setSubscriptionRequiredByEvent(true)
     window.addEventListener('subscription_required', onSubscriptionRequired)
     return () => {
       window.removeEventListener('subscription_required', onSubscriptionRequired)
@@ -125,11 +124,8 @@ function AppLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const pathname = location.pathname
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-
-  useEffect(() => {
-    setMobileNavOpen(false)
-  }, [location.pathname])
+  const [mobileNavState, setMobileNavState] = useState({ open: false, pathname })
+  const mobileNavOpen = mobileNavState.open && mobileNavState.pathname === pathname
 
   const titleMap = {
     '/dashboard': t('page_titles./dashboard'),
@@ -139,6 +135,7 @@ function AppLayout() {
     '/mais': t('page_titles./mais'),
     '/assinatura': t('page_titles./assinatura'),
     '/admin/assinantes': t('page_titles./admin/assinantes'),
+    '/admin/legal': t('page_titles./admin/legal', 'Legal settings'),
     '/avaliacao': t('page_titles./avaliacao'),
     '/calendario': t('page_titles./calendario'),
     '/relatorio-final': t('page_titles./relatorio-final'),
@@ -148,13 +145,19 @@ function AppLayout() {
 
   return (
     <div className="app-shell">
-      <Sidebar open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <Sidebar open={mobileNavOpen} onClose={() => setMobileNavState({ open: false, pathname })} />
       <div className="app-main">
-        <Topbar title={title} user={null} onMenuToggle={() => setMobileNavOpen((s) => !s)} />
+        <Topbar
+          title={title}
+          user={null}
+          onMenuToggle={() => setMobileNavState({ open: !mobileNavOpen, pathname })}
+        />
         <main className="app-content" role="main">
-          <div key={location.pathname} className="page-transition">
-            <Outlet />
-          </div>
+          <RequiredLegalAcceptanceModal>
+            <div key={location.pathname} className="page-transition">
+              <Outlet />
+            </div>
+          </RequiredLegalAcceptanceModal>
         </main>
       </div>
     </div>
@@ -176,6 +179,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/assinatura" element={<Assinatura />} />
           <Route path="/admin/assinantes" element={<AdminAssinantes />} />
+          <Route path="/admin/legal" element={<AdminLegal />} />
           <Route path="/livros" element={<Livros />} />
           <Route element={<RequireSubscriptionAccess />}>
             <Route path="/dashboard" element={<Dashboard />} />

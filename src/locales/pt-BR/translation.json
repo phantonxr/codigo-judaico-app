@@ -9,7 +9,8 @@
     "books": "Livros",
     "more": "Mais",
     "subscription": "Assinatura",
-    "subscribers": "Assinantes"
+    "subscribers": "Assinantes",
+    "legal": "Legal"
   },
   "brand": {
     "name": "Código Judaico",
@@ -168,6 +169,7 @@
     "/mais": "Mais",
     "/assinatura": "Assinatura",
     "/admin/assinantes": "Assinantes",
+    "/admin/legal": "Configuracoes legais",
     "/avaliacao": "Avaliação Financeira",
     "/calendario": "Calendário",
     "/relatorio-final": "Relatório Final",

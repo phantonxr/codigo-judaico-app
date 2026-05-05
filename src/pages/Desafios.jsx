@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Check, Lock, Loader, Star, AlertTriangle,
   BookOpen, Target, ChevronRight, Flame, Shield, Circle, CircleDot, Sparkles,
@@ -48,6 +49,7 @@ var STATUS_ICONS = {
 }
 
 export default function Desafios() {
+  const { t } = useTranslation()
   var { assignedTrack } = useFinancialDiagnosis()
 
   var stateRefresh = useState(0)
@@ -69,11 +71,11 @@ export default function Desafios() {
     return (
       <div className="container" style={{ display: 'grid', gap: 16, paddingTop: 12 }}>
         <SectionCard
-          title="Desafios"
-          description="Faca sua avaliacao financeira para desbloquear sua trilha personalizada."
+          title={t('challenges.title')}
+          description={t('challenges.assessment_required')}
         >
           <Link to="/avaliacao" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-            <Target size={16} /> Iniciar Avaliacao
+            <Target size={16} /> {t('challenges.start_assessment_btn')}
           </Link>
         </SectionCard>
       </div>
@@ -92,6 +94,7 @@ export default function Desafios() {
    ════════════════════════════════════════════════════ */
 
 function TwentyOneDayView({ assignedTrack }) {
+  const { t } = useTranslation()
   var navigate = useNavigate()
   var track = challenges21Days[assignedTrack] || challenges21Days.trilha1
   var trackLabel = TRACK_LABELS[assignedTrack] || assignedTrack
@@ -225,7 +228,7 @@ function TwentyOneDayView({ assignedTrack }) {
         setRefresh(function (r) { return r + 1 })
       })
       .catch(function () {
-        setAiError('Modo offline: feedback gerado localmente.')
+        setAiError(t('challenges.offline_feedback'))
         var fallback = generateFallbackFeedback(payload)
         saveDayAIFeedback(selectedDay, fallback)
         setIsAILoading(false)
@@ -280,7 +283,7 @@ function TwentyOneDayView({ assignedTrack }) {
           border: '1px solid rgba(215,178,74,0.15)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12,
         }}>
-          <span style={{ fontWeight: 700 }}>{p21.completed}/21 dias</span>
+          <span style={{ fontWeight: 700 }}>{t('challenges.completed_count', { completed: p21.completed })}</span>
           <div className="progress" style={{ flex: 1, margin: '0 12px', height: 5 }}>
             <div className="progress-fill" style={{ width: p21.percent + '%' }} />
           </div>
@@ -292,13 +295,13 @@ function TwentyOneDayView({ assignedTrack }) {
         <div className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.55)' }}>
           <div className="card-inner" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontWeight: 900 }}>Relatório Final liberado</div>
+              <div style={{ fontWeight: 900 }}>{t('challenges.report_unlocked')}</div>
               <div className="muted" style={{ fontSize: 13 }}>
-                Veja seus padrões, gatilhos e próximos passos.
+                {t('challenges.report_hint')}
               </div>
             </div>
             <Link className="btn btn-primary" to="/relatorio-final">
-              Ver Relatório Final
+              {t('challenges.see_final_report')}
             </Link>
           </div>
         </div>
@@ -344,11 +347,11 @@ function TwentyOneDayView({ assignedTrack }) {
           <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
               <div style={{ fontWeight: 900, fontSize: 16, color: 'var(--gold-2)' }}>
-                Dia {selectedDay + 1}: {dayContent.title}
+                {t('challenges.day_label', { day: selectedDay + 1, title: dayContent.title })}
               </div>
               {completed && (
                 <span className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764' }}>
-                  <Check size={12} /> Concluido
+                  <Check size={12} /> {t('challenges.done_badge')}
                 </span>
               )}
             </div>
@@ -357,20 +360,20 @@ function TwentyOneDayView({ assignedTrack }) {
             <div style={{ display: 'grid', gap: 10 }}>
               {dayContent.oracao && (
                 <div style={{ display: 'grid', gap: 4 }}>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Oracao</div>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_prayer')}</div>
                   <div style={{ fontStyle: 'italic', fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{dayContent.oracao}</div>
                 </div>
               )}
               <div style={{ display: 'grid', gap: 4 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Manha</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_morning')}</div>
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{dayContent.manha}</div>
               </div>
               <div style={{ display: 'grid', gap: 4 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tarde</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_afternoon')}</div>
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{dayContent.tarde}</div>
               </div>
               <div style={{ display: 'grid', gap: 4 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Noite</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_evening')}</div>
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{dayContent.noite}</div>
               </div>
             </div>
@@ -391,7 +394,7 @@ function TwentyOneDayView({ assignedTrack }) {
       <div className="card glass-card">
         <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Tarefas do dia</div>
+            <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>{t('challenges.tasks_title')}</div>
             {/* Circular progress indicator */}
             <div className="circular-progress">
               <svg width="64" height="64">
@@ -410,12 +413,12 @@ function TwentyOneDayView({ assignedTrack }) {
 
           {executedCount > 0 && executedCount < totalTasks && (
             <div style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
-              Cada tarefa executada fortalece sua estrutura financeira. Continue.
+              {t('challenges.keep_going')}
             </div>
           )}
           {executedCount === totalTasks && (
             <div style={{ fontSize: 12, lineHeight: 1.5, color: '#4ad764', fontWeight: 700 }}>
-              Todas as tarefas executadas. Sua disciplina esta construindo prosperidade.
+              {t('challenges.all_tasks_done')}
             </div>
           )}
 
@@ -426,7 +429,7 @@ function TwentyOneDayView({ assignedTrack }) {
               return (
                 <span key={s} style={{ display: 'flex', alignItems: 'center', gap: 4, color: info.color }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: info.color, display: 'inline-block' }} />
-                  {info.label}
+                  {t('task_statuses.' + s)}
                 </span>
               )
             })}
@@ -467,7 +470,7 @@ function TwentyOneDayView({ assignedTrack }) {
                     )}
                   </div>
                   <div style={{ fontSize: 10, fontWeight: 700, color: info.color, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                    {info.label}
+                    {t('task_statuses.' + status)}
                   </div>
                 </button>
               )
@@ -475,7 +478,7 @@ function TwentyOneDayView({ assignedTrack }) {
           </div>
 
           <div className="muted" style={{ fontSize: 11, textAlign: 'center' }}>
-            Toque em cada tarefa para alterar o status
+            {t('challenges.tap_to_change')}
           </div>
         </div>
       </div>
@@ -483,21 +486,21 @@ function TwentyOneDayView({ assignedTrack }) {
       {/* Reflections */}
       <div className="card" style={{ boxShadow: 'none' }}>
         <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
-          <div style={{ fontWeight: 900, fontSize: 14 }}>Reflexoes do dia</div>
+          <div style={{ fontWeight: 900, fontSize: 14 }}>{t('challenges.reflections_title')}</div>
           {dayContent?.reflexao && (
             <div style={{ fontStyle: 'italic', fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>{dayContent.reflexao}</div>
           )}
           <div className="field">
-            <label>O que fiz hoje</label>
-            <textarea className="input" rows={2} placeholder="Descreva o que aconteceu (impulso, decisao, contexto, justificativa mental)..." value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
+            <label>{t('challenges.what_i_did_label')}</label>
+            <textarea className="input" rows={2} placeholder={t('challenges.what_i_did_placeholder')} value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
           </div>
           <div className="field">
-            <label>Como me senti</label>
-            <textarea className="input" rows={2} placeholder="Quais emocoes vieram antes e depois (ansiedade, culpa, alivio, comparacao, pressao, vazio)?" value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
+            <label>{t('challenges.how_i_felt_label')}</label>
+            <textarea className="input" rows={2} placeholder={t('challenges.how_i_felt_placeholder')} value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
           </div>
           <div className="field">
-            <label>Gatilho dominante do dia (possível)</label>
-            <textarea className="input" rows={2} placeholder="Ex.: recompensa imediata, ansiedade, validacao/status, comparacao social, escassez/FOMO, fuga emocional, culpa, desorganizacao..." value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
+            <label>{t('challenges.trigger_label')}</label>
+            <textarea className="input" rows={2} placeholder={t('challenges.trigger_placeholder')} value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
           </div>
         </div>
       </div>
@@ -516,8 +519,8 @@ function TwentyOneDayView({ assignedTrack }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div className="ai-avatar"><Star size={20} /></div>
               <div>
-                <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Feedback do Rabino Mentor IA</div>
-                <div className="muted" style={{ fontSize: 12 }}>Dia {selectedDay + 1}</div>
+                <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>{t('challenges.feedback_title')}</div>
+                <div className="muted" style={{ fontSize: 12 }}>{t('challenges.feedback_day', { day: selectedDay + 1 })}</div>
               </div>
             </div>
 
@@ -527,7 +530,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <Target size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Gatilho detectado</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_trigger')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.detectedTrigger}</div>
                   </div>
@@ -537,7 +540,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <Sparkles size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Padrao emocional</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_pattern')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.emotionalPattern}</div>
                   </div>
@@ -547,7 +550,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
                       <AlertTriangle size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Risco financeiro</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_risk')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.financialRisk}</div>
                   </div>
@@ -557,7 +560,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <BookOpen size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_wisdom')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.jewishWisdom}</div>
                   </div>
@@ -567,7 +570,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
                       <Target size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Micro-acao</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_action')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.practicalAction}</div>
                   </div>
@@ -577,7 +580,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <Star size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Feedback</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_text')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.feedbackText}</div>
                   </div>
@@ -589,7 +592,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <Target size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Analise do dia</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_analysis')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.summary}</div>
                   </div>
@@ -599,7 +602,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
                       <AlertTriangle size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Correcao de rota</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_correction')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.correction}</div>
                   </div>
@@ -609,7 +612,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <BookOpen size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_wisdom')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.jewishWisdom}</div>
                   </div>
@@ -625,7 +628,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
                       <Target size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Foco para amanha</span>
+                      <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('challenges.feedback_tomorrow')}</span>
                     </div>
                     <div className="ai-feedback-section-body">{feedbackNow.nextFocus}</div>
                   </div>
@@ -635,7 +638,7 @@ function TwentyOneDayView({ assignedTrack }) {
 
             {feedbackNow.receivedAt && (
               <div className="muted" style={{ fontSize: 11, textAlign: 'right' }}>
-                Recebido em {new Date(feedbackNow.receivedAt).toLocaleString('pt-BR')}
+                {t('challenges.feedback_received_at', { date: new Date(feedbackNow.receivedAt).toLocaleString() })}
               </div>
             )}
           </div>
@@ -645,8 +648,7 @@ function TwentyOneDayView({ assignedTrack }) {
       {/* Retention copy block */}
       <div className="retention-block">
         <div className="retention-block-body">
-          Cada dia nao executado e um passo para tras. A consistencia e a chave da prosperidade.
-          Nao existe atalho — existe disciplina diaria.
+          {t('challenges.retention_body')}
         </div>
       </div>
 
@@ -661,7 +663,7 @@ function TwentyOneDayView({ assignedTrack }) {
         >
           <div className="card-inner" style={{ display: 'grid', gap: 12, textAlign: 'center' }}>
             <div style={{ fontWeight: 950, fontSize: 18, color: 'var(--gold-2)', letterSpacing: '-0.01em' }}>
-              Parabéns, você concluiu os 21 dias
+              {t('challenges.congrats_title')}
             </div>
             <div
               className="muted"
@@ -671,8 +673,7 @@ function TwentyOneDayView({ assignedTrack }) {
                 marginInline: 'auto',
               }}
             >
-              Você chegou ao fim da primeira etapa. Agora seus registros revelam padrões, gatilhos e decisões que podem estar controlando sua vida financeira.
-              O próximo passo é entender o que o Rabino Mentor identificou sobre você.
+              {t('challenges.congrats_body')}
             </div>
             <div style={{ display: 'grid', gap: 10, justifyItems: 'center' }}>
               <Link
@@ -686,7 +687,7 @@ function TwentyOneDayView({ assignedTrack }) {
                   fontSize: 15,
                 }}
               >
-                Ver meu Relatório Final
+                {t('challenges.see_final_report_btn')}
               </Link>
             </div>
           </div>
@@ -704,9 +705,9 @@ function TwentyOneDayView({ assignedTrack }) {
             style={{ flex: 1, maxWidth: 260, justifyContent: 'center', padding: '13px 18px', fontSize: 13 }}
           >
             {isAILoading ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Loader size={14} className="spin" /> Enviando...</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Loader size={14} className="spin" /> {t('challenges.sending_to_mentor')}</span>
             ) : (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><BookOpen size={14} /> Enviar para Rabino Mentor</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><BookOpen size={14} /> {t('challenges.send_to_mentor_btn')}</span>
             )}
           </button>
         )}
@@ -717,7 +718,7 @@ function TwentyOneDayView({ assignedTrack }) {
             onClick={handleCompleteDay}
             style={{ flex: 1, maxWidth: 440, justifyContent: 'center', padding: '13px 18px' }}
           >
-            <Check size={14} /> Concluir dia {selectedDay + 1}
+            <Check size={14} /> {t('challenges.complete_day_btn', { day: selectedDay + 1 })}
           </button>
         )}
         {!feedbackNow && !completed && (
@@ -730,7 +731,7 @@ function TwentyOneDayView({ assignedTrack }) {
               border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)',
             }}
           >
-            <Check size={14} /> Concluir
+            <Check size={14} /> {t('challenges.complete_btn')}
           </button>
         )}
       </div>
@@ -743,6 +744,7 @@ function TwentyOneDayView({ assignedTrack }) {
    ════════════════════════════════════════════════════ */
 
 function MacroPhaseView({ assignedTrack, phase }) {
+  const { t } = useTranslation()
   var p6m = get6MonthProgress()
 
   var stateModal = useState(null)
@@ -761,18 +763,18 @@ function MacroPhaseView({ assignedTrack, phase }) {
   return (
     <div className="container" style={{ display: 'grid', gap: 16, paddingTop: 12 }}>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span className="badge"><Shield size={14} /> Programa 6 Meses</span>
+        <span className="badge"><Shield size={14} /> {t('challenges.program_6months')}</span>
         {phase === 'completed' && (
           <span className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764' }}>
-            <Star size={14} /> Jornada completa!
+            <Star size={14} /> {t('challenges.journey_complete')}
           </span>
         )}
       </div>
 
-      <SectionCard title="Construcao Patrimonial" description="180 dias de transformacao financeira profunda">
+      <SectionCard title={t('challenges.patrimonial_construction')} description={t('challenges.patrimonial_desc')}>
         <div style={{ display: 'grid', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-            <span style={{ fontWeight: 800 }}>{p6m.completed}/180 dias</span>
+            <span style={{ fontWeight: 800 }}>{p6m.completed}/180 {t('common.days')}</span>
             <span className="muted">{p6m.percent}%</span>
           </div>
           <div className="progress">
@@ -781,7 +783,7 @@ function MacroPhaseView({ assignedTrack, phase }) {
         </div>
       </SectionCard>
 
-      <div style={{ fontWeight: 700, letterSpacing: '0.02em' }}>Marcos mensais</div>
+      <div style={{ fontWeight: 700, letterSpacing: '0.02em' }}>{t('challenges.monthly_milestones')}</div>
       <div className="dashboard-stack">
         {[1, 2, 3, 4, 5, 6].map(function (m) {
           return (

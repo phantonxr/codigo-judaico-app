@@ -1,4 +1,5 @@
 import { Lock, Unlock, Check, ChevronRight, Trophy, Shield, TrendingUp, Landmark, ShieldCheck, Crown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getMonthProgress, isMonthCompleted, isMonthUnlocked } from '../hooks/useJourneyProgress.js'
 import { MONTH_PLAN } from '../data/sixMonthJourney.js'
 
@@ -12,6 +13,7 @@ var MONTH_ICONS = [Landmark, Shield, TrendingUp, Landmark, ShieldCheck, Crown]
  *   onOpen: (monthNum) => void
  */
 export default function MonthMilestoneCard({ monthNum, onOpen }) {
+  const { t } = useTranslation()
   var plan = MONTH_PLAN[monthNum - 1]
   var progress = getMonthProgress(monthNum)
   var completed = isMonthCompleted(monthNum)
@@ -49,14 +51,14 @@ export default function MonthMilestoneCard({ monthNum, onOpen }) {
             </div>
             <div>
               <div style={{ fontWeight: 900, fontSize: 15, color: completed ? '#4ad764' : unlocked ? 'var(--gold-2)' : 'var(--muted)' }}>
-                {monthNum}o Mes
+                {t('calendar.month_card.month_label', { n: monthNum })}
               </div>
               <div className="muted" style={{ fontSize: 12 }}>{plan.title}</div>
             </div>
           </div>
           {completed ? (
             <span className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764' }}>
-              <Trophy size={12} /> Completo
+              <Trophy size={12} /> {t('calendar.month_card.complete')}
             </span>
           ) : unlocked ? (
             <ChevronRight size={18} style={{ color: 'var(--gold-2)' }} />
@@ -75,7 +77,7 @@ export default function MonthMilestoneCard({ monthNum, onOpen }) {
               <div className="progress-fill" style={{ width: progress.percent + '%' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span className="muted">{progress.completed}/30 dias</span>
+              <span className="muted">{progress.completed}/30 {t('common.days')}</span>
               <span className="muted">{progress.percent}%</span>
             </div>
           </div>
@@ -96,7 +98,7 @@ export default function MonthMilestoneCard({ monthNum, onOpen }) {
         {/* CTA */}
         {unlocked && !completed && (
           <button className="btn btn-primary" type="button" style={{ marginTop: 4 }}>
-            {progress.completed === 0 ? 'Comecar mes' : 'Continuar'} <ChevronRight size={14} />
+            {progress.completed === 0 ? t('calendar.month_card.start') : t('calendar.month_card.continue')} <ChevronRight size={14} />
           </button>
         )}
       </div>

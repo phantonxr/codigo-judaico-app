@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, CheckCircle2, Eye, Sparkles, Target } from 'lucide-react'
 import SectionCard from '../components/SectionCard.jsx'
 import { apiFetch } from '../services/apiClient.js'
@@ -23,73 +24,73 @@ function normalizeText(value) {
   }
 }
 
-function pickDominantTrigger(report) {
+function pickDominantTrigger(report, translate) {
   var g = String(report?.gatilhoPrincipal || '').trim()
   if (g) return g
   var top0 = report?.topTriggers?.[0]
   if (top0) return String(top0).trim()
-  return 'gatilho emocional'
+  return translate('report.trigger_fallback')
 }
 
-function buildTriggerTendencyDescription(dominantTrigger, report) {
+function buildTriggerTendencyDescription(dominantTrigger, report, translate) {
   var dominantN = normalizeText(dominantTrigger)
 
   if (dominantN.includes('ansied')) {
-    return 'Você tende a gastar para aliviar ansiedade e buscar sensação imediata de controle.'
+    return translate('report.tendency_anxiety')
   }
 
   if (dominantN.includes('compar') || dominantN.includes('status') || dominantN.includes('valid')) {
-    return 'Você tende a gastar quando se compara, buscando validação e alívio emocional rápido.'
+    return translate('report.tendency_validation')
   }
 
   if (dominantN.includes('recomp') || dominantN.includes('prazer') || dominantN.includes('imediat')) {
-    return 'Você tende a gastar em busca de recompensa imediata quando a emoção sobe.'
+    return translate('report.tendency_reward')
   }
 
-  var emotionalPattern = String(report?.emotionalPattern || report?.emotionalPattern || '').trim()
+  var emotionalPattern = String(report?.emotionalPattern || '').trim()
   if (emotionalPattern && emotionalPattern.length <= 120) {
-    return 'Você tende a gastar quando ' + emotionalPattern.replace(/\.$/, '') + '.'
+    return translate('report.tendency_pattern', { pattern: emotionalPattern.replace(/\.$/, '') })
   }
 
-  return 'Você tende a gastar quando a decisão acontece no piloto automático — para aliviar a emoção do momento.'
+  return translate('report.tendency_default')
 }
 
-function inferSituationEmotion(dominantTrigger, report) {
-  var t = normalizeText(dominantTrigger)
+function inferSituationEmotion(dominantTrigger, report, translate) {
+  var dn = normalizeText(dominantTrigger)
   var ep = normalizeText(report?.emotionalPattern)
-  var source = t + ' ' + ep
+  var source = dn + ' ' + ep
 
-  if (source.includes('ansied')) return 'sente ansiedade'
-  if (source.includes('estress') || source.includes('press')) return 'fica sob pressão'
-  if (source.includes('frustra') || source.includes('raiva') || source.includes('irrit')) return 'fica frustrado'
-  if (source.includes('tedio') || source.includes('entedi')) return 'sente tédio'
-  if (source.includes('carenc') || source.includes('vazio')) return 'sente carência'
+  if (source.includes('ansied')) return translate('report.situation_anxiety')
+  if (source.includes('estress') || source.includes('press')) return translate('report.situation_pressure')
+  if (source.includes('frustra') || source.includes('raiva') || source.includes('irrit')) return translate('report.situation_frustrated')
+  if (source.includes('tedio') || source.includes('entedi')) return translate('report.situation_bored')
+  if (source.includes('carenc') || source.includes('vazio')) return translate('report.situation_empty')
 
-  return 'a emoção sobe'
+  return translate('report.situation_default')
 }
 
-function inferRecurringPattern(dominantTrigger, report) {
-  var t = normalizeText(dominantTrigger)
+function inferRecurringPattern(dominantTrigger, report, translate) {
+  var dn = normalizeText(dominantTrigger)
   var ep = normalizeText(report?.emotionalPattern)
-  var source = t + ' ' + ep
+  var source = dn + ' ' + ep
 
   if (source.includes('recomp') || source.includes('prazer') || source.includes('imediat') || source.includes('aliv')) {
-    return 'busca alívio imediato'
+    return translate('report.pattern_relief')
   }
   if (source.includes('compar') || source.includes('status') || source.includes('valid')) {
-    return 'busca validação'
+    return translate('report.pattern_validation')
   }
   if (source.includes('escasse') || source.includes('oportun') || source.includes('perder')) {
-    return 'cai na urgência'
+    return translate('report.pattern_urgency')
   }
 
-  return 'repete o mesmo ciclo'
+  return translate('report.pattern_default')
 }
 
-function inferAutomaticBehavior(dominantTrigger) {
-  var t = normalizeText(dominantTrigger)
-  if (t.includes('descontrol') || t.includes('impuls')) return 'compra por impulso'
-  return 'decide no automático'
+function inferAutomaticBehavior(dominantTrigger, translate) {
+  var dn = normalizeText(dominantTrigger)
+  if (dn.includes('descontrol') || dn.includes('impuls')) return translate('report.behavior_impulse')
+  return translate('report.behavior_default')
 }
 
 function buildPatternsList(dominantTrigger) {
@@ -98,28 +99,26 @@ function buildPatternsList(dominantTrigger) {
 
   items.push({
     id: 'impulso_emocional',
-    label: 'Gastos por impulso emocional',
     icon: Sparkles,
   })
 
   if (dominantN.includes('recomp') || dominantN.includes('prazer') || dominantN.includes('imediat')) {
-    items.push({ id: 'recompensa', label: 'Busca por recompensa imediata', icon: CheckCircle2 })
+    items.push({ id: 'recompensa', icon: CheckCircle2 })
   }
 
   items.push({
     id: 'consciencia',
-    label: 'Falta de consciência no momento da decisão',
     icon: Eye,
   })
 
   if (items.length < 3) {
-    items.push({ id: 'recompensa', label: 'Busca por recompensa imediata', icon: CheckCircle2 })
+    items.push({ id: 'recompensa', icon: CheckCircle2 })
   }
 
   return items.slice(0, 3)
 }
 
-function computeRecordsStats(payload, dominantTrigger) {
+function computeRecordsStats(payload, dominantTrigger, translate) {
   if (!payload) return null
 
   var triggers = Array.isArray(payload.triggers) ? payload.triggers : []
@@ -133,20 +132,20 @@ function computeRecordsStats(payload, dominantTrigger) {
   var dominantKey = dominantN.split(/\s+/).filter(Boolean)[0] || dominantN
 
   var repeatedMoments = dominantKey
-    ? triggerTexts.filter(function (t) { return normalizeText(t).includes(dominantKey) }).length
+    ? triggerTexts.filter(function (tx) { return normalizeText(tx).includes(dominantKey) }).length
     : 0
 
   var ctxCounts = { pressao: 0, cansaco: 0, redes: 0, promocoes: 0, familia: 0 }
   for (var i = 0; i < triggerTexts.length; i++) {
-    var t = normalizeText(triggerTexts[i])
-    if (t.includes('trabalho') || t.includes('prazo') || t.includes('press')) ctxCounts.pressao++
-    if (t.includes('cans') || t.includes('noite') || t.includes('sono')) ctxCounts.cansaco++
-    if (t.includes('instagram') || t.includes('rede') || t.includes('social') || t.includes('compar')) ctxCounts.redes++
-    if (t.includes('promo') || t.includes('so hoje') || t.includes('urgenc') || t.includes('ultima')) ctxCounts.promocoes++
-    if (t.includes('famil') || t.includes('filh') || t.includes('marid') || t.includes('espos')) ctxCounts.familia++
+    var tx = normalizeText(triggerTexts[i])
+    if (tx.includes('trabalho') || tx.includes('prazo') || tx.includes('press')) ctxCounts.pressao++
+    if (tx.includes('cans') || tx.includes('noite') || tx.includes('sono')) ctxCounts.cansaco++
+    if (tx.includes('instagram') || tx.includes('rede') || tx.includes('social') || tx.includes('compar')) ctxCounts.redes++
+    if (tx.includes('promo') || tx.includes('so hoje') || tx.includes('urgenc') || tx.includes('ultima')) ctxCounts.promocoes++
+    if (tx.includes('famil') || tx.includes('filh') || tx.includes('marid') || tx.includes('espos')) ctxCounts.familia++
   }
 
-  var context = 'momentos de emoção intensa'
+  var context = translate('report.context_default')
   var best = { k: 'none', v: 0 }
   var keys = Object.keys(ctxCounts)
   for (var j = 0; j < keys.length; j++) {
@@ -156,14 +155,14 @@ function computeRecordsStats(payload, dominantTrigger) {
 
   if (best.v > 0) {
     context = best.k === 'pressao'
-      ? 'pressão e prazos'
+      ? translate('report.context_pressure')
       : best.k === 'cansaco'
-        ? 'cansaço e fim do dia'
+        ? translate('report.context_fatigue')
         : best.k === 'redes'
-          ? 'comparação e redes sociais'
+          ? translate('report.context_social')
           : best.k === 'promocoes'
-            ? 'promoções e sensação de urgência'
-            : 'situações familiares'
+            ? translate('report.context_promotions')
+            : translate('report.context_family')
   }
 
   var progress = Array.isArray(payload.allDaysProgress) ? payload.allDaysProgress : []
@@ -219,6 +218,7 @@ function buildFinalReportPayload() {
 }
 
 export default function RelatorioFinal() {
+  const { t } = useTranslation()
   const p21 = get21DayProgress()
   const isEligible = p21.completed >= 21
 
@@ -239,19 +239,19 @@ export default function RelatorioFinal() {
       body: JSON.stringify(payload),
     })
       .then((data) => setReport(data))
-      .catch(() => setError('Não consegui gerar seu relatório agora. Tente novamente em instantes.'))
+      .catch(() => setError(t('report.error')))
       .finally(() => setLoading(false))
-  }, [payload])
+  }, [payload, t])
 
   if (!isEligible) {
     return (
       <div className="container" style={{ display: 'grid', gap: 14, paddingTop: 12 }}>
         <SectionCard
-          title="Relatório Rabínico da Sua Jornada Financeira"
-          description="Conclua os 21 dias para liberar seu relatório final personalizado com padrões, gatilhos e a virada para a próxima trilha."
+          title={t('report.title')}
+          description={t('report.description')}
         >
           <Link className="btn btn-primary" to="/desafios">
-            Ir para os Desafios
+            {t('report.go_to_challenges_btn')}
           </Link>
         </SectionCard>
       </div>
@@ -260,13 +260,10 @@ export default function RelatorioFinal() {
 
   return (
     <div className="container" style={{ display: 'grid', gap: 14, paddingTop: 12, paddingBottom: 90 }}>
-      <SectionCard
-        title=""
-        description=""
-      >
+      <SectionCard title="" description="">
         {loading ? (
           <div className="card" style={{ padding: 12 }}>
-            <div className="muted">Gerando seu relatório…</div>
+            <div className="muted">{t('report.generating')}</div>
           </div>
         ) : null}
 
@@ -277,48 +274,41 @@ export default function RelatorioFinal() {
         ) : null}
 
         {report ? (() => {
-          const dominantTrigger = pickDominantTrigger(report)
-          const tendency = buildTriggerTendencyDescription(dominantTrigger, report)
-          const stats = computeRecordsStats(payload, dominantTrigger)
-          const situation = inferSituationEmotion(dominantTrigger, report)
-          const recurring = inferRecurringPattern(dominantTrigger, report)
-          const automatic = inferAutomaticBehavior(dominantTrigger)
+          const dominantTrigger = pickDominantTrigger(report, t)
+          const tendency = buildTriggerTendencyDescription(dominantTrigger, report, t)
+          const stats = computeRecordsStats(payload, dominantTrigger, t)
+          const situation = inferSituationEmotion(dominantTrigger, report, t)
+          const recurring = inferRecurringPattern(dominantTrigger, report, t)
+          const automatic = inferAutomaticBehavior(dominantTrigger, t)
+          const block5Items = t('report.block5_items', { returnObjects: true })
 
           return (
             <div style={{ display: 'grid', gap: 12 }}>
-              {/* BLOCO 1 — IMPACTO IMEDIATO */}
               <div className="card" style={{ borderColor: 'rgba(240,156,74,0.35)' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-                  <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-                    Você <span style={{ color: 'var(--gold-2)' }}>não tem</span> um problema com dinheiro.
-                  </div>
-                  <div style={{ fontWeight: 900, fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.78)' }}>
-                    Você tem um <span style={{ color: 'var(--gold-2)' }}>padrão</span> que te faz perder dinheiro.
-                  </div>
+                  <div style={{ fontWeight: 950, fontSize: 22, letterSpacing: '-0.02em', lineHeight: 1.15 }}
+                    dangerouslySetInnerHTML={{ __html: t('report.block1_title').replace('<gold>', '<span style="color:var(--gold-2)">').replace('</gold>', '</span>') }}
+                  />
+                  <div style={{ fontWeight: 900, fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.78)' }}
+                    dangerouslySetInnerHTML={{ __html: t('report.block1_body').replace('<gold>', '<span style="color:var(--gold-2)">').replace('</gold>', '</span>') }}
+                  />
                 </div>
               </div>
 
-              {/* BLOCO 2 — GATILHO DOMINANTE */}
               <div className="card" style={{ borderColor: 'var(--gold-2)' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Target size={16} style={{ color: 'var(--gold-2)' }} />
-                    <div style={{ fontWeight: 900, color: 'var(--gold-2)' }}>Gatilho principal identificado</div>
+                    <div style={{ fontWeight: 900, color: 'var(--gold-2)' }}>{t('report.block2_trigger_title')}</div>
                   </div>
                   <div style={{ fontWeight: 950, fontSize: 16, letterSpacing: '-0.01em' }}>
                     {dominantTrigger}
                   </div>
                   <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.65 }}>
-                    <div>Você gasta quando:</div>
-                    <div>
-                      → <strong style={{ color: 'var(--gold-2)' }}>{situation}</strong>
-                    </div>
-                    <div>
-                      → <strong style={{ color: 'var(--gold-2)' }}>{recurring}</strong>
-                    </div>
-                    <div>
-                      → <strong style={{ color: 'var(--gold-2)' }}>{automatic}</strong>
-                    </div>
+                    <div>{t('report.block2_you_spend')}</div>
+                    <div>→ <strong style={{ color: 'var(--gold-2)' }}>{situation}</strong></div>
+                    <div>→ <strong style={{ color: 'var(--gold-2)' }}>{recurring}</strong></div>
+                    <div>→ <strong style={{ color: 'var(--gold-2)' }}>{automatic}</strong></div>
                   </div>
                   <div className="muted" style={{ lineHeight: 1.65 }}>
                     {tendency}
@@ -326,99 +316,81 @@ export default function RelatorioFinal() {
                 </div>
               </div>
 
-              {/* BLOCO 3 — PROVA (DADOS) */}
               <div className="card">
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-                  <div style={{ fontWeight: 900 }}>Seus próprios registros mostraram que:</div>
+                  <div style={{ fontWeight: 900 }}>{t('report.block3_records_title')}</div>
                   {stats ? (
                     <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.7 }}>
-                      <div>
-                        - Você repetiu esse padrão em <strong style={{ color: 'var(--gold-2)' }}>{stats.repeatedMoments}</strong> momentos
-                      </div>
-                      <div>
-                        - Ele apareceu principalmente em <strong style={{ color: 'var(--gold-2)' }}>{stats.context}</strong>
-                      </div>
-                      <div>
-                        Você tentou controlar, mas voltou ao mesmo comportamento{stats.attemptedControlDays ? (
-                          <> em <strong style={{ color: 'var(--gold-2)' }}>{stats.attemptedControlDays}</strong> dias</>
-                        ) : null}.
-                      </div>
+                      <div dangerouslySetInnerHTML={{ __html: t('report.block3_repeated', { count: stats.repeatedMoments }).replace('<gold>', '<strong style="color:var(--gold-2)">').replace('</gold>', '</strong>') }} />
+                      <div dangerouslySetInnerHTML={{ __html: t('report.block3_context', { context: stats.context }).replace('<gold>', '<strong style="color:var(--gold-2)">').replace('</gold>', '</strong>') }} />
+                      {stats.attemptedControlDays ? (
+                        <div dangerouslySetInnerHTML={{ __html: t('report.block3_control', { count: stats.attemptedControlDays }).replace('<gold>', '<strong style="color:var(--gold-2)">').replace('</gold>', '</strong>') }} />
+                      ) : null}
                     </div>
                   ) : (
                     <div className="muted" style={{ lineHeight: 1.7 }}>
-                      - Você repetiu esse padrão em vários momentos
-                      <br />
-                      - Ele aparece quando a emoção sobe
-                      <br />
-                      - Você tenta controlar, mas volta ao automático
+                      {t('report.block3_generic_1')}<br />
+                      {t('report.block3_generic_2')}<br />
+                      {t('report.block3_generic_3')}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* BLOCO 4 — QUEBRA DE ILUSÃO */}
               <div className="card glass-card">
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
                   <div style={{ fontWeight: 950, lineHeight: 1.35, fontSize: 16 }}>
-                    Isso não é falta de dinheiro.
+                    {t('report.block4_title')}
                   </div>
-                  <div className="muted" style={{ lineHeight: 1.65 }}>
-                    Isso é falta de <strong style={{ color: 'var(--gold-2)' }}>controle emocional</strong> sobre decisões financeiras.
-                  </div>
+                  <div className="muted" style={{ lineHeight: 1.65 }}
+                    dangerouslySetInnerHTML={{ __html: t('report.block4_body').replace('<gold>', '<strong style="color:var(--gold-2)">').replace('</gold>', '</strong>') }}
+                  />
                 </div>
               </div>
 
-              {/* BLOCO 5 — CONSEQUÊNCIA */}
               <div className="card" style={{ borderColor: 'rgba(240,156,74,0.35)' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 900 }}>
                     <AlertTriangle size={16} style={{ color: 'rgba(240,156,74,0.9)' }} />
-                    <span>Se você continuar assim:</span>
+                    <span>{t('report.block5_title')}</span>
                   </div>
                   <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.7 }}>
-                    <div>- vai continuar ganhando… e perdendo no mesmo ritmo</div>
-                    <div>- nunca vai construir patrimônio de verdade</div>
-                    <div>- sempre vai sentir que está recomeçando</div>
+                    {Array.isArray(block5Items) && block5Items.map((item, i) => (
+                      <div key={i}>{item}</div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* BLOCO 6 — VIRADA PSICOLÓGICA */}
               <div className="card glass-card">
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-                  <div style={{ fontWeight: 900 }}>Mas existe uma diferença entre você de antes e você agora:</div>
-                  <div className="muted" style={{ lineHeight: 1.75 }}>
-                    Agora você sabe exatamente o que te faz perder dinheiro.
-                  </div>
-                  <div style={{ fontWeight: 950, color: 'var(--gold-2)' }}>Isso muda tudo.</div>
+                  <div style={{ fontWeight: 900 }}>{t('report.block6_title')}</div>
+                  <div className="muted" style={{ lineHeight: 1.75 }}>{t('report.block6_body')}</div>
+                  <div style={{ fontWeight: 950, color: 'var(--gold-2)' }}>{t('report.block6_cta')}</div>
                 </div>
               </div>
 
-              {/* BLOCO 7 — SOLUÇÃO */}
               <div className="card">
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-                  <div style={{ fontWeight: 900 }}>A próxima fase da jornada não é sobre aprender mais.</div>
-                  <div className="muted" style={{ lineHeight: 1.75 }}>
-                    É sobre reprogramar esse <strong style={{ color: 'var(--gold-2)' }}>padrão</strong>.
-                  </div>
-                  <div className="muted" style={{ lineHeight: 1.75 }}>
-                    Ela foi criada exatamente para isso.
-                  </div>
+                  <div style={{ fontWeight: 900 }}>{t('report.block7_title')}</div>
+                  <div className="muted" style={{ lineHeight: 1.75 }}
+                    dangerouslySetInnerHTML={{ __html: t('report.block7_body').replace('<gold>', '<strong style="color:var(--gold-2)">').replace('</gold>', '</strong>') }}
+                  />
+                  <div className="muted" style={{ lineHeight: 1.75 }}>{t('report.block7_body2')}</div>
                 </div>
               </div>
 
-              {/* BLOCO 8 — CTA ULTRA FORTE */}
               <div className="card" style={{ borderColor: 'rgba(215,178,74,0.35)' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
                   <Link className="btn btn-primary btn-block btn-mentor-glow" to="/assinatura" style={{ justifyContent: 'center' }}>
-                    Quero assumir o controle do meu dinheiro
+                    {t('report.block8_cta')}
                   </Link>
                   <div className="muted" style={{ fontSize: 12, lineHeight: 1.6 }}>
-                    Acesso imediato à próxima fase
+                    {t('report.block8_note')}
                   </div>
                   <div className="muted" style={{ fontSize: 12, lineHeight: 1.6 }}>
                     <CheckCircle2 size={14} style={{ color: 'var(--gold-2)', verticalAlign: '-2px' }} />{' '}
-                    Quem ignora esse padrão, repete ele.
+                    {t('report.block8_pattern')}
                   </div>
                 </div>
               </div>

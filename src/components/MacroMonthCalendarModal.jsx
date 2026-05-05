@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Lock, Unlock, Check, ChevronLeft, ChevronRight, Send, Loader, Star, AlertTriangle, BookOpen, Target, Lightbulb } from 'lucide-react'
 import {
   buildDayChecklist,
@@ -27,6 +28,7 @@ import { readDiagnosis } from '../hooks/useFinancialDiagnosis.js'
  *   assignedTrack: string
  */
 export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTrack }) {
+  const { t } = useTranslation()
   var plan = MONTH_PLAN[monthNum - 1]
   var monthProgress = getMonthProgress(monthNum)
 
@@ -172,7 +174,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
         setRefresh(function (r) { return r + 1 })
       })
       .catch(function () {
-        setAiError('Modo offline: feedback gerado localmente.')
+        setAiError(t('calendar.drawer.offline_feedback'))
         var fallback = generateFallbackFeedback(payload)
         saveDayAIFeedback(activeDayInfo.globalIdx, fallback)
         setIsAILoading(false)
@@ -215,8 +217,8 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               )}
               <div style={{ fontWeight: 900, fontSize: 16 }}>
                 {selectedDay !== null
-                  ? plan.title + ' \u2014 Dia ' + (selectedDay + 1) + '/30'
-                  : 'Mes ' + monthNum + ': ' + plan.title
+                  ? plan.title + ' \u2014 ' + t('common.day') + ' ' + (selectedDay + 1) + '/30'
+                  : t('calendar.month_label', { month: monthNum, title: plan.title })
                 }
               </div>
             </div>
@@ -227,7 +229,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               }
             </div>
           </div>
-          <button className="icon-btn" type="button" onClick={onClose} aria-label="Fechar">
+          <button className="icon-btn" type="button" onClick={onClose} aria-label={t('calendar.drawer.close')}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
@@ -241,7 +243,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               {/* Month progress */}
               <div style={{ display: 'grid', gap: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                  <span style={{ fontWeight: 800 }}>{monthProgress.completed}/30 dias</span>
+                  <span style={{ fontWeight: 800 }}>{monthProgress.completed}/30 {t('common.days')}</span>
                   <span className="muted">{monthProgress.percent}%</span>
                 </div>
                 <div className="progress">
@@ -282,7 +284,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               {/* Badges */}
               {plan.badges && (
                 <div style={{ display: 'grid', gap: 8 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13 }}>Badges do mes</div>
+                  <div style={{ fontWeight: 800, fontSize: 13 }}>{t('calendar.month_badges')}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {plan.badges.map(function (b) {
                       var earned = isDayFullyCompleted(b.day + 20)
@@ -307,11 +309,11 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               {/* Month score */}
               <div className="card glass-card">
                 <div className="card-inner" style={{ display: 'grid', gap: 8 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13 }}>Score do Mes {monthNum}</div>
+                  <div style={{ fontWeight: 800, fontSize: 13 }}>{t('calendar.month_score', { month: monthNum })}</div>
                   <div style={{ display: 'flex', gap: 16 }}>
                     <div style={{ display: 'grid', gap: 4, textAlign: 'center', flex: 1 }}>
                       <div className="score-number" style={{ color: 'var(--gold-2)' }}>{monthProgress.percent}</div>
-                      <div className="muted" style={{ fontSize: 11 }}>Conclusao</div>
+                      <div className="muted" style={{ fontSize: 11 }}>{t('calendar.month_completion')}</div>
                     </div>
                   </div>
                 </div>
@@ -330,22 +332,22 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               {/* Day content */}
               <div className="card" style={{ boxShadow: 'none' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
-                  <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Atividades do dia</div>
+                  <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>{t('calendar.drawer.activities')}</div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     <div style={{ display: 'grid', gap: 4 }}>
-                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Oracao</div>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_prayer')}</div>
                       <div style={{ fontStyle: 'italic', fontSize: 13, lineHeight: 1.6, color: 'var(--muted)' }}>{activeDayContent?.oracao}</div>
                     </div>
                     <div style={{ display: 'grid', gap: 4 }}>
-                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Manha</div>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_morning')}</div>
                       <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{activeDayContent?.manha}</div>
                     </div>
                     <div style={{ display: 'grid', gap: 4 }}>
-                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tarde</div>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_afternoon')}</div>
                       <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{activeDayContent?.tarde}</div>
                     </div>
                     <div style={{ display: 'grid', gap: 4 }}>
-                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Noite</div>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--gold-2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('challenges.section_evening')}</div>
                       <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{activeDayContent?.noite}</div>
                     </div>
                   </div>
@@ -356,7 +358,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               <div className="card glass-card checklist-card">
                 <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Checklist</div>
+                    <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>{t('calendar.drawer.checklist')}</div>
                     <span className="badge">{activeChecklist?.checked || 0}/{activeChecklist?.total || 7}</span>
                   </div>
                   <div className="progress">
@@ -382,35 +384,35 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               {/* Reflections */}
               <div className="card" style={{ boxShadow: 'none' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
-                  <div style={{ fontWeight: 900, fontSize: 14 }}>Reflexoes do dia</div>
+                  <div style={{ fontWeight: 900, fontSize: 14 }}>{t('calendar.drawer.reflections_title')}</div>
                   <div className="field">
-                    <label>O que fiz hoje</label>
+                    <label>{t('calendar.drawer.what_i_did_label')}</label>
                     <textarea
                       className="input"
                       rows={2}
-                      placeholder="Descreva o que executou..."
+                      placeholder={t('calendar.drawer.what_i_did_placeholder')}
                       value={whatIDid}
                       onChange={function (e) { setWhatIDid(e.target.value) }}
                       onBlur={saveReflections}
                     />
                   </div>
                   <div className="field">
-                    <label>Como me senti</label>
+                    <label>{t('calendar.drawer.how_i_felt_label')}</label>
                     <textarea
                       className="input"
                       rows={2}
-                      placeholder="Descreva suas emocoes..."
+                      placeholder={t('calendar.drawer.how_i_felt_placeholder')}
                       value={howIFelt}
                       onChange={function (e) { setHowIFelt(e.target.value) }}
                       onBlur={saveReflections}
                     />
                   </div>
                   <div className="field">
-                    <label>Maior gatilho do dia</label>
+                    <label>{t('calendar.drawer.trigger_label')}</label>
                     <textarea
                       className="input"
                       rows={2}
-                      placeholder="Qual foi o maior desafio emocional..."
+                      placeholder={t('calendar.drawer.trigger_placeholder')}
                       value={trigger}
                       onChange={function (e) { setTrigger(e.target.value) }}
                       onBlur={saveReflections}
@@ -429,11 +431,11 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                 >
                   {isAILoading ? (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Loader size={16} className="spin" /> Consultando Rabino Mentor...
+                      <Loader size={16} className="spin" /> {t('calendar.drawer.consulting_mentor')}
                     </span>
                   ) : (
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Send size={16} /> Enviar para Rabino Mentor IA
+                      <Send size={16} /> {t('calendar.drawer.send_to_mentor')}
                     </span>
                   )}
                 </button>
@@ -446,8 +448,8 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div className="ai-avatar"><Star size={20} /></div>
                       <div>
-                        <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Feedback do Rabino Mentor IA</div>
-                        <div className="muted" style={{ fontSize: 12 }}>Mes {monthNum}, Dia {selectedDay + 1}</div>
+                        <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>{t('calendar.drawer.feedback_title')}</div>
+                        <div className="muted" style={{ fontSize: 12 }}>{t('calendar.drawer.day_subtitle', { month: monthNum, day: selectedDay + 1 })}</div>
                       </div>
                     </div>
 
@@ -455,7 +457,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                       <div className="ai-feedback-section">
                         <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                           <BookOpen size={14} />
-                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Licao patrimonial</span>
+                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('calendar.drawer.lesson')}</span>
                         </div>
                         <div className="ai-feedback-section-body">{currentFeedback.macroLesson}</div>
                       </div>
@@ -465,7 +467,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                       <div className="ai-feedback-section">
                         <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                           <Target size={14} />
-                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Analise do dia</span>
+                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('calendar.drawer.feedback_analysis')}</span>
                         </div>
                         <div className="ai-feedback-section-body">{currentFeedback.summary}</div>
                       </div>
@@ -475,7 +477,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                       <div className="ai-feedback-section">
                         <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
                           <AlertTriangle size={14} />
-                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Ponto cego</span>
+                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('calendar.drawer.blind_spot')}</span>
                         </div>
                         <div className="ai-feedback-section-body">{currentFeedback.blindspot}</div>
                       </div>
@@ -485,7 +487,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                       <div className="ai-feedback-section">
                         <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                           <BookOpen size={14} />
-                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sabedoria judaica</span>
+                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('calendar.drawer.feedback_wisdom')}</span>
                         </div>
                         <div className="ai-feedback-section-body">{currentFeedback.jewishWisdom}</div>
                       </div>
@@ -501,7 +503,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                       <div className="ai-feedback-section" style={{ borderColor: 'rgba(240,156,74,0.3)', background: 'rgba(240,156,74,0.06)' }}>
                         <div className="ai-feedback-section-head" style={{ color: '#f09c4a' }}>
                           <Lightbulb size={14} />
-                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Atividade extra sugerida</span>
+                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('calendar.drawer.extra_activity')}</span>
                         </div>
                         <div className="ai-feedback-section-body">{currentFeedback.extraTask}</div>
                       </div>
@@ -511,7 +513,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                       <div className="ai-feedback-section">
                         <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
                           <Target size={14} />
-                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Foco para amanha</span>
+                          <span style={{ fontWeight: 800, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('calendar.drawer.feedback_tomorrow')}</span>
                         </div>
                         <div className="ai-feedback-section-body">{currentFeedback.tomorrowFocus || currentFeedback.nextFocus}</div>
                       </div>
@@ -519,7 +521,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
 
                     {currentFeedback.receivedAt && (
                       <div className="muted" style={{ fontSize: 11, textAlign: 'right' }}>
-                        Recebido em {new Date(currentFeedback.receivedAt).toLocaleString('pt-BR')}
+                        {t('challenges.feedback_received_at', { date: new Date(currentFeedback.receivedAt).toLocaleString() })}
                       </div>
                     )}
 
@@ -530,7 +532,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
                         type="button"
                         onClick={handleCompleteDay}
                       >
-                        <Check size={16} /> Concluir dia {selectedDay + 1} e liberar proximo
+                        <Check size={16} /> {t('calendar.drawer.complete_day')}
                       </button>
                     )}
                   </div>
@@ -540,7 +542,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
               {/* Already completed */}
               {isDayFullyCompleted(activeDayInfo.globalIdx) && !currentFeedback && (
                 <div className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764', justifySelf: 'start' }}>
-                  <Check size={14} /> Dia concluido
+                  <Check size={14} /> {t('calendar.day_completed_badge')}
                 </div>
               )}
             </div>
@@ -550,7 +552,7 @@ export default function MacroMonthCalendarModal({ monthNum, onClose, assignedTra
         {/* Footer */}
         <div className="drawer-foot">
           <button className="btn" type="button" onClick={selectedDay !== null ? closeDay : onClose}>
-            {selectedDay !== null ? 'Voltar ao mes' : 'Fechar'}
+            {selectedDay !== null ? t('calendar.back_to_month') : t('calendar.drawer.close')}
           </button>
         </div>
       </div>

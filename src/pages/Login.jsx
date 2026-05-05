@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { readCurrentUser, signInUser } from '../hooks/useCurrentUser.js'
 
 function buildCheckoutRedirect(errorData, email) {
@@ -18,26 +19,27 @@ function buildCheckoutRedirect(errorData, email) {
   return `/checkout?${params.toString()}`
 }
 
-function toFriendlyLoginError(caught) {
+function toFriendlyLoginError(caught, t) {
   if (caught?.status === 401) {
-    return 'E-mail ou senha incorretos. Tente novamente.'
+    return t('auth.login.errors.invalid_credentials')
   }
 
   const raw =
     caught?.data?.detail ||
     caught?.data?.message ||
     caught?.message ||
-    'Nao consegui entrar. Confira o e-mail, a senha e se o acesso ja foi liberado.'
+    t('auth.login.errors.generic')
   const normalized = String(raw).replace(/^API \d+:\s*/u, '').trim()
 
   if (/credenciais invalidas/i.test(normalized)) {
-    return 'E-mail ou senha incorretos. Tente novamente.'
+    return t('auth.login.errors.invalid_credentials')
   }
 
   return normalized
 }
 
 export default function Login() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState(() => readCurrentUser().email || '')
@@ -58,7 +60,7 @@ export default function Login() {
         navigate(buildCheckoutRedirect(caught.data, email), { replace: true })
         return
       }
-      setError(toFriendlyLoginError(caught))
+      setError(toFriendlyLoginError(caught, t))
     } finally {
       setLoading(false)
     }
@@ -69,15 +71,15 @@ export default function Login() {
       <div className="card" style={{ maxWidth: 520, marginInline: 'auto' }}>
         <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'grid', gap: 6 }}>
-            <div style={{ fontWeight: 900, fontSize: 18 }}>Login</div>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>{t('auth.login.title')}</div>
             <div className="muted">
-              Entre com o e-mail e a senha criados no checkout. Se o pagamento ainda nao estiver confirmado, vamos te levar de volta para finalizar a assinatura.
+              {t('auth.login.description')}
             </div>
           </div>
 
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
             <div className="field">
-              <label htmlFor="email">E-mail</label>
+              <label htmlFor="email">{t('auth.login.email')}</label>
               <input
                 id="email"
                 className="input"
@@ -88,7 +90,7 @@ export default function Login() {
               />
             </div>
             <div className="field">
-              <label htmlFor="password">Senha</label>
+              <label htmlFor="password">{t('auth.login.password')}</label>
               <input
                 id="password"
                 className="input"
@@ -106,16 +108,16 @@ export default function Login() {
             ) : null}
 
             <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? t('auth.login.loading') : t('auth.login.submit')}
             </button>
             <Link className="btn btn-soft" to="/esqueci-senha">
-              Esqueci a senha
+              {t('auth.login.forgot_password')}
             </Link>
             <Link className="btn btn-soft" to="/checkout">
-              Ainda nao tenho acesso
+              {t('auth.login.no_access')}
             </Link>
             <Link className="btn" to="/">
-              Voltar para a Landing
+              {t('auth.login.back_to_landing')}
             </Link>
           </form>
         </div>

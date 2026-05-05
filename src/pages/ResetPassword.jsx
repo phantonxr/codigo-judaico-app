@@ -1,8 +1,12 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { resetPassword } from '../services/sessionSync.js'
 
+const MINIMUM_PASSWORD_LENGTH = 8
+
 export default function ResetPassword() {
+  const { t } = useTranslation()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
@@ -17,17 +21,17 @@ export default function ResetPassword() {
     setError('')
 
     if (!token) {
-      setError('Link invalido. Solicite um novo e-mail de recuperacao.')
+      setError(t('auth.reset_password.errors.invalid_link'))
       return
     }
 
-    if (password.length < 8) {
-      setError('A nova senha precisa ter pelo menos 8 caracteres.')
+    if (password.length < MINIMUM_PASSWORD_LENGTH) {
+      setError(t('auth.reset_password.errors.too_short', { min: MINIMUM_PASSWORD_LENGTH }))
       return
     }
 
     if (password !== confirmPassword) {
-      setError('As senhas nao conferem.')
+      setError(t('auth.reset_password.errors.mismatch'))
       return
     }
 
@@ -40,7 +44,7 @@ export default function ResetPassword() {
       const message =
         caught?.data?.detail ||
         caught?.data?.message ||
-        'Nao foi possivel redefinir a senha. Solicite um novo link.'
+        t('auth.reset_password.errors.generic')
       setError(String(message).replace(/^API \d+:\s*/u, ''))
     } finally {
       setLoading(false)
@@ -52,13 +56,13 @@ export default function ResetPassword() {
       <div className="card" style={{ maxWidth: 520, marginInline: 'auto' }}>
         <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'grid', gap: 6 }}>
-            <div style={{ fontWeight: 900, fontSize: 18 }}>Definir nova senha</div>
-            <div className="muted">Escolha sua nova senha para entrar no sistema.</div>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>{t('auth.reset_password.title')}</div>
+            <div className="muted">{t('auth.reset_password.description')}</div>
           </div>
 
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
             <div className="field">
-              <label htmlFor="password">Nova senha</label>
+              <label htmlFor="password">{t('auth.reset_password.new_password')}</label>
               <input
                 id="password"
                 className="input"
@@ -69,7 +73,7 @@ export default function ResetPassword() {
               />
             </div>
             <div className="field">
-              <label htmlFor="confirmPassword">Confirmar senha</label>
+              <label htmlFor="confirmPassword">{t('auth.reset_password.confirm_password')}</label>
               <input
                 id="confirmPassword"
                 className="input"
@@ -88,15 +92,15 @@ export default function ResetPassword() {
 
             {success ? (
               <div className="muted" style={{ color: '#c7f3b0' }}>
-                Senha atualizada com sucesso. Redirecionando para o login...
+                {t('auth.reset_password.success')}
               </div>
             ) : null}
 
             <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar nova senha'}
+              {loading ? t('auth.reset_password.loading') : t('auth.reset_password.submit')}
             </button>
             <Link className="btn" to="/login">
-              Voltar para o login
+              {t('auth.reset_password.back_to_login')}
             </Link>
           </form>
         </div>

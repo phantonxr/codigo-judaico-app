@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import SectionCard from '../components/SectionCard.jsx'
 import useCurrentUser from '../hooks/useCurrentUser.js'
 import { getAvailablePlans } from '../services/payments.js'
@@ -38,10 +39,10 @@ function buildUpgradeLink(planId, email) {
   return `/checkout?${params.toString()}`
 }
 
-function PlanUpgradeCard({ plan, email, onFocusAnnualHint, onBlurAnnualHint }) {
+function PlanUpgradeCard({ plan, email, onFocusAnnualHint, onBlurAnnualHint, t }) {
   const isAnnual = plan.id === 'anual'
   const isDisabled = plan.isDisabled
-  const ctaLabel = plan.ctaLabel || 'Continuar'
+  const ctaLabel = plan.ctaLabel || t('common.back')
 
   return (
     <div
@@ -79,7 +80,7 @@ function PlanUpgradeCard({ plan, email, onFocusAnnualHint, onBlurAnnualHint }) {
             style={{ marginTop: 'auto', opacity: 0.6, cursor: 'not-allowed' }}
             disabled
           >
-            Indisponível agora
+            {t('subscription.unavailable')}
           </button>
         ) : (
           <Link
@@ -98,9 +99,10 @@ function PlanUpgradeCard({ plan, email, onFocusAnnualHint, onBlurAnnualHint }) {
 }
 
 export default function Assinatura() {
+  const { t } = useTranslation()
   const currentUser = useCurrentUser()
   const planName = currentUser?.plan || '-'
-  const planStatus = currentUser?.planStatus || (planName && planName !== '-' ? 'Ativo' : '-')
+  const planStatus = currentUser?.planStatus || (planName && planName !== '-' ? t('admin.statuses.active') : '-')
   const nextChargeDate = currentUser?.nextChargeDate || '-'
   const hasActiveAccess = currentUser?.hasActiveAccess !== false
   const [availablePlans, setAvailablePlans] = useState([])
@@ -142,16 +144,10 @@ export default function Assinatura() {
 
   useEffect(() => {
     const t1 = window.setTimeout(() => {
-      showPopupOnce(
-        'signup_5s',
-        'Somente os 10 primeiros manterão o valor anual de R$ 397,90 nesta condição especial.',
-      )
+      showPopupOnce('signup_5s', t('subscription.popup_10'))
     }, 5000)
     const t3 = window.setTimeout(() => {
-      showPopupOnce(
-        'signup_20s',
-        'Quem para após os 21 dias apenas descobriu o padrão. Quem continua começa a dominar o padrão.',
-      )
+      showPopupOnce('signup_20s', t('subscription.popup_20'))
     }, 20000)
 
     return () => {
@@ -228,16 +224,16 @@ export default function Assinatura() {
 
   const remainingMs = Math.max(0, offerDeadlineMs - nowMs)
   const countdownText = formatCountdown(remainingMs)
+  const benefits = t('subscription.benefits', { returnObjects: true })
 
   return (
     <div className="container dashboard-grid">
       <SectionCard
-        title="Continuar a jornada"
-        description="Você já descobriu seus gatilhos. Agora precisa dominá-los."
+        title={t('subscription.title')}
+        description={t('subscription.description')}
       >
         <div style={{ display: 'grid', gap: 18 }}>
 
-          {/* Offer timer */}
           <div
             className="card"
             style={{
@@ -248,27 +244,26 @@ export default function Assinatura() {
             <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ display: 'grid', gap: 4 }}>
-                  <div className="badge" style={{ width: 'fit-content' }}>Condição especial liberada hoje</div>
+                  <div className="badge" style={{ width: 'fit-content' }}>{t('subscription.special_offer_badge')}</div>
                   <div className="muted" style={{ lineHeight: 1.7 }}>
-                    Seu relatório de 21 dias desbloqueou uma condição temporária para continuar a jornada.
+                    {t('subscription.special_offer_desc')}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 900, fontSize: 22, color: 'var(--gold-2)' }}>{countdownText}</div>
-                  <div className="muted" style={{ fontSize: 12 }}>tempo restante</div>
+                  <div className="muted" style={{ fontSize: 12 }}>{t('subscription.time_remaining')}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Copy blocks */}
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
               <div style={{ fontWeight: 900, fontSize: 22, lineHeight: 1.2 }}>
-                Você já descobriu seus gatilhos. Agora precisa dominá-los.
+                {t('subscription.copy_title')}
               </div>
               <div className="muted" style={{ lineHeight: 1.75 }}>
-                Os 21 dias revelam o padrão. A próxima trilha transforma consciência em domínio financeiro.
+                {t('subscription.copy_body_1')}
               </div>
               <div
                 className="muted"
@@ -280,8 +275,7 @@ export default function Assinatura() {
                   background: 'rgba(215,178,74,0.06)',
                 }}
               >
-                No método judaico, prosperidade não nasce de cortes desesperados, mas de domínio, repetição e construção de base.
-                Primeiro você identifica o impulso. Depois aprende a governá-lo. Em seguida planta patrimônio. Por fim, colhe liberdade.
+                {t('subscription.copy_body_2')}
               </div>
               <div
                 className="muted"
@@ -293,8 +287,7 @@ export default function Assinatura() {
                   background: 'rgba(255,255,255,0.03)',
                 }}
               >
-                A condição especial abaixo foi liberada porque você chegou ao fim da primeira etapa.
-                Ela não representa apenas acesso a conteúdos; representa a continuação da sua transformação.
+                {t('subscription.copy_body_3')}
               </div>
             </div>
           </div>
@@ -308,13 +301,12 @@ export default function Assinatura() {
               }}
             >
               <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-                <span className="badge" style={{ width: 'fit-content' }}>Volte para a jornada</span>
+                <span className="badge" style={{ width: 'fit-content' }}>{t('subscription.reactivate_badge')}</span>
                 <div style={{ fontWeight: 900, fontSize: 22, lineHeight: 1.2 }}>
-                  Seu acesso precisa ser reativado para liberar novamente todo o método
+                  {t('subscription.reactivate_title')}
                 </div>
                 <div className="muted" style={{ lineHeight: 1.7 }}>
-                  Escolha uma das opções abaixo para voltar a acessar o Rabino Mentor, os desafios,
-                  a biblioteca e a continuação completa da jornada.
+                  {t('subscription.reactivate_desc')}
                 </div>
               </div>
             </div>
@@ -327,7 +319,7 @@ export default function Assinatura() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ display: 'grid', gap: 4 }}>
-                  <div style={{ fontWeight: 900, fontSize: 16 }}>Plano atual</div>
+                  <div style={{ fontWeight: 900, fontSize: 16 }}>{t('subscription.current_plan')}</div>
                   <div className="muted">{planName}</div>
                 </div>
                 <span className="badge">{planStatus}</span>
@@ -336,13 +328,13 @@ export default function Assinatura() {
               <div className="grid grid-2">
                 <div className="card" style={{ boxShadow: 'none' }}>
                   <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
-                    <div className="muted">Valor</div>
-                    <div style={{ fontWeight: 900, color: 'var(--gold-2)' }}>Conforme plano ativo</div>
+                    <div className="muted">{t('subscription.plan_value')}</div>
+                    <div style={{ fontWeight: 900, color: 'var(--gold-2)' }}>{t('subscription.plan_value_active')}</div>
                   </div>
                 </div>
                 <div className="card" style={{ boxShadow: 'none' }}>
                   <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
-                    <div className="muted">Valido ate</div>
+                    <div className="muted">{t('subscription.valid_until')}</div>
                     <div style={{ fontWeight: 900 }}>{nextChargeDate}</div>
                   </div>
                 </div>
@@ -350,13 +342,12 @@ export default function Assinatura() {
 
               <div style={{ display: 'grid', gap: 8 }}>
                 <div style={{ fontWeight: 900 }}>
-                  {hasActiveAccess ? 'Beneficios liberados' : 'O que sera liberado ao renovar'}
+                  {hasActiveAccess ? t('subscription.benefits_active') : t('subscription.benefits_renew')}
                 </div>
                 <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.82)' }}>
-                  <li>Rabino Mentor (chat guiado)</li>
-                  <li>Biblioteca de ensinamentos</li>
-                  <li>Desafios interativos</li>
-                  <li>Progresso e streak</li>
+                  {Array.isArray(benefits) && benefits.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -364,9 +355,8 @@ export default function Assinatura() {
 
           {plansForUi.length > 0 ? (
             <div style={{ display: 'grid', gap: 10 }}>
-              <div style={{ fontWeight: 900, fontSize: 16 }}>Escolha sua próxima trilha</div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>{t('subscription.choose_track')}</div>
 
-              {/* Annual hover/focus hint */}
               {showAnnualHint ? (
                 <div
                   className="card"
@@ -378,7 +368,7 @@ export default function Assinatura() {
                 >
                   <div className="card-inner" style={{ padding: 12 }}>
                     <div className="muted" style={{ fontSize: 12, lineHeight: 1.6 }}>
-                      Plano anual libera 12 meses de jornada com economia de R$ 56,90 em relação ao mensal.
+                      {t('subscription.annual_hint')}
                     </div>
                   </div>
                 </div>
@@ -392,6 +382,7 @@ export default function Assinatura() {
                     email={currentUser?.email}
                     onFocusAnnualHint={() => setShowAnnualHint(true)}
                     onBlurAnnualHint={() => setShowAnnualHint(false)}
+                    t={t}
                   />
                 ))}
               </div>
@@ -400,7 +391,6 @@ export default function Assinatura() {
         </div>
       </SectionCard>
 
-      {/* Discreet pop-up */}
       {popup ? (
         <div
           role="status"
@@ -431,7 +421,7 @@ export default function Assinatura() {
                 onClick={() => setPopup(null)}
                 style={{ padding: '8px 10px', borderRadius: 12 }}
               >
-                Fechar
+                {t('subscription.close_popup')}
               </button>
             </div>
           </div>

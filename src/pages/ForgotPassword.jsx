@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { requestPasswordReset } from '../services/sessionSync.js'
 
 export default function ForgotPassword() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -17,7 +19,7 @@ export default function ForgotPassword() {
       await requestPasswordReset(email)
       setSuccess(true)
     } catch {
-      setError('Nao foi possivel enviar o e-mail agora. Tente novamente em instantes.')
+      setError(t('auth.forgot_password.error'))
     } finally {
       setLoading(false)
     }
@@ -28,15 +30,15 @@ export default function ForgotPassword() {
       <div className="card" style={{ maxWidth: 520, marginInline: 'auto' }}>
         <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'grid', gap: 6 }}>
-            <div style={{ fontWeight: 900, fontSize: 18 }}>Recuperar senha</div>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>{t('auth.forgot_password.title')}</div>
             <div className="muted">
-              Informe seu e-mail para receber um link de redefinicao de senha.
+              {t('auth.forgot_password.description')}
             </div>
           </div>
 
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
             <div className="field">
-              <label htmlFor="email">E-mail</label>
+              <label htmlFor="email">{t('auth.forgot_password.email')}</label>
               <input
                 id="email"
                 className="input"
@@ -55,15 +57,15 @@ export default function ForgotPassword() {
 
             {success ? (
               <div className="muted" style={{ color: '#c7f3b0' }}>
-                Se o e-mail existir na base, enviamos o link para redefinir a senha.
+                {t('auth.forgot_password.success')}
               </div>
             ) : null}
 
             <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? 'Enviando...' : 'Enviar link'}
+              {loading ? t('auth.forgot_password.loading') : t('auth.forgot_password.submit')}
             </button>
             <Link className="btn" to="/login">
-              Voltar para o login
+              {t('auth.forgot_password.back_to_login')}
             </Link>
           </form>
         </div>

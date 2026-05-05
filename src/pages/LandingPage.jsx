@@ -1,42 +1,17 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Flame, Crown, Sprout, Star, Compass, BookOpen, Target, Award } from 'lucide-react'
 
-var PHASES = [
-  {
-    icon: Flame,
-    days: '21 dias',
-    name: 'Consciência dos gatilhos',
-    desc: 'Você identifica os gatilhos que fazem você perder dinheiro (impulso, ansiedade, comparação, medo) e passa a enxergar o padrão antes que ele te controle.',
-  },
-  {
-    icon: Crown,
-    days: '1 mês',
-    name: 'Autocontrole e disciplina',
-    desc: 'Você desenvolve autocontrole sobre esses gatilhos e aprende a tomar decisões com clareza — mesmo em dias ruins, sem voltar para o velho ciclo.',
-  },
-  {
-    icon: Sprout,
-    days: '6 meses',
-    name: 'Primeiros patrimônios',
-    desc: 'Você constrói seus primeiros patrimônios com equilíbrio: reservas, consistência e escolhas inteligentes — sem extremos e sem culpa.',
-  },
-  {
-    icon: Star,
-    days: '365 dias',
-    name: 'Colheita máxima e legado',
-    desc: 'Você colhe os grandes frutos da prosperidade: estabilidade, crescimento real e um legado que permanece — com paz e direção.',
-  },
-]
-
-var BENEFITS = [
-  { icon: Compass, title: 'Direção', text: 'Saiba exatamente o que fazer todos os dias para reorganizar sua vida financeira — sem depender de motivação.' },
-  { icon: BookOpen, title: 'Mentoria', text: 'Receba orientação do Rabino Mentor IA para interpretar decisões, corrigir padrões e acelerar sua jornada.' },
-  { icon: Target, title: 'Execução', text: 'Tarefas diárias reais que geram mudança financeira concreta — não teoria, ação.' },
-  { icon: Award, title: 'Legado', text: 'Construa patrimônio e desfrute da riqueza sem viver como refém da escassez.' },
-]
+var PHASE_ICONS = [Flame, Crown, Sprout, Star]
+var BENEFIT_ICONS = [Compass, BookOpen, Target, Award]
 
 export default function LandingPage() {
+  const { t } = useTranslation()
+
+  const phases = t('landing.phases', { returnObjects: true })
+  const benefits = t('landing.benefits', { returnObjects: true })
+
   useEffect(function () {
     var nodes = Array.from(document.querySelectorAll('[data-phase-card]'))
     if (!nodes.length) return
@@ -239,17 +214,17 @@ export default function LandingPage() {
 
         {/* ══════ HERO ══════ */}
         <section className="hero landing-hero">
-          <span className="badge landing-badge">Método milenar judaico &bull; Experiência premium</span>
+          <span className="badge landing-badge">{t('landing.badge')}</span>
 
           <h1 className="landing-headline">
-            DESCUBRA O MÉTODO QUE OS JUDEUS USAM POR 21 DIAS PARA TER UMA VIDA FINANCEIRA PRÓSPERA
+            {t('landing.headline')}
           </h1>
 
           <p className="landing-subheadline">
-            Mesmo em tempos de crise, instabilidade e escassez, existe um sistema seguido há gerações para construir riqueza, disciplina emocional, patrimônio e legado.
+            {t('landing.subheadline_1')}
             <br />
             <br />
-            Um método em 4 fases e atividades diárias que mudarão sua vida financeira, inspirado nos princípios que fizeram um povo prosperar até no deserto.
+            {t('landing.subheadline_2')}
           </p>
 
           <div className="hero-actions">
@@ -257,10 +232,10 @@ export default function LandingPage() {
               className="btn btn-primary btn-mentor-glow landing-cta-primary"
               to="/checkout"
             >
-              Quero desbloquear o método
+              {t('landing.cta_primary')}
             </Link>
             <Link className="btn landing-cta-secondary" to="/login">
-              Já tenho acesso (Entrar)
+              {t('landing.cta_secondary')}
             </Link>
           </div>
         </section>
@@ -269,17 +244,16 @@ export default function LandingPage() {
         <section className="section landing-section">
           <div className="landing-section-header">
             <h2 className="landing-section-title">
-              Prosperidade é uma transformação em 4 fases
+              {t('landing.phases_title')}
             </h2>
             <p className="landing-section-sub">
-              Primeiro você aprende a enxergar o que faz você perder dinheiro. Depois, domina o impulso.
-              Em seguida, constrói seus primeiros patrimônios com equilíbrio. Por fim, colhe os grandes frutos da prosperidade e constrói um legado.
+              {t('landing.phases_subtitle')}
             </p>
           </div>
 
           <div className="landing-phases-grid">
-            {PHASES.map(function (ph, idx) {
-              var Icon = ph.icon
+            {Array.isArray(phases) && phases.map(function (ph, idx) {
+              var Icon = PHASE_ICONS[idx]
               return (
                 <div
                   key={idx}
@@ -299,7 +273,7 @@ export default function LandingPage() {
                   <div className="landing-phase-name">{ph.name}</div>
                   <div className="landing-phase-desc">{ph.desc}</div>
                   {idx === 0 ? (
-                    <div className="landing-phase-start-badge">Comece aqui • Início da jornada</div>
+                    <div className="landing-phase-start-badge">{t('landing.phase_start_badge')}</div>
                   ) : null}
                 </div>
               )
@@ -311,13 +285,13 @@ export default function LandingPage() {
         <section className="section landing-section">
           <div className="landing-section-header">
             <h2 className="landing-section-title">
-              O que você recebe dentro do método
+              {t('landing.benefits_title')}
             </h2>
           </div>
 
           <div className="landing-benefits-grid">
-            {BENEFITS.map(function (b, idx) {
-              var Icon = b.icon
+            {Array.isArray(benefits) && benefits.map(function (b, idx) {
+              var Icon = BENEFIT_ICONS[idx]
               return (
                 <div key={idx} className="landing-benefit-card">
                   <div className="landing-benefit-icon">
@@ -335,17 +309,15 @@ export default function LandingPage() {
         <section className="section landing-section">
           <div className="landing-authority-block">
             <h2 className="landing-authority-title">
-              Por que esse método funciona há milênios?
+              {t('landing.authority_title')}
             </h2>
             <div className="landing-authority-body">
               <p>
-                Porque a prosperidade não nasce de cortes cegos.
+                {t('landing.authority_body_1')}
               </p>
+              <p dangerouslySetInnerHTML={{ __html: t('landing.authority_body_2') }} />
               <p>
-                Ela nasce de <strong>ordem, disciplina emocional, visão de longo prazo e construção de patrimônio</strong>.
-              </p>
-              <p>
-                É assim que um povo atravessou desertos, guerras e crises sem perder sua capacidade de prosperar.
+                {t('landing.authority_body_3')}
               </p>
             </div>
           </div>
@@ -355,16 +327,16 @@ export default function LandingPage() {
         <section className="section landing-section" style={{ paddingBottom: 64 }}>
           <div className="landing-final-cta">
             <div className="landing-final-cta-title">
-              Se você quer descobrir o método e ainda não tem acesso, comece sua jornada agora.
+              {t('landing.final_cta_title')}
             </div>
             <div className="landing-final-cta-sub">
-              Desbloqueie a experiência premium e siga a mesma progressão diária usada há gerações para construir riqueza e legado.
+              {t('landing.final_cta_sub')}
             </div>
             <Link
               className="btn btn-primary btn-mentor-glow landing-cta-primary"
               to="/checkout"
             >
-              Quero começar minha ascensão
+              {t('landing.final_cta_btn')}
             </Link>
           </div>
         </section>

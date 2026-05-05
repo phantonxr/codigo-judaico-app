@@ -1,6 +1,7 @@
 import LessonCard from '../components/LessonCard.jsx'
 import SectionCard from '../components/SectionCard.jsx'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import useCurrentUser from '../hooks/useCurrentUser.js'
 import useLessonsCatalog from '../hooks/useLessonsCatalog.js'
 import {
@@ -9,6 +10,7 @@ import {
 } from '../utils/progress.js'
 
 export default function Biblioteca() {
+  const { t } = useTranslation()
   const currentUser = useCurrentUser()
   const userEmail = currentUser?.email
   const { lessons, loading: catalogLoading } = useLessonsCatalog()
@@ -54,8 +56,8 @@ export default function Biblioteca() {
   return (
     <div className="container" style={{ display: 'grid', gap: 14 }}>
       <SectionCard
-        title="Biblioteca"
-        description={`10 ensinamentos com progresso individual. Concluídas: ${completedCount}/${lessons.length}.`}
+        title={t('library.title')}
+        description={t('library.description', { count: lessons.length, completed: completedCount, total: lessons.length })}
       >
         {loading ? (
           <div className="grid">

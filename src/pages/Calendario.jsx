@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ChevronLeft, ChevronRight, Check, Lock, Star, Calendar,
   Eye, Shield, Flame, Award, Send, Loader, AlertTriangle,
@@ -37,30 +38,18 @@ import { challenges21Days, TRACK_LABELS } from '../data/challenges21Days.js'
 import { MONTH_PLAN, getSixMonthDay } from '../data/sixMonthJourney.js'
 import { generateDailyFeedback, generateFallbackFeedback } from '../services/rabbiMentorAI.js'
 
-var WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
-
-var PHASE_NAMES = {
-  '21days': 'Seder HaKesef',
-  '6months': 'Mahalach HaZera',
-  completed: 'Shnat HaKatzir',
-}
-var PHASE_SUBS = {
-  '21days': '21 dias de fundacao',
-  '6months': '6 meses de construcao patrimonial',
-  completed: 'Jornada completa — colheita',
-}
 
 /* Journey milestones */
 var MILESTONES = [
-  { dayIndex: 6, label: 'Semana 1', icon: '7' },
-  { dayIndex: 13, label: 'Semana 2', icon: '14' },
-  { dayIndex: 20, label: '21 Dias!', icon: '21' },
-  { dayIndex: 50, label: 'Mes 1', icon: 'M1' },
-  { dayIndex: 80, label: 'Mes 2', icon: 'M2' },
-  { dayIndex: 110, label: 'Mes 3', icon: 'M3' },
-  { dayIndex: 140, label: 'Mes 4', icon: 'M4' },
-  { dayIndex: 170, label: 'Mes 5', icon: 'M5' },
-  { dayIndex: 200, label: 'Jornada Completa!', icon: 'FIM' },
+  { dayIndex: 6, labelKey: 'week1', icon: '7' },
+  { dayIndex: 13, labelKey: 'week2', icon: '14' },
+  { dayIndex: 20, labelKey: 'days21', icon: '21' },
+  { dayIndex: 50, labelKey: 'month1', icon: 'M1' },
+  { dayIndex: 80, labelKey: 'month2', icon: 'M2' },
+  { dayIndex: 110, labelKey: 'month3', icon: 'M3' },
+  { dayIndex: 140, labelKey: 'month4', icon: 'M4' },
+  { dayIndex: 170, labelKey: 'month5', icon: 'M5' },
+  { dayIndex: 200, labelKey: 'complete', icon: 'FIM' },
 ]
 
 function getMilestoneForDayIndex(idx) {
@@ -86,6 +75,7 @@ function getPhaseForDayIndex(idx) {
 }
 
 export default function Calendario() {
+  const { t } = useTranslation()
   var stateRefresh = useState(0)
   var setRefresh = stateRefresh[1]
 
@@ -106,8 +96,8 @@ export default function Calendario() {
     return (
       <div className="container" style={{ display: 'grid', gap: 16, paddingTop: 12 }}>
         <SectionCard
-          title="Central Operacional"
-          description="Inicie sua jornada para visualizar o mapa da prosperidade."
+          title={t('calendar.title')}
+          description={t('calendar.not_started')}
         />
       </div>
     )
@@ -119,6 +109,7 @@ export default function Calendario() {
 }
 
 function CalendarInner({ startDate, assignedTrack }) {
+  const { t } = useTranslation()
   var now = new Date()
   var stateMonth = useState(function () { return new Date(now.getFullYear(), now.getMonth(), 1) })
   var viewMonth = stateMonth[0]
@@ -194,7 +185,7 @@ function CalendarInner({ startDate, assignedTrack }) {
     setRefresh(function (r) { return r + 1 })
   }
 
-  var monthLabel = viewMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  var monthLabel = viewMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
   monthLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)
 
   /* Earned badges */
@@ -214,15 +205,15 @@ function CalendarInner({ startDate, assignedTrack }) {
       {/* Header: Central Operacional */}
       <div style={{ display: 'grid', gap: 6 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span className="badge"><MapPin size={14} /> Central Operacional</span>
+          <span className="badge"><MapPin size={14} /> {t('calendar.title')}</span>
           <span className="badge">
             {phase === '21days' && <Flame size={14} />}
             {phase === '6months' && <Shield size={14} />}
             {phase === 'completed' && <Star size={14} />}
-            {PHASE_NAMES[phase]}
+            {t('phase_names.' + phase)}
           </span>
         </div>
-        <div className="muted" style={{ fontSize: 12 }}>{PHASE_SUBS[phase]}</div>
+        <div className="muted" style={{ fontSize: 12 }}>{t('calendar.phase_subs.' + phase)}</div>
       </div>
 
       {/* Streak + Discipline + Next milestone row */}
@@ -231,34 +222,34 @@ function CalendarInner({ startDate, assignedTrack }) {
           <div style={{ fontSize: 22, fontWeight: 900, color: streak > 0 ? 'var(--gold-2)' : 'var(--muted)' }}>
             <Flame size={16} style={{ verticalAlign: -2, marginRight: 4 }} />{streak}
           </div>
-          <div className="muted" style={{ fontSize: 11, fontWeight: 600 }}>Streak (dias)</div>
+          <div className="muted" style={{ fontSize: 11, fontWeight: 600 }}>{t('calendar.streak_label')}</div>
         </div>
         <div className="glass-card card" style={{ padding: 14, display: 'grid', gap: 4, textAlign: 'center' }}>
           <div style={{ fontSize: 22, fontWeight: 900, color: discipline > 50 ? '#4ad764' : 'var(--muted)' }}>
             {discipline}%
           </div>
-          <div className="muted" style={{ fontSize: 11, fontWeight: 600 }}>Disciplina</div>
+          <div className="muted" style={{ fontSize: 11, fontWeight: 600 }}>{t('calendar.discipline_label')}</div>
         </div>
         {nextMilestone && (
           <div className="glass-card card" style={{ padding: 14, display: 'grid', gap: 4, textAlign: 'center' }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--gold-2)' }}>
               <Trophy size={14} style={{ verticalAlign: -2, marginRight: 4 }} />
-              {nextMilestone.label}
+              {t('calendar.milestones.' + nextMilestone.labelKey)}
             </div>
             <div className="muted" style={{ fontSize: 11, fontWeight: 600 }}>
-              Faltam {Math.max(0, nextMilestone.dayIndex - currentIdx)} dias
+              {t('calendar.days_until', { count: Math.max(0, nextMilestone.dayIndex - currentIdx) })}
             </div>
           </div>
         )}
       </div>
 
       {/* Progress summary */}
-      <SectionCard title={trackLabel} description={phase === '21days' ? 'Desafio de 21 dias' : 'Programa de 6 meses'}>
+      <SectionCard title={trackLabel} description={phase === '21days' ? t('calendar.challenge_21') : t('calendar.program_6months')}>
         <div style={{ display: 'grid', gap: 8 }}>
           {phase === '21days' && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ fontWeight: 800 }}>21 Dias: {p21.completed}/21</span>
+                <span style={{ fontWeight: 800 }}>{t('calendar.progress_21', { completed: p21.completed })}</span>
                 <span className="muted">{p21.percent}%</span>
               </div>
               <div className="progress">
@@ -269,7 +260,7 @@ function CalendarInner({ startDate, assignedTrack }) {
           {(phase === '6months' || phase === 'completed') && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ fontWeight: 800 }}>Programa: {p21.completed + p6m.completed}/{21 + 180}</span>
+                <span style={{ fontWeight: 800 }}>{t('calendar.progress_total', { completed: p21.completed + p6m.completed, total: 21 + 180 })}</span>
                 <span className="muted">{Math.round(((p21.completed + p6m.completed) / 201) * 100)}%</span>
               </div>
               <div className="progress">
@@ -295,7 +286,7 @@ function CalendarInner({ startDate, assignedTrack }) {
         textAlign: 'center',
       }}>
         {/* Week header */}
-        {WEEKDAYS.map(function (w) {
+        {t('calendar.weekdays', { returnObjects: true }).map(function (w) {
           return (
             <div key={w} style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold-2)', padding: '4px 0', opacity: 0.7 }}>
               {w}
@@ -407,7 +398,7 @@ function CalendarInner({ startDate, assignedTrack }) {
 
       {/* Earned badges */}
       {earnedBadges.length > 0 && (
-        <SectionCard title="Conquistas" description="Badges conquistados na jornada">
+        <SectionCard title={t('calendar.achievements_title')} description={t('calendar.achievements_desc')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {earnedBadges.map(function (b) {
               return (
@@ -422,7 +413,7 @@ function CalendarInner({ startDate, assignedTrack }) {
 
       {/* 6-month overview */}
       {(phase === '6months' || phase === 'completed') && (
-        <SectionCard title="Visao 6 Meses" description="Progresso mensal geral">
+        <SectionCard title={t('calendar.months_overview_title')} description={t('calendar.months_overview_desc')}>
           <div style={{ display: 'grid', gap: 10 }}>
             {MONTH_PLAN.map(function (mp) {
               var mp6 = getMonthProgress(mp.month)
@@ -432,7 +423,7 @@ function CalendarInner({ startDate, assignedTrack }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                     <span style={{ fontWeight: 700 }}>
                       {done && <Check size={12} style={{ marginRight: 4, verticalAlign: -2, color: '#4ad764' }} />}
-                      Mes {mp.month}: {mp.title}
+                      {t('calendar.month_label', { month: mp.month, title: mp.title })}
                     </span>
                     <span className="muted">{mp6.percent}%</span>
                   </div>
@@ -455,6 +446,7 @@ function CalendarInner({ startDate, assignedTrack }) {
    ════════════════════════════════════════════════════ */
 
 function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
+  const { t } = useTranslation()
   var stateRefresh = useState(0)
   var setRefresh = stateRefresh[1]
 
@@ -472,12 +464,12 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
   var phaseInfo = getPhaseForDayIndex(dayIndex)
   if (dayIndex <= 20) {
     content = track[dayIndex]
-    phaseLabel = phaseInfo.name + ' — Dia ' + (dayIndex + 1) + '/21'
+    phaseLabel = phaseInfo.name + ' — ' + t('common.day') + ' ' + (dayIndex + 1) + '/21'
   } else {
     var macroIdx = dayIndex - 21
     if (macroIdx >= 0 && macroIdx < 180) {
       content = getSixMonthDay(macroIdx)
-      phaseLabel = phaseInfo.name + ' — Mes ' + content.month + ', Dia ' + content.dayInMonth
+      phaseLabel = phaseInfo.name + ' — ' + t('common.day') + ' ' + content.dayInMonth
     }
   }
 
@@ -562,7 +554,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
         setRefresh(function (r) { return r + 1 })
       })
       .catch(function () {
-        setAiError('Modo offline: feedback gerado localmente.')
+        setAiError(t('calendar.drawer.offline_feedback'))
         var fallback = generateFallbackFeedback(payload)
         saveDayAIFeedback(dayIndex, fallback)
         setIsAILoading(false)
@@ -584,7 +576,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
   // Find next phase reward
   var currentPhase = getFullPhase()
   var nextPhaseIdx = ESCADA_PHASES.indexOf(currentPhase) + 1
-  var nextPhaseReward = nextPhaseIdx < ESCADA_PHASES.length ? ESCADA_PHASES[nextPhaseIdx].name : 'Jornada Completa'
+  var nextPhaseReward = nextPhaseIdx < ESCADA_PHASES.length ? ESCADA_PHASES[nextPhaseIdx].name : t('calendar.milestones.complete')
 
   var stateWI = useState(saved?.whatIDid || '')
   var whatIDid = stateWI[0]
@@ -663,7 +655,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
         setRefresh(function (r) { return r + 1 })
       })
       .catch(function () {
-        setAiError('Modo offline: feedback gerado localmente.')
+        setAiError(t('calendar.drawer.offline_feedback'))
         var fallback = generateFallbackFeedback(payload)
         saveDayAIFeedback(dayIndex, fallback)
         setIsAILoading(false)
@@ -714,7 +706,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
             </div>
             {latestCompleted && (
               <span className="badge" style={{ background: 'rgba(74,215,100,0.12)', borderColor: 'rgba(74,215,100,0.35)', color: '#4ad764', flexShrink: 0 }}>
-                <Check size={12} /> Concluido
+                <Check size={12} /> {t('challenges.done_badge')}
               </span>
             )}
           </div>
@@ -727,7 +719,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
               fontSize: 12, textAlign: 'center',
             }}>
               <div style={{ fontWeight: 900, color: streak > 0 ? 'var(--gold-2)' : 'var(--muted)', fontSize: 16 }}>{streak}</div>
-              <div className="muted" style={{ fontSize: 10 }}>Streak</div>
+              <div className="muted" style={{ fontSize: 10 }}>{t('calendar.drawer.streak')}</div>
             </div>
             {nextMil && (
               <div style={{
@@ -736,9 +728,9 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
                 fontSize: 12,
               }}>
                 <div style={{ fontWeight: 800, color: 'var(--gold-2)', fontSize: 12 }}>
-                  <Trophy size={11} style={{ verticalAlign: -1, marginRight: 4 }} />{nextMil.label}
+                  <Trophy size={11} style={{ verticalAlign: -1, marginRight: 4 }} />{t('calendar.milestones.' + nextMil.labelKey)}
                 </div>
-                <div className="muted" style={{ fontSize: 10 }}>Faltam {Math.max(0, nextMil.dayIndex - dayIndex)} dias</div>
+                <div className="muted" style={{ fontSize: 10 }}>{t('calendar.days_until', { count: Math.max(0, nextMil.dayIndex - dayIndex) })}</div>
               </div>
             )}
             <div style={{
@@ -746,7 +738,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
               background: 'rgba(179,136,255,0.06)', border: '1px solid rgba(179,136,255,0.15)',
               fontSize: 12,
             }}>
-              <div style={{ fontWeight: 800, color: '#b388ff', fontSize: 11 }}>Proximo nivel</div>
+              <div style={{ fontWeight: 800, color: '#b388ff', fontSize: 11 }}>{t('calendar.drawer.next_level')}</div>
               <div className="muted" style={{ fontSize: 10 }}>{nextPhaseReward}</div>
             </div>
           </div>
@@ -754,25 +746,25 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
             <div style={{ display: 'grid', gap: 8, fontSize: 13, lineHeight: 1.6 }}>
               {content.oracao && (
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>Oracao</div>
+                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>{t('challenges.section_prayer')}</div>
                   <div className="muted" style={{ fontStyle: 'italic' }}>{content.oracao}</div>
                 </div>
               )}
               {content.manha && (
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>Manha</div>
+                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>{t('challenges.section_morning')}</div>
                   <div className="muted">{content.manha}</div>
                 </div>
               )}
               {content.tarde && (
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>Tarde</div>
+                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>{t('challenges.section_afternoon')}</div>
                   <div className="muted">{content.tarde}</div>
                 </div>
               )}
               {content.noite && (
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>Noite</div>
+                  <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--gold-2)', textTransform: 'uppercase', marginBottom: 2 }}>{t('challenges.section_evening')}</div>
                   <div className="muted">{content.noite}</div>
                 </div>
               )}
@@ -788,9 +780,9 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
           {isAccessible && content && (
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 14, display: 'grid', gap: 10 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>Tarefas</div>
+                <div style={{ fontWeight: 900, fontSize: 14, color: 'var(--gold-2)' }}>{t('calendar.drawer.tasks_title')}</div>
                 <span className="badge" style={{ padding: '4px 8px', fontSize: 10, background: TASK_STATUSES[daySummary]?.bg, borderColor: TASK_STATUSES[daySummary]?.color, color: TASK_STATUSES[daySummary]?.color }}>
-                  {TASK_STATUSES[daySummary]?.label || 'Nao executado'}
+                  {t('task_statuses.' + (daySummary || 'none'))}
                 </span>
               </div>
               <div style={{ display: 'grid', gap: 6 }}>
@@ -821,33 +813,33 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
                         {status === 'executed' && <Check size={12} style={{ color: info.color }} />}
                       </span>
                       <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#fff' }}>{item.label}</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: info.color, textTransform: 'uppercase' }}>{info.label}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: info.color, textTransform: 'uppercase' }}>{t('task_statuses.' + status)}</span>
                     </button>
                   )
                 })}
               </div>
-              <div className="muted" style={{ fontSize: 10, textAlign: 'center' }}>Toque para alterar status</div>
+              <div className="muted" style={{ fontSize: 10, textAlign: 'center' }}>{t('calendar.drawer.tap_status')}</div>
             </div>
           )}
 
           {/* Reflection fields (editable if accessible) */}
           {isAccessible && (
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 14, display: 'grid', gap: 10 }}>
-              <div style={{ fontWeight: 900, fontSize: 14 }}>Reflexoes</div>
+              <div style={{ fontWeight: 900, fontSize: 14 }}>{t('calendar.drawer.reflections_title')}</div>
               {content?.reflexao && (
                 <div style={{ fontStyle: 'italic', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>{content.reflexao}</div>
               )}
               <div className="field">
-                <label>O que fiz hoje</label>
-                <textarea className="input" rows={2} placeholder="Descreva o que executou..." value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
+                <label>{t('calendar.drawer.what_i_did_label')}</label>
+                <textarea className="input" rows={2} placeholder={t('calendar.drawer.what_i_did_placeholder')} value={whatIDid} onChange={function (e) { setWhatIDid(e.target.value) }} onBlur={saveReflections} />
               </div>
               <div className="field">
-                <label>Como me senti</label>
-                <textarea className="input" rows={2} placeholder="Descreva suas emocoes..." value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
+                <label>{t('calendar.drawer.how_i_felt_label')}</label>
+                <textarea className="input" rows={2} placeholder={t('calendar.drawer.how_i_felt_placeholder')} value={howIFelt} onChange={function (e) { setHowIFelt(e.target.value) }} onBlur={saveReflections} />
               </div>
               <div className="field">
-                <label>Maior gatilho do dia</label>
-                <textarea className="input" rows={2} placeholder="Qual foi o maior desafio emocional..." value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
+                <label>{t('calendar.drawer.trigger_label')}</label>
+                <textarea className="input" rows={2} placeholder={t('calendar.drawer.trigger_placeholder')} value={trigger} onChange={function (e) { setTrigger(e.target.value) }} onBlur={saveReflections} />
               </div>
             </div>
           )}
@@ -855,10 +847,10 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
           {/* Read-only reflections for past days viewed */}
           {!isAccessible && saved && (saved.whatIDid || saved.howIFelt || saved.trigger) && (
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 12, display: 'grid', gap: 8 }}>
-              <div style={{ fontWeight: 800, fontSize: 13 }}>Suas reflexoes</div>
-              {saved.whatIDid && <div style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--gold-2)' }}>O que fiz:</span> <span className="muted">{saved.whatIDid}</span></div>}
-              {saved.howIFelt && <div style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--gold-2)' }}>Como me senti:</span> <span className="muted">{saved.howIFelt}</span></div>}
-              {saved.trigger && <div style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--gold-2)' }}>Gatilho:</span> <span className="muted">{saved.trigger}</span></div>}
+              <div style={{ fontWeight: 800, fontSize: 13 }}>{t('calendar.drawer.your_reflections')}</div>
+              {saved.whatIDid && <div style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--gold-2)' }}>{t('calendar.drawer.what_i_did_done')}</span> <span className="muted">{saved.whatIDid}</span></div>}
+              {saved.howIFelt && <div style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--gold-2)' }}>{t('calendar.drawer.how_i_felt_done')}</span> <span className="muted">{saved.howIFelt}</span></div>}
+              {saved.trigger && <div style={{ fontSize: 13 }}><span style={{ fontWeight: 700, color: 'var(--gold-2)' }}>{t('calendar.drawer.trigger_done')}</span> <span className="muted">{saved.trigger}</span></div>}
             </div>
           )}
 
@@ -878,9 +870,9 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
               disabled={isAILoading}
             >
               {isAILoading ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Loader size={16} className="spin" /> Consultando Rabino Mentor...</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Loader size={16} className="spin" /> {t('calendar.drawer.consulting_mentor')}</span>
               ) : (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Send size={16} /> Enviar para Rabino Mentor IA</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Send size={16} /> {t('calendar.drawer.send_to_mentor')}</span>
               )}
             </button>
           )}
@@ -892,14 +884,14 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div className="ai-avatar" style={{ width: 36, height: 36, fontSize: 18 }}><Star size={16} /></div>
                   <div>
-                    <div style={{ fontWeight: 900, fontSize: 13, color: 'var(--gold-2)' }}>Feedback do Rabino Mentor IA</div>
+                    <div style={{ fontWeight: 900, fontSize: 13, color: 'var(--gold-2)' }}>{t('calendar.drawer.feedback_title')}</div>
                   </div>
                 </div>
                 {latestFeedback.summary && (
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <Target size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 11, textTransform: 'uppercase' }}>Analise</span>
+                      <span style={{ fontWeight: 800, fontSize: 11, textTransform: 'uppercase' }}>{t('calendar.drawer.feedback_analysis')}</span>
                     </div>
                     <div className="ai-feedback-section-body" style={{ fontSize: 13 }}>{latestFeedback.summary}</div>
                   </div>
@@ -908,7 +900,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: 'var(--gold-2)' }}>
                       <BookOpen size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 11, textTransform: 'uppercase' }}>Sabedoria judaica</span>
+                      <span style={{ fontWeight: 800, fontSize: 11, textTransform: 'uppercase' }}>{t('calendar.drawer.feedback_wisdom')}</span>
                     </div>
                     <div className="ai-feedback-section-body" style={{ fontSize: 13 }}>{latestFeedback.jewishWisdom}</div>
                   </div>
@@ -917,7 +909,7 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
                   <div className="ai-feedback-section">
                     <div className="ai-feedback-section-head" style={{ color: '#4ad764' }}>
                       <Target size={14} />
-                      <span style={{ fontWeight: 800, fontSize: 11, textTransform: 'uppercase' }}>Foco para amanha</span>
+                      <span style={{ fontWeight: 800, fontSize: 11, textTransform: 'uppercase' }}>{t('calendar.drawer.feedback_tomorrow')}</span>
                     </div>
                     <div className="ai-feedback-section-body" style={{ fontSize: 13 }}>{latestFeedback.nextFocus}</div>
                   </div>
@@ -929,12 +921,12 @@ function DayDrawer({ dayIndex, dayNum, assignedTrack, onClose }) {
           {/* Complete day button */}
           {isAccessible && latestFeedback && !latestCompleted && (
             <button className="btn btn-primary btn-block btn-done" type="button" onClick={handleCompleteDay}>
-              <Check size={16} /> Concluir dia e liberar proximo
+              <Check size={16} /> {t('calendar.drawer.complete_day')}
             </button>
           )}
 
           {/* Close */}
-          <button className="btn btn-soft btn-block" type="button" onClick={onClose}>Fechar</button>
+          <button className="btn btn-soft btn-block" type="button" onClick={onClose}>{t('calendar.drawer.close')}</button>
         </div>
       </div>
     </>

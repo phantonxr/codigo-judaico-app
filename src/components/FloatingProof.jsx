@@ -1,74 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Zap, ShieldCheck, Users, Sparkles, Target, Eye, TrendingUp } from 'lucide-react'
 
 function randomBetween(minMs, maxMs) {
   return Math.floor(minMs + Math.random() * (maxMs - minMs + 1))
 }
 
-var NOTIFICATIONS = [
-  {
-    id: 'movement',
-    icon: Users,
-    title: '17 pessoas acessaram esta etapa nos últimos minutos',
-    subtitle: 'A maioria começou pela fase Seder HaKesef para identificar seus gatilhos financeiros.',
-  },
-  {
-    id: 'value',
-    icon: Zap,
-    title: 'Valor reservado por poucos minutos',
-    subtitle: 'Depois que a janela encerra, a próxima liberação pode voltar com outro valor.',
-  },
-  {
-    id: 'started',
-    icon: Sparkles,
-    title: 'Nova jornada iniciada agora',
-    subtitle: 'Mais uma pessoa começou os 21 dias para entender por que o dinheiro escapa.',
-  },
-  {
-    id: 'stripe',
-    icon: ShieldCheck,
-    title: 'Acesso seguro via Stripe',
-    subtitle: 'Crie sua conta e use o mesmo e-mail no pagamento para liberação automática.',
-  },
-  {
-    id: 'root',
-    icon: Target,
-    title: 'Comece pela raiz do problema',
-    subtitle: 'Antes de prosperar, você precisa enxergar o padrão que controla suas decisões.',
-  },
-  {
-    id: 'phase',
-    icon: Eye,
-    title: 'A primeira fase revela o gatilho',
-    subtitle: 'Os 21 dias mostram onde seu dinheiro está sendo perdido sem perceber.',
-  },
-  {
-    id: 'not-cuts',
-    icon: TrendingUp,
-    title: 'Não é corte de gastos',
-    subtitle: 'É domínio financeiro: viver melhor, decidir melhor e construir com consciência.',
-  },
-]
+var NOTIFICATION_ICONS = {
+  movement: Users,
+  value: Zap,
+  started: Sparkles,
+  stripe: ShieldCheck,
+  root: Target,
+  phase: Eye,
+  'not-cuts': TrendingUp,
+}
 
-function pickNextNotification(lastId) {
-  if (NOTIFICATIONS.length <= 1) return NOTIFICATIONS[0]
-  var next = NOTIFICATIONS[Math.floor(Math.random() * NOTIFICATIONS.length)]
-  if (next.id === lastId) {
-    next = NOTIFICATIONS[(NOTIFICATIONS.findIndex(function (n) { return n.id === next.id }) + 1) % NOTIFICATIONS.length]
+var NOTIFICATION_IDS = ['movement', 'value', 'started', 'stripe', 'root', 'phase', 'not-cuts']
+
+function pickNextId(lastId) {
+  if (NOTIFICATION_IDS.length <= 1) return NOTIFICATION_IDS[0]
+  var next = NOTIFICATION_IDS[Math.floor(Math.random() * NOTIFICATION_IDS.length)]
+  if (next === lastId) {
+    next = NOTIFICATION_IDS[(NOTIFICATION_IDS.indexOf(next) + 1) % NOTIFICATION_IDS.length]
   }
   return next
 }
 
 export default function FloatingProof() {
+  const { t } = useTranslation()
   var [visible, setVisible] = useState(false)
-  var [current, setCurrent] = useState(NOTIFICATIONS[0])
-  var lastIdRef = useRef(current.id)
+  var [currentId, setCurrentId] = useState(NOTIFICATION_IDS[0])
+  var lastIdRef = useRef(currentId)
   var isInteractingRef = useRef(false)
   var timeoutsRef = useRef([])
 
   var Icon = useMemo(function () {
-    return current.icon || Zap
-  }, [current])
+    return NOTIFICATION_ICONS[currentId] || Zap
+  }, [currentId])
 
   useEffect(function () {
     function clearAll() {
@@ -87,12 +56,11 @@ export default function FloatingProof() {
         return
       }
 
-      var next = pickNextNotification(lastIdRef.current)
-      lastIdRef.current = next.id
-      setCurrent(next)
+      var nextId = pickNextId(lastIdRef.current)
+      lastIdRef.current = nextId
+      setCurrentId(nextId)
       setVisible(true)
 
-      // Visible most of the interval to feel like a real notification.
       var hideAfter = 4200
       var interval = randomBetween(5000, 8000)
       var hideTimeout = setTimeout(function () {
@@ -141,6 +109,10 @@ export default function FloatingProof() {
     }
   }, [])
 
+  var key = currentId.replace(/-/g, '_')
+  var title = t('floating_proof.' + key + '_title')
+  var subtitle = t('floating_proof.' + key + '_subtitle')
+
   return (
     <div
       className={'floating-proof' + (visible ? ' floating-proof--visible' : '')}
@@ -153,8 +125,8 @@ export default function FloatingProof() {
           <Icon size={16} />
         </div>
         <div className="floating-proof-content">
-          <div className="floating-proof-title">{current.title}</div>
-          <div className="floating-proof-subtitle">{current.subtitle}</div>
+          <div className="floating-proof-title">{title}</div>
+          <div className="floating-proof-subtitle">{subtitle}</div>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createCheckoutSession } from '../services/payments.js'
 import { getBookCatalog } from '../services/books.js'
 import { useUtmParams } from '../hooks/useUtmParams.js'
@@ -57,12 +58,10 @@ function buildFreshCheckoutPath(planId) {
   return `/checkout?plan=${encodeURIComponent(selectedPlan.id)}`
 }
 
-function resolveAccessLabel(planId) {
-  var pid = String(planId || '')
-  if (pid === 'mensal') return '1 mês de acesso completo'
-  if (pid === 'anual') return '12 meses de acesso completo'
-  if (pid === 'vitalicio') return 'Acesso vitalício ao método'
-  return '21 dias de acesso completo'
+function resolveAccessLabel(planId, t) {
+  const known = ['mensal', 'anual', 'vitalicio']
+  const pid = String(planId || '')
+  return t('checkout.plans.access_labels.' + (known.includes(pid) ? pid : 'default'))
 }
 
 function resolvePhaseLabel(planTitle) {
@@ -72,33 +71,29 @@ function resolvePhaseLabel(planTitle) {
   return left || title
 }
 
-function resolvePromise(planId) {
-  var pid = String(planId || '')
-  if (pid === 'mensal') {
-    return 'Você continua avançando: identifica o impulso, corrige o padrão e sustenta decisões financeiras mais conscientes.'
-  }
-  if (pid === 'anual') {
-    return 'Você consolida o domínio financeiro por 12 meses, reforçando hábitos e eliminando recaídas de impulso.'
-  }
-  if (pid === 'vitalicio') {
-    return 'Você garante acesso permanente ao método para evoluir no seu ritmo e voltar sempre que precisar recalibrar.'
-  }
-  return 'Em 21 dias, você começa a enxergar os gatilhos invisíveis que fazem seu dinheiro escapar — e inicia o domínio sobre suas decisões financeiras.'
+function resolvePromise(planId, t) {
+  const known = ['mensal', 'anual', 'vitalicio']
+  const pid = String(planId || '')
+  return t('checkout.plans.promises.' + (known.includes(pid) ? pid : 'default'))
 }
 
-function resolveCtaLabel(planId) {
-  var pid = String(planId || '')
-  if (pid === 'primeiro-acesso' || pid === 'renovacao') return 'Liberar meu acesso de 21 dias agora'
-  return 'Liberar meu acesso agora'
+function resolveCtaLabel(planId, t) {
+  const known = ['primeiro-acesso', 'renovacao']
+  const pid = String(planId || '')
+  return t('checkout.plans.cta_labels.' + (known.includes(pid) ? pid : 'default'))
 }
 
 export default function CheckoutPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const selectedPlan = resolvePlan(searchParams.get('plan'))
-  const accessLabel = resolveAccessLabel(selectedPlan.id)
-  const phaseLabel = resolvePhaseLabel(selectedPlan.title)
-  const promise = resolvePromise(selectedPlan.id)
-  const ctaLabel = resolveCtaLabel(selectedPlan.id)
+  const planTitle = t('checkout.plans.titles.' + selectedPlan.id, { defaultValue: selectedPlan.title })
+  const planHighlight = t('checkout.plans.highlights.' + selectedPlan.id, { defaultValue: selectedPlan.highlight })
+  const planSubtitle = t('checkout.plans.subtitles.' + selectedPlan.id, { defaultValue: selectedPlan.subtitle })
+  const accessLabel = resolveAccessLabel(selectedPlan.id, t)
+  const phaseLabel = resolvePhaseLabel(planTitle)
+  const promise = resolvePromise(selectedPlan.id, t)
+  const ctaLabel = resolveCtaLabel(selectedPlan.id, t)
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -147,12 +142,12 @@ export default function CheckoutPage() {
     setError('')
 
     if (!existingAccountFlow && password.trim().length < MINIMUM_PASSWORD_LENGTH) {
-      setError(`Crie uma senha com pelo menos ${MINIMUM_PASSWORD_LENGTH} caracteres.`)
+      setError(t('checkout.errors.password_too_short', { min: MINIMUM_PASSWORD_LENGTH }))
       return
     }
 
     if (!existingAccountFlow && password !== passwordConfirmation) {
-      setError('A confirmação da senha não confere.')
+      setError(t('checkout.errors.password_mismatch'))
       return
     }
 
@@ -173,7 +168,7 @@ export default function CheckoutPage() {
       })
 
       if (!response?.url) {
-        throw new Error('Checkout sem URL.')
+        throw new Error(t('checkout.errors.no_url'))
       }
 
       window.location.href = response.url
@@ -182,7 +177,7 @@ export default function CheckoutPage() {
         caught?.data?.detail ||
         caught?.data?.message ||
         caught?.message ||
-        'Nao consegui abrir o checkout agora. Tente novamente em instantes.'
+        t('checkout.errors.generic')
       setError(
         String(nextError).replace(/^API \d+:\s*/u, ''),
       )
@@ -197,17 +192,15 @@ export default function CheckoutPage() {
       <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 22 }}>
         <div className="card">
           <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-            <span className="badge" style={{ width: 'fit-content' }}>Checkout oficial via Stripe</span>
+            <span className="badge" style={{ width: 'fit-content' }}>{t('checkout.badge')}</span>
             <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05 }}>
-              Desbloqueie o Método Judaico da Prosperidade
+              {t('checkout.title')}
             </h1>
             <div style={{ fontWeight: 900, color: 'var(--gold-2)', lineHeight: 1.35 }}>
-              Mais de 1.247 pessoas já iniciaram essa jornada
+              {t('checkout.social_proof')}
             </div>
             <div className="muted" style={{ lineHeight: 1.7 }}>
-              {existingAccountFlow
-                ? 'Sua conta já foi encontrada. Falta só concluir o pagamento para liberar o acesso.'
-                : 'Crie sua conta agora. Assim que o Stripe confirmar, a liberação acontece imediatamente.'}
+              {existingAccountFlow ? t('checkout.existing_account') : t('checkout.new_account')}
             </div>
           </div>
         </div>
@@ -224,8 +217,8 @@ export default function CheckoutPage() {
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <strong style={{ fontSize: 18 }}>{selectedPlan.title}</strong>
-                <span className="badge">{selectedPlan.highlight}</span>
+                <strong style={{ fontSize: 18 }}>{planTitle}</strong>
+                <span className="badge">{planHighlight}</span>
               </div>
 
               <div className="checkout-promise">
@@ -237,25 +230,23 @@ export default function CheckoutPage() {
               </div>
 
               <div className="checkout-benefits">
-                <div className="checkout-benefit">✔ Identifique seus gatilhos de gasto</div>
-                <div className="checkout-benefit">✔ Receba orientação do Rabino Mentor IA</div>
-                <div className="checkout-benefit">✔ Comece sua jornada de domínio financeiro</div>
+                <div className="checkout-benefit">{t('checkout.benefits.triggers')}</div>
+                <div className="checkout-benefit">{t('checkout.benefits.mentor')}</div>
+                <div className="checkout-benefit">{t('checkout.benefits.journey')}</div>
               </div>
 
               <div className="muted" style={{ display: 'grid', gap: 4, lineHeight: 1.5 }}>
                 <div style={{ fontWeight: 900, color: 'rgba(255,255,255,0.85)' }}>{accessLabel}</div>
-                <div>
-                  Fase inicial: <strong style={{ color: 'var(--gold-2)' }}>{phaseLabel}</strong>
-                </div>
-                <div style={{ maxWidth: 640 }}>{selectedPlan.subtitle}</div>
+                <div dangerouslySetInnerHTML={{ __html: t('checkout.access_period', { phase: `<strong style="color:var(--gold-2)">${phaseLabel}</strong>` }).replace('<gold>', '').replace('</gold>', '') }} />
+                <div style={{ maxWidth: 640 }}>{planSubtitle}</div>
               </div>
 
               <div className="checkout-window-alert">
                 <div className="checkout-window-alert__title">
-                  ⚠️ ESTE VALOR ESTÁ DISPONÍVEL SOMENTE NESTA JANELA DE ACESSO.
+                  {t('checkout.window_alert_title')}
                 </div>
                 <div className="checkout-window-alert__sub">
-                  APÓS O ENCERRAMENTO, A PRÓXIMA LIBERAÇÃO PODE VOLTAR COM OUTRO VALOR.
+                  {t('checkout.window_alert_sub')}
                 </div>
               </div>
 
@@ -265,12 +256,12 @@ export default function CheckoutPage() {
                 </div>
                 <div className="checkout-timer__content">
                   <div className="checkout-timer__title">
-                    {isUrgentWindow ? '⚠️ ÚLTIMOS MINUTOS PARA MANTER ESSE VALOR' : '⚡ JANELA DE ACESSO COM VALOR REDUZIDO'}
+                    {isUrgentWindow ? t('checkout.timer_urgent_title') : t('checkout.timer_normal_title')}
                   </div>
                   <div className="checkout-timer__label">
-                    {isUrgentWindow ? 'TEMPO RESTANTE:' : 'ESSE VALOR FICA RESERVADO POR:'}
+                    {isUrgentWindow ? t('checkout.timer_urgent_label') : t('checkout.timer_normal_label')}
                   </div>
-                  <div className="checkout-timer__time" aria-label={`Tempo restante ${countdownLabel}`}>{countdownLabel}</div>
+                  <div className="checkout-timer__time" aria-label={t('checkout.timer_aria', { time: countdownLabel })}>{countdownLabel}</div>
                 </div>
               </div>
             </div>
@@ -282,11 +273,11 @@ export default function CheckoutPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={18} style={{ color: 'var(--gold-2)', flexShrink: 0 }} />
                   <div style={{ fontWeight: 900, fontSize: 16 }}>
-                    Adicione livros ao seu pedido
+                    {t('checkout.books_section_title')}
                   </div>
                 </div>
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-                  Livros físicos com sabedoria judaica — adquira junto com seu plano e economize na entrega.
+                  {t('checkout.books_section_hint')}
                 </div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   {availableBooks.map(function (book) {
@@ -343,7 +334,7 @@ export default function CheckoutPage() {
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
               <div style={{ fontWeight: 900, fontSize: 18 }}>
-                {existingAccountFlow ? 'Conta encontrada' : 'Dados para liberar o acesso'}
+                {existingAccountFlow ? t('checkout.form_title_existing') : t('checkout.form_title_new')}
               </div>
 
               {existingAccountFlow ? (
@@ -356,35 +347,33 @@ export default function CheckoutPage() {
                     background: 'rgba(215, 178, 74, 0.08)',
                     color: 'var(--text)',
                   }}
-                >
-                  Vamos continuar com <strong>{email}</strong> e com a senha que voce ja cadastrou.
-                  Agora falta so finalizar o checkout para ativar o acesso.
-                </div>
+                  dangerouslySetInnerHTML={{ __html: t('checkout.existing_account_note', { email }) }}
+                />
               ) : null}
 
               {existingAccountFlow ? null : (
                 <div className="field">
-                  <label htmlFor="checkout-name">Nome</label>
+                  <label htmlFor="checkout-name">{t('checkout.name_label')}</label>
                   <input
                     id="checkout-name"
                     className="input"
                     type="text"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Como devemos te chamar"
+                    placeholder={t('checkout.name_placeholder')}
                   />
                 </div>
               )}
 
               <div className="field">
-                <label htmlFor="checkout-email">E-mail</label>
+                <label htmlFor="checkout-email">{t('checkout.email_label')}</label>
                 <input
                   id="checkout-email"
                   className="input"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="voce@exemplo.com"
+                  placeholder={t('checkout.email_placeholder')}
                   readOnly={existingAccountFlow}
                   required
                 />
@@ -392,14 +381,14 @@ export default function CheckoutPage() {
 
               {existingAccountFlow ? null : (
                 <div className="field">
-                  <label htmlFor="checkout-password">Senha</label>
+                  <label htmlFor="checkout-password">{t('checkout.password_label')}</label>
                   <input
                     id="checkout-password"
                     className="input"
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Crie sua senha de acesso"
+                    placeholder={t('checkout.password_placeholder')}
                     autoComplete="new-password"
                     required
                   />
@@ -408,37 +397,32 @@ export default function CheckoutPage() {
 
               {existingAccountFlow ? null : (
                 <div className="field">
-                  <label htmlFor="checkout-password-confirmation">Confirmar senha</label>
+                  <label htmlFor="checkout-password-confirmation">{t('checkout.confirm_password_label')}</label>
                   <input
                     id="checkout-password-confirmation"
                     className="input"
                     type="password"
                     value={passwordConfirmation}
                     onChange={(event) => setPasswordConfirmation(event.target.value)}
-                    placeholder="Repita a senha"
+                    placeholder={t('checkout.confirm_password_placeholder')}
                     autoComplete="new-password"
                     required
                   />
                 </div>
               )}
 
-              <div className="muted">
-                {existingAccountFlow ? (
-                  <>
-                    O login sera liberado para <strong>{email}</strong> assim que o Stripe confirmar o pagamento.
-                  </>
-                ) : (
-                  <>
-                    Sua conta sera criada para <strong>{email || 'o e-mail informado acima'}</strong>.
-                    O login sera liberado depois da confirmacao do Stripe, usando a senha criada acima.
-                  </>
-                )}
-              </div>
+              <div className="muted"
+                dangerouslySetInnerHTML={{
+                  __html: existingAccountFlow
+                    ? t('checkout.account_note_existing', { email })
+                    : t('checkout.account_note_new', { email: email || t('checkout.account_note_placeholder') })
+                }}
+              />
 
               {existingAccountFlow ? (
                 <div className="muted" style={{ fontSize: 14 }}>
-                  Se quiser usar outro e-mail, abra um checkout novo em{' '}
-                  <Link to={buildFreshCheckoutPath(selectedPlan.id)}>usar outra conta</Link>.
+                  {t('checkout.other_account_note')}{' '}
+                  <Link to={buildFreshCheckoutPath(selectedPlan.id)}>{t('checkout.other_account_link')}</Link>.
                 </div>
               ) : null}
 
@@ -449,27 +433,25 @@ export default function CheckoutPage() {
               ) : null}
 
               <button className="btn btn-primary btn-block btn-mentor-glow" type="submit" disabled={loading} style={{ padding: '14px 16px', fontSize: 16 }}>
-                {loading
-                  ? 'Abrindo checkout...'
-                  : ctaLabel}
+                {loading ? t('checkout.submit_loading') : ctaLabel}
               </button>
 
               <div className="muted" style={{ textAlign: 'center', fontSize: 12, lineHeight: 1.5 }}>
-                Seu acesso começa após a confirmação segura do pagamento.
+                {t('checkout.submit_success_text')}
               </div>
 
               <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.6, fontSize: 13 }}>
-                <div>🔒 Pagamento 100% seguro via Stripe</div>
-                <div>✔ Liberação imediata após confirmação</div>
-                <div>🔑 Acesso com e-mail e senha</div>
+                <div>{t('checkout.security_notes.stripe')}</div>
+                <div>{t('checkout.security_notes.immediate')}</div>
+                <div>{t('checkout.security_notes.access')}</div>
               </div>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <Link className="btn" to="/">
-                  Voltar para a landing
+                  {t('checkout.back_to_landing')}
                 </Link>
                 <Link className="btn btn-soft" to="/login">
-                  {existingAccountFlow ? 'Voltar ao login' : 'Ja tenho conta'}
+                  {existingAccountFlow ? t('checkout.back_to_login') : t('checkout.already_have_account')}
                 </Link>
               </div>
             </div>

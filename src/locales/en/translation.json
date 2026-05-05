@@ -1,0 +1,808 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "assessment": "Assessment",
+    "mentor": "Rabbi Mentor AI",
+    "challenges": "Challenges",
+    "calendar": "Calendar",
+    "library": "Library",
+    "books": "Books",
+    "more": "More",
+    "subscription": "Subscription",
+    "subscribers": "Subscribers"
+  },
+  "brand": {
+    "name": "Jewish Code",
+    "tagline": "of Prosperity"
+  },
+  "common": {
+    "loading": "Loading...",
+    "close": "Close",
+    "retry": "Try again",
+    "student_fallback": "Student",
+    "send": "Send",
+    "logout": "Sign out",
+    "days": "days",
+    "day": "Day",
+    "week": "Week",
+    "streak": "Streak",
+    "export": "Export",
+    "clear": "Clear",
+    "consult": "Search",
+    "buy": "Buy",
+    "back": "Back",
+    "open_menu": "Open menu",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "go_to_dashboard": "Go to dashboard",
+    "go_to_landing": "Go to landing page",
+    "navigation": "Navigation",
+    "user_profile": "User profile"
+  },
+  "topbar": {
+    "greeting": "Shalom, {{name}}",
+    "streak_label": "Streak",
+    "streak_value": "{{count}} days",
+    "week_label": "Week"
+  },
+  "sidebar": {
+    "plan_label": "Plan: {{plan}}",
+    "renew": "Subscription: renew now"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "description": "Enter the email and password you created at checkout. If payment isn't confirmed yet, we'll redirect you to complete your subscription.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "loading": "Signing in...",
+      "forgot_password": "Forgot password",
+      "no_access": "I don't have access yet",
+      "back_to_landing": "Back to landing page",
+      "errors": {
+        "invalid_credentials": "Incorrect email or password. Please try again.",
+        "generic": "Could not sign in. Check your email, password and whether access has been granted."
+      }
+    },
+    "forgot_password": {
+      "title": "Recover password",
+      "description": "Enter your email to receive a password reset link.",
+      "email": "Email",
+      "submit": "Send link",
+      "loading": "Sending...",
+      "back_to_login": "Back to sign in",
+      "success": "If the email exists in our system, we've sent a password reset link.",
+      "error": "Could not send the email right now. Please try again in a moment."
+    },
+    "reset_password": {
+      "title": "Set new password",
+      "description": "Choose your new password to sign in.",
+      "new_password": "New password",
+      "confirm_password": "Confirm password",
+      "submit": "Save new password",
+      "loading": "Saving...",
+      "back_to_login": "Back to sign in",
+      "success": "Password updated successfully. Redirecting to sign in...",
+      "errors": {
+        "invalid_link": "Invalid link. Please request a new recovery email.",
+        "too_short": "The new password must be at least {{min}} characters.",
+        "mismatch": "Passwords do not match.",
+        "generic": "Could not reset the password. Please request a new link."
+      }
+    }
+  },
+  "landing": {
+    "badge": "Ancient Jewish method • Premium experience",
+    "headline": "DISCOVER THE METHOD JEWS USE OVER 21 DAYS TO ACHIEVE A PROSPEROUS FINANCIAL LIFE",
+    "subheadline_1": "Even in times of crisis, instability and scarcity, there is a system followed for generations to build wealth, emotional discipline, assets and legacy.",
+    "subheadline_2": "A 4-phase method with daily activities that will transform your financial life, inspired by the principles that made a people prosper even in the desert.",
+    "cta_primary": "I want to unlock the method",
+    "cta_secondary": "I already have access (Sign In)",
+    "phases_title": "Prosperity is a 4-phase transformation",
+    "phases_subtitle": "First you learn to see what makes you lose money. Then you master the impulse. Next, you build your first assets in balance. Finally, you reap the great fruits of prosperity and build a legacy.",
+    "phase_start_badge": "Start here • Beginning of the journey",
+    "phases": [
+      {
+        "days": "21 days",
+        "name": "Trigger awareness",
+        "desc": "You identify the triggers that make you lose money (impulse, anxiety, comparison, fear) and start seeing the pattern before it controls you."
+      },
+      {
+        "days": "1 month",
+        "name": "Self-control and discipline",
+        "desc": "You develop self-control over these triggers and learn to make decisions with clarity — even on bad days, without falling back into the old cycle."
+      },
+      {
+        "days": "6 months",
+        "name": "First assets",
+        "desc": "You build your first assets in balance: emergency funds, consistency and smart choices — without extremes and without guilt."
+      },
+      {
+        "days": "365 days",
+        "name": "Maximum harvest and legacy",
+        "desc": "You reap the great fruits of prosperity: stability, real growth and a legacy that endures — with peace and direction."
+      }
+    ],
+    "benefits_title": "What you receive inside the method",
+    "benefits": [
+      {
+        "title": "Direction",
+        "text": "Know exactly what to do every day to reorganize your financial life — without depending on motivation."
+      },
+      {
+        "title": "Mentorship",
+        "text": "Receive guidance from the AI Rabbi Mentor to interpret decisions, correct patterns and accelerate your journey."
+      },
+      {
+        "title": "Execution",
+        "text": "Real daily tasks that create concrete financial change — not theory, action."
+      },
+      {
+        "title": "Legacy",
+        "text": "Build wealth and enjoy prosperity without living as a hostage to scarcity."
+      }
+    ],
+    "authority_title": "Why has this method worked for millennia?",
+    "authority_body_1": "Because prosperity doesn't come from blind cuts.",
+    "authority_body_2": "It comes from <strong>order, emotional discipline, long-term vision and asset building</strong>.",
+    "authority_body_3": "This is how a people crossed deserts, wars and crises without losing their capacity to prosper.",
+    "final_cta_title": "If you want to discover the method and don't have access yet, start your journey now.",
+    "final_cta_sub": "Unlock the premium experience and follow the same daily progression used for generations to build wealth and legacy.",
+    "final_cta_btn": "I want to start my ascension"
+  },
+  "subscription_notice": {
+    "badge": "Renewal required",
+    "title": "Your premium journey has been paused",
+    "description": "Your premium access is no longer active. Renew now to re-unlock the Rabbi Mentor, challenges, library and all journey progression.",
+    "current_plan": "Current plan",
+    "valid_until": "Valid until",
+    "plan_paused": "Subscription paused",
+    "renew_btn": "View plans and renew now"
+  },
+  "page_titles": {
+    "/dashboard": "Dashboard",
+    "/mentor": "Rabbi Mentor AI",
+    "/desafios": "Challenges",
+    "/biblioteca": "Library",
+    "/mais": "More",
+    "/assinatura": "Subscription",
+    "/admin/assinantes": "Subscribers",
+    "/avaliacao": "Financial Assessment",
+    "/calendario": "Calendar",
+    "/relatorio-final": "Final Report",
+    "/livros": "Books",
+    "default": "Jewish Code of Prosperity"
+  },
+  "dashboard": {
+    "journey_title": "The Ancient Journey of Jewish Prosperity",
+    "journey_description": "This method is inspired by principles taught for generations in the Jewish tradition, where prosperity does not come from blind expense cuts, but from <gold>order, emotional discipline, asset building and legacy vision</gold>.",
+    "start_transformation": "Start your transformation",
+    "start_diagnosis_hint": "Discover your personalized track by answering the financial diagnosis. It identifies your profile and starts your 365-day journey toward full prosperity.",
+    "start_assessment_btn": "Start Financial Assessment",
+    "total_journey": "Total Journey",
+    "day_label": "Day {{day}}",
+    "streak_days": "Streak: {{count}} days",
+    "metrics": {
+      "streak": "Streak",
+      "streak_hint": "Consecutive",
+      "emotional": "Emotional",
+      "emotional_hint": "Self-awareness",
+      "patrimony": "Patrimony",
+      "patrimony_hint": "Building",
+      "discipline": "Discipline",
+      "discipline_hint": "Consistency"
+    },
+    "ascension_ladder": "Ascension Ladder",
+    "ascension_description": "4 progressive phases. Each phase unlocks the next. Progression is mandatory — there are no shortcuts.",
+    "phase_current": "Current Phase",
+    "phase_done": "Completed",
+    "phase_locked": "Locked",
+    "days_remaining": "{{count}} days remaining to complete this phase",
+    "completed_days": "{{completed}}/{{total}} days",
+    "unlock_phase": {
+      "1": "Unlock Chodesh HaMelech",
+      "2": "Unlock Mahalach HaZera",
+      "3": "Unlock Shnat HaKatzir",
+      "default": "Unlock next phase"
+    },
+    "retention_title": "Why is progression mandatory",
+    "retention_body": "Those who abandon the journey return to serving the same triggers that kept them trapped. In Jewish tradition, prosperity is built in layers: <strong>stability → mastery → planting → harvest</strong>. There are no shortcuts. There is only daily consistency.",
+    "last_feedback_label": "Last Rabbi Mentor feedback",
+    "continue_btn": "Continue my ascension",
+    "phase_benefits": [
+      "You identify exactly where you lose money, which emotions trigger your spending, and you create the foundation to never live on financial autopilot again.",
+      "You master buying impulses, build emotional resilience, and take complete command of your financial life with clarity and strategy.",
+      "You build real assets — emergency reserve, property, investments. Each day is a brick in your financial freedom building.",
+      "You reap abundance. Enjoy the best of the earth, consolidate your legacy, and live the prosperity that Jewish generations taught."
+    ]
+  },
+  "checkout": {
+    "badge": "Official checkout via Stripe",
+    "title": "Unlock the Jewish Method of Prosperity",
+    "social_proof": "Over 1,247 people have already started this journey",
+    "existing_account": "Your account has been found. Just complete the payment to unlock access.",
+    "new_account": "Create your account now. As soon as Stripe confirms, access is released immediately.",
+    "window_alert_title": "⚠️ THIS PRICE IS ONLY AVAILABLE IN THIS ACCESS WINDOW.",
+    "window_alert_sub": "AFTER THE WINDOW CLOSES, THE NEXT RELEASE MAY RETURN AT A DIFFERENT PRICE.",
+    "timer_urgent_title": "⚠️ LAST MINUTES TO KEEP THIS PRICE",
+    "timer_normal_title": "⚡ REDUCED PRICE ACCESS WINDOW",
+    "timer_urgent_label": "TIME REMAINING:",
+    "timer_normal_label": "THIS PRICE IS RESERVED FOR:",
+    "benefits": {
+      "triggers": "✔ Identify your spending triggers",
+      "mentor": "✔ Receive guidance from the AI Rabbi Mentor",
+      "journey": "✔ Start your financial mastery journey"
+    },
+    "access_period": "Initial phase: <gold>{{phase}}</gold>",
+    "books_section_title": "Add books to your order",
+    "books_section_hint": "Physical books with Jewish wisdom — buy together with your plan and save on shipping.",
+    "form_title_existing": "Account found",
+    "form_title_new": "Details to unlock access",
+    "existing_account_note": "We'll continue with <strong>{{email}}</strong> and the password you already registered. Just complete checkout to activate access.",
+    "name_label": "Name",
+    "name_placeholder": "What should we call you",
+    "email_label": "Email",
+    "password_label": "Password",
+    "password_placeholder": "Create your access password",
+    "confirm_password_label": "Confirm password",
+    "confirm_password_placeholder": "Repeat your password",
+    "account_note_existing": "Login will be released for <strong>{{email}}</strong> as soon as Stripe confirms payment.",
+    "account_note_new": "Your account will be created for <strong>{{email}}</strong>. Login will be released after Stripe confirmation, using the password created above.",
+    "account_note_placeholder": "the email entered above",
+    "other_account_link": "use another account",
+    "other_account_note": "If you want to use a different email, open a new checkout at",
+    "submit_loading": "Opening checkout...",
+    "submit_success_text": "Your access begins after secure payment confirmation.",
+    "security_notes": {
+      "stripe": "🔒 100% secure payment via Stripe",
+      "immediate": "✔ Immediate access after confirmation",
+      "access": "🔑 Access with email and password"
+    },
+    "back_to_landing": "Back to landing",
+    "already_have_account": "I already have an account",
+    "back_to_login": "Back to sign in",
+    "email_placeholder": "you@example.com",
+    "timer_aria": "Time remaining {{time}}",
+    "errors": {
+      "password_too_short": "Create a password with at least {{min}} characters.",
+      "password_mismatch": "Password confirmation does not match.",
+      "no_url": "Checkout URL not found.",
+      "generic": "Could not open checkout right now. Please try again in a moment."
+    },
+    "plans": {
+      "titles": {
+        "primeiro-acesso": "Seder HaKesef — 21 Days",
+        "renovacao": "Seder HaKesef — 21 Days",
+        "mensal": "Chodesh HaMelech Track",
+        "anual": "Shnat HaKatzir Annual Journey",
+        "vitalicio": "Brit HaOsher Lifetime Legacy"
+      },
+      "highlights": {
+        "primeiro-acesso": "Initial stage",
+        "renovacao": "Condition released",
+        "mensal": "Natural next phase",
+        "anual": "Best choice",
+        "vitalicio": "Definitive access"
+      },
+      "subtitles": {
+        "primeiro-acesso": "The initial phase to stabilize your financial life and reveal the triggers that control your decisions.",
+        "renovacao": "Special condition to continue the initial stage for another 21 days.",
+        "mensal": "The month of financial mastery — monthly access to the track to treat triggers and govern your impulses.",
+        "anual": "12 months of journey with savings compared to monthly (12.5% discount).",
+        "vitalicio": "Permanent access to the method and Jewish prosperity tracks. Ideal for those who want definitive access."
+      },
+      "access_labels": {
+        "mensal": "1 month full access",
+        "anual": "12 months full access",
+        "vitalicio": "Lifetime access to the method",
+        "default": "21 days full access"
+      },
+      "cta_labels": {
+        "primeiro-acesso": "Unlock my 21-day access now",
+        "renovacao": "Unlock my 21-day access now",
+        "default": "Unlock my access now"
+      },
+      "promises": {
+        "mensal": "You keep advancing: identify the impulse, correct the pattern and sustain more conscious financial decisions.",
+        "anual": "You consolidate financial mastery over 12 months, reinforcing habits and eliminating impulse relapses.",
+        "vitalicio": "You secure permanent access to the method to evolve at your own pace and return whenever you need to recalibrate.",
+        "default": "In 21 days, you begin to see the invisible triggers that make your money escape — and start mastering your financial decisions."
+      }
+    }
+  },
+  "checkout_success": {
+    "badge": "Payment received",
+    "title": "We are granting your access",
+    "loading": "Confirming checkout and releasing your account login...",
+    "access_granted": "Your access has been released for {{email}}. Sign in with the password created at checkout.",
+    "access_email_fallback": "the email provided",
+    "pending": "Payment returned successfully. If access hasn't appeared yet, wait a moment for Stripe's final confirmation.",
+    "plan_label": "Plan:",
+    "email_label": "Email:",
+    "status_label": "Stripe Status:",
+    "plan_default": "Premium",
+    "email_not_provided": "not provided",
+    "status_processing": "processing",
+    "go_to_login": "Go to sign in",
+    "back_to_checkout": "Back to checkout",
+    "errors": {
+      "no_session": "Could not find the checkout session to confirm payment.",
+      "status_error": "We received your return, but couldn't check the status right now."
+    }
+  },
+  "checkout_cancelled": {
+    "badge": "Checkout cancelled",
+    "title": "Your access has not been granted yet",
+    "description": "The Stripe payment was not completed. Your account is saved, but login will only be released after checkout is finalized.",
+    "try_again": "Try again",
+    "back_to_landing": "Back to landing"
+  },
+  "mentor": {
+    "title": "Rabbi Mentor",
+    "description": "Ask about the Jewish Code of Prosperity: spending triggers, self-control, organization and wealth — with practical guidance and Jewish wisdom.",
+    "online_badge": "Online now",
+    "interactions_badge": "Interactions today: {{today}}/{{limit}}",
+    "export_btn": "Export",
+    "clear_btn": "Clear",
+    "retry_btn": "Try again",
+    "send_btn": "Send",
+    "retry_short": "Retry",
+    "placeholder": "Write your message…",
+    "message_label": "Message",
+    "chat_history_label": "Chat history",
+    "suggestions_label": "Quick suggestions",
+    "role_assistant": "Rabbi Mentor",
+    "role_user": "You",
+    "daily_limit_title": "Daily limit reached"
+  },
+  "challenges": {
+    "title": "Challenges",
+    "assessment_required": "Complete your financial assessment to unlock your personalized track.",
+    "start_assessment_btn": "Start Assessment",
+    "program_6months": "6-Month Program",
+    "journey_complete": "Journey complete!",
+    "patrimonial_construction": "Asset Building",
+    "patrimonial_desc": "180 days of profound financial transformation",
+    "monthly_milestones": "Monthly milestones",
+    "report_unlocked": "Final Report unlocked",
+    "report_hint": "See your patterns, triggers and next steps.",
+    "see_final_report": "See Final Report",
+    "day_label": "Day {{day}}: {{title}}",
+    "done_badge": "Completed",
+    "section_prayer": "Prayer",
+    "section_morning": "Morning",
+    "section_afternoon": "Afternoon",
+    "section_evening": "Evening",
+    "tasks_title": "Today's tasks",
+    "tap_to_change": "Tap each task to change its status",
+    "all_tasks_done": "All tasks completed. Your discipline is building prosperity.",
+    "keep_going": "Each completed task strengthens your financial structure. Keep going.",
+    "reflections_title": "Today's reflections",
+    "what_i_did_label": "What I did today",
+    "what_i_did_placeholder": "Describe what happened (impulse, decision, context, mental justification)...",
+    "how_i_felt_label": "How I felt",
+    "how_i_felt_placeholder": "What emotions came before and after (anxiety, guilt, relief, comparison, pressure, emptiness)?",
+    "trigger_label": "Dominant trigger of the day (possible)",
+    "trigger_placeholder": "E.g.: immediate reward, anxiety, validation/status, social comparison, scarcity/FOMO, emotional escape, guilt, disorganization...",
+    "send_to_mentor_btn": "Send to Rabbi Mentor",
+    "sending_to_mentor": "Sending...",
+    "complete_day_btn": "Complete day {{day}}",
+    "complete_btn": "Complete",
+    "offline_feedback": "Offline mode: feedback generated locally.",
+    "feedback_title": "Rabbi Mentor AI Feedback",
+    "feedback_day": "Day {{day}}",
+    "feedback_trigger": "Detected trigger",
+    "feedback_pattern": "Emotional pattern",
+    "feedback_risk": "Financial risk",
+    "feedback_wisdom": "Jewish wisdom",
+    "feedback_action": "Micro-action",
+    "feedback_text": "Feedback",
+    "feedback_analysis": "Day analysis",
+    "feedback_correction": "Course correction",
+    "feedback_tomorrow": "Focus for tomorrow",
+    "feedback_received_at": "Received on {{date}}",
+    "retention_body": "Each day not completed is a step backward. Consistency is the key to prosperity. There are no shortcuts — only daily discipline.",
+    "congrats_title": "Congratulations, you completed the 21 days",
+    "congrats_body": "You've reached the end of the first stage. Now your records reveal patterns, triggers and decisions that may be controlling your financial life. The next step is understanding what the Rabbi Mentor identified about you.",
+    "see_final_report_btn": "See my Final Report",
+    "completed_count": "{{completed}}/21 days"
+  },
+  "library": {
+    "title": "Library",
+    "description": "{{count}} teachings with individual progress. Completed: {{completed}}/{{total}}."
+  },
+  "assessment": {
+    "title": "Rabbi Mentor Assessment",
+    "description": "Personalized diagnosis of your financial life.",
+    "completed_title": "Assessment completed",
+    "completed_description": "Your track has been defined and the journey is already underway.",
+    "your_track": "Your track",
+    "diagnosis_summary": "Diagnosis summary",
+    "main_trigger": "Main trigger identified",
+    "continue_journey_btn": "Continue my journey",
+    "shalom": "Shalom. Let's start your journey.",
+    "intro_body_1": "The AI Rabbi Mentor will analyze your deep financial patterns — not just your expenses, but the emotions, beliefs and behaviors behind them.",
+    "intro_body_2": "Answer honestly. There are no right or wrong answers. The diagnosis will identify your root pattern and assign your personalized transformation track.",
+    "what_analyzed_title": "What will be analyzed:",
+    "what_analyzed": [
+      "Anxiety-driven spending",
+      "Validation purchases",
+      "Secret expenses",
+      "Status-seeking",
+      "Emotional escape",
+      "Family financial beliefs",
+      "Fear of money",
+      "Financial paralysis"
+    ],
+    "after_title": "After the assessment you will receive:",
+    "after_items": [
+      "Financial psychological diagnosis",
+      "Root trigger identification",
+      "Applied Jewish wisdom",
+      "Inspiring proverb",
+      "Practical transformation method",
+      "Personalized 21-day + 6-month track"
+    ],
+    "start_btn": "Start assessment",
+    "question_progress": "Question {{current}} of {{total}}",
+    "question_label": "Question {{current}}/{{total}}",
+    "result_title": "Your Diagnosis",
+    "result_description": "Result of the Rabbi Mentor AI assessment.",
+    "result_track_label": "Your assigned track",
+    "result_track_unlocked": "Track unlocked",
+    "result_diagnosis": "Diagnosis",
+    "result_root": "Root of the problem",
+    "result_wisdom": "Jewish wisdom",
+    "result_method": "Applied Jewish method",
+    "start_21_days_btn": "Start my 21-day track",
+    "see_calendar_btn": "View journey calendar",
+    "go_to_dashboard_btn": "Go to Dashboard",
+    "questions": [
+      "When I'm anxious, I tend to spend money to relieve tension.",
+      "I have bought things I hid from my spouse or family.",
+      "I feel momentary pleasure when buying, but regret afterward.",
+      "I have expenses I prefer no one knows about.",
+      "I use consumption as emotional escape (boredom, loneliness, frustration).",
+      "I buy things to appear successful to others.",
+      "I own assets (car, clothes, electronics) that cost more than my income warranted.",
+      "I have debts that arose from wanting to maintain a lifestyle above my means.",
+      "I prioritize appearance and comfort before having an emergency fund.",
+      "I feel I need to show material progress to be respected.",
+      "I'm afraid to look at my bank statements or debts.",
+      "I believe money is 'difficult' or 'not for me'.",
+      "My family always struggled financially and I internalized that this is how it should be.",
+      "I freeze when I need to make financial decisions.",
+      "I cannot think about investments or growth — only survival."
+    ],
+    "scale_options": [
+      "Strongly disagree",
+      "Disagree",
+      "Neutral",
+      "Agree",
+      "Strongly agree"
+    ],
+    "content": {
+      "trilha1": {
+        "trackLabel": "Tikun of Impulse",
+        "diagnostico": "Your main pattern is emotional impulse spending. You use purchases as an escape valve for anxiety, boredom, loneliness or frustration. The pleasure is momentary, but regret accumulates. There may be secret spending or \"financial infidelity\" — consumption you hide from those you love.",
+        "gatilho": "The root trigger is tied to the pursuit of quick dopamine. When emotion is uncomfortable, the brain seeks immediate relief through consumption. Over time, this becomes a cycle: tension → purchase → relief → guilt → more tension.",
+        "sabedoria": "In Jewish tradition, the \"yetzer hara\" (evil inclination) is not destroyed — it is redirected. The impulse is not the enemy; the impulse without direction is. The Talmud teaches that whoever governs their impulses is stronger than one who conquers cities.",
+        "proverbio": "\"Whoever governs their impulses is stronger than one who conquers cities.\" — Pirkei Avot 4:1",
+        "metodo": "The Jewish method for compulsion is Tikun (repair): pause before action, name the feeling and redirect the energy. Instead of fighting the impulse, you observe it, name it and choose consciously. With each 90-second pause, you strengthen your \"muscle of choice\"."
+      },
+      "trilha2": {
+        "trackLabel": "Foundation of Wealth",
+        "diagnostico": "Your main pattern is building \"on top\" before having the foundation. You invest in appearance, comfort and status before having a reserve, paying off debts and real structure. The house looks beautiful, but the foundation is fragile.",
+        "gatilho": "The root trigger is the need for external validation. The ego seeks recognition through material possessions. Status-driven debts are the symptom; the cause is confusing wealth with appearance.",
+        "sabedoria": "Proverbs 24:27 teaches: \"First prepare the field, then build the house.\" In Jewish tradition, order matters. Before displaying, protect. Before decorating, lay the foundation. The wise person first builds what no one sees — the foundation.",
+        "proverbio": "\"First prepare the field, then build the house.\" — Proverbs 24:27",
+        "metodo": "The Jewish method for financial ego is priority inversion: reserve before luxury, debt payoff before acquisition, simplicity before ostentation. With each decision, ask: \"Does this strengthen my foundation or just my facade?\""
+      },
+      "trilha3": {
+        "trackLabel": "Abundance with Prudence",
+        "diagnostico": "Your main pattern is paralysis through fear. Past financial traumas, inherited scarcity beliefs and fear of loss create a prison where you don't advance. Surviving has become the ceiling; prospering seems impossible or \"not for you\".",
+        "gatilho": "The root trigger is financial trauma — yours or your family's. Memories of difficulty created an internal narrative that money is dangerous, scarce or \"not for people like me\". This generates decision paralysis.",
+        "sabedoria": "The Torah repeats \"Do not fear\" 365 times — one for each day of the year. In Jewish tradition, fear is acknowledged, but it does not have the final word. Deuteronomy 30:19 says: \"I have set before you life and death; choose life.\" You have the power to choose, even with fear.",
+        "proverbio": "\"Do not fear, for I am with you.\" — Isaiah 41:10",
+        "metodo": "The Jewish method for financial fear is gradual action with faith. It does not require total courage — it requires the first step. Investing $10, asking for a raise, looking at your bank statement. Each small action proves to the brain that the danger is not as great as fear suggests."
+      }
+    }
+  },
+  "calendar": {
+    "title": "Operations Center",
+    "not_started": "Start your journey to view the prosperity map.",
+    "phase_subs": {
+      "21days": "21 days of foundation",
+      "6months": "6 months of asset building",
+      "completed": "Journey complete — harvest"
+    },
+    "streak_label": "Streak (days)",
+    "discipline_label": "Discipline",
+    "days_until": "{{count}} days remaining",
+    "challenge_21": "21-day challenge",
+    "program_6months": "6-month program",
+    "progress_21": "21 Days: {{completed}}/21",
+    "progress_total": "Program: {{completed}}/{{total}}",
+    "achievements_title": "Achievements",
+    "achievements_desc": "Badges earned on the journey",
+    "months_overview_title": "6-Month Overview",
+    "months_overview_desc": "Overall monthly progress",
+    "month_label": "Month {{month}}: {{title}}",
+    "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "drawer": {
+      "streak": "Streak",
+      "next_level": "Next level",
+      "tasks_title": "Tasks",
+      "not_executed": "Not executed",
+      "tap_status": "Tap to change status",
+      "reflections_title": "Reflections",
+      "what_i_did_label": "What I did today",
+      "what_i_did_placeholder": "Describe what you did...",
+      "how_i_felt_label": "How I felt",
+      "how_i_felt_placeholder": "Describe your emotions...",
+      "trigger_label": "Main trigger of the day",
+      "trigger_placeholder": "What was the biggest emotional challenge...",
+      "your_reflections": "Your reflections",
+      "what_i_did_done": "What I did:",
+      "how_i_felt_done": "How I felt:",
+      "trigger_done": "Trigger:",
+      "send_to_mentor": "Send to Rabbi Mentor AI",
+      "consulting_mentor": "Consulting Rabbi Mentor...",
+      "complete_day": "Complete day and unlock next",
+      "close": "Close",
+      "offline_feedback": "Offline mode: feedback generated locally.",
+      "feedback_title": "Rabbi Mentor AI Feedback",
+      "feedback_analysis": "Analysis",
+      "feedback_wisdom": "Jewish wisdom",
+      "feedback_tomorrow": "Focus for tomorrow",
+      "activities": "Day activities",
+      "checklist": "Checklist",
+      "lesson": "Asset lesson",
+      "blind_spot": "Blind spot",
+      "extra_activity": "Suggested extra activity",
+      "day_subtitle": "Month {{month}}, Day {{day}}"
+    },
+    "month_badges": "Month badges",
+    "month_score": "Month {{month}} Score",
+    "month_completion": "Completion",
+    "day_completed_badge": "Day completed",
+    "back_to_month": "Back to month",
+    "month_card": {
+      "month_label": "Month {{n}}",
+      "complete": "Complete",
+      "start": "Start month",
+      "continue": "Continue"
+    },
+    "milestones": {
+      "week1": "Week 1",
+      "week2": "Week 2",
+      "days21": "21 Days!",
+      "month1": "Month 1",
+      "month2": "Month 2",
+      "month3": "Month 3",
+      "month4": "Month 4",
+      "month5": "Month 5",
+      "complete": "Journey Complete!"
+    }
+  },
+  "subscription": {
+    "title": "Continue the journey",
+    "description": "You've already discovered your triggers. Now you need to master them.",
+    "special_offer_badge": "Special condition released today",
+    "special_offer_desc": "Your 21-day report has unlocked a temporary condition to continue the journey.",
+    "time_remaining": "time remaining",
+    "copy_title": "You've already discovered your triggers. Now you need to master them.",
+    "copy_body_1": "The 21 days reveal the pattern. The next track transforms awareness into financial mastery.",
+    "copy_body_2": "In the Jewish method, prosperity doesn't come from desperate cuts, but from mastery, repetition and building a foundation. First you identify the impulse. Then you learn to govern it. Next you plant assets. Finally, you harvest freedom.",
+    "copy_body_3": "The special condition below was released because you reached the end of the first stage. It doesn't just represent access to content; it represents the continuation of your transformation.",
+    "reactivate_badge": "Return to the journey",
+    "reactivate_title": "Your access needs to be reactivated to unlock the full method again",
+    "reactivate_desc": "Choose one of the options below to regain access to the Rabbi Mentor, challenges, library and full journey continuation.",
+    "current_plan": "Current plan",
+    "plan_value": "Value",
+    "plan_value_active": "As per active plan",
+    "valid_until": "Valid until",
+    "benefits_active": "Unlocked benefits",
+    "benefits_renew": "What will be unlocked upon renewal",
+    "benefits": [
+      "Rabbi Mentor (guided chat)",
+      "Teachings library",
+      "Interactive challenges",
+      "Progress and streak"
+    ],
+    "choose_track": "Choose your next track",
+    "annual_hint": "Annual plan unlocks 12 months of journey saving compared to monthly.",
+    "unavailable": "Unavailable now",
+    "close_popup": "Close",
+    "popup_10": "Only the first 10 will keep the annual value in this special condition.",
+    "popup_20": "Those who stop after 21 days only discovered the pattern. Those who continue start mastering it."
+  },
+  "books": {
+    "title": "Books",
+    "description": "Works with Jewish wisdom on finance, prosperity and generational legacy.",
+    "my_library": "My Library",
+    "available": "Available Books",
+    "more_available": "Other Available Books",
+    "loading": "Loading...",
+    "empty": "No books available at this time.",
+    "acquired_badge": "Acquired",
+    "coming_soon": "Coming soon",
+    "download_pdf": "Download PDF",
+    "buy_btn": "Buy — {{price}}",
+    "buying": "Opening checkout...",
+    "purchased_success_title": "Book acquired successfully!",
+    "purchased_success_desc": "The PDF is already available for download below.",
+    "error_load": "Error loading books.",
+    "error_checkout": "Could not open checkout right now. Please try again."
+  },
+  "report": {
+    "title": "Rabbinical Report of Your Financial Journey",
+    "description": "Complete the 21 days to unlock your personalized final report with patterns, triggers and the turning point to the next track.",
+    "go_to_challenges_btn": "Go to Challenges",
+    "generating": "Generating your report…",
+    "error": "Could not generate your report right now. Please try again in a moment.",
+    "block1_title": "You <gold>don't have</gold> a money problem.",
+    "block1_body": "You have a <gold>pattern</gold> that makes you lose money.",
+    "block2_trigger_title": "Main trigger identified",
+    "block2_you_spend": "You spend when:",
+    "block3_records_title": "Your own records showed that:",
+    "block3_repeated": "- You repeated this pattern in <gold>{{count}}</gold> moments",
+    "block3_context": "- It appeared mainly during <gold>{{context}}</gold>",
+    "block3_control": "You tried to control it, but returned to the same behavior in <gold>{{count}}</gold> days.",
+    "block3_generic_1": "- You repeated this pattern in several moments",
+    "block3_generic_2": "- It appears when emotions run high",
+    "block3_generic_3": "- You try to control it, but fall back on autopilot",
+    "block4_title": "This is not a lack of money.",
+    "block4_body": "This is a lack of <gold>emotional control</gold> over financial decisions.",
+    "block5_title": "If you continue like this:",
+    "block5_items": [
+      "- you'll keep earning… and losing at the same rate",
+      "- you'll never truly build wealth",
+      "- you'll always feel like you're starting over"
+    ],
+    "block6_title": "But there's a difference between the old you and you now:",
+    "block6_body": "Now you know exactly what makes you lose money.",
+    "block6_cta": "That changes everything.",
+    "block7_title": "The next phase of the journey is not about learning more.",
+    "block7_body": "It's about reprogramming this <gold>pattern</gold>.",
+    "block7_body2": "It was created exactly for that.",
+    "block8_cta": "I want to take control of my money",
+    "block8_note": "Immediate access to the next phase",
+    "block8_pattern": "Those who ignore this pattern repeat it.",
+    "trigger_fallback": "emotional trigger",
+    "tendency_anxiety": "You tend to spend to relieve anxiety and seek an immediate sense of control.",
+    "tendency_validation": "You tend to spend when you compare yourself, seeking validation and quick emotional relief.",
+    "tendency_reward": "You tend to spend in pursuit of immediate reward when emotions rise.",
+    "tendency_pattern": "You tend to spend when {{pattern}}.",
+    "tendency_default": "You tend to spend when the decision happens on autopilot — to relieve the emotion of the moment.",
+    "situation_anxiety": "feel anxious",
+    "situation_pressure": "are under pressure",
+    "situation_frustrated": "feel frustrated",
+    "situation_bored": "feel bored",
+    "situation_empty": "feel empty",
+    "situation_default": "emotions rise",
+    "pattern_relief": "seek immediate relief",
+    "pattern_validation": "seek validation",
+    "pattern_urgency": "fall into urgency",
+    "pattern_default": "repeat the same cycle",
+    "behavior_impulse": "buy on impulse",
+    "behavior_default": "decide on autopilot",
+    "context_pressure": "pressure and deadlines",
+    "context_fatigue": "fatigue and end of day",
+    "context_social": "comparison and social media",
+    "context_promotions": "promotions and urgency",
+    "context_family": "family situations",
+    "context_default": "moments of intense emotion"
+  },
+  "more": {
+    "title": "More",
+    "description": "Premium upsells and space for future integrations and profile.",
+    "offers": [
+      {
+        "title": "Family Wealth",
+        "description": "A premium track to build protection, emergency fund and family financial decisions with clarity."
+      },
+      {
+        "title": "Abundance Mindset",
+        "description": "Restructures beliefs, reduces guilt and strengthens purpose without falling into excess."
+      },
+      {
+        "title": "Premium Community",
+        "description": "Exclusive meetings, guided studies, networking and group challenges with ongoing support."
+      }
+    ]
+  },
+  "admin": {
+    "restricted_title": "Restricted access",
+    "restricted_desc": "Area exclusive to master user.",
+    "back_to_dashboard": "Back to dashboard",
+    "title": "Subscribers",
+    "description": "Users with checkout, active subscription, expired subscription or pending payment.",
+    "summary": {
+      "total": "Total",
+      "active": "Active",
+      "expired": "Expired",
+      "pending": "Pending"
+    },
+    "search_label": "Search",
+    "search_placeholder": "Name, email or plan",
+    "status_label": "Status",
+    "status_options": {
+      "all": "All",
+      "active": "Active",
+      "expired": "Expired",
+      "pending": "Pending"
+    },
+    "consult_btn": "Search",
+    "loading": "Loading subscribers...",
+    "empty": "No subscribers found.",
+    "error_load": "Could not load subscribers.",
+    "table": {
+      "student": "Student",
+      "plan": "Plan",
+      "status": "Status",
+      "valid_until": "Valid until",
+      "created_at": "Created at",
+      "stripe": "Stripe",
+      "customer": "Customer",
+      "subscription": "Subscription",
+      "student_fallback": "Student"
+    },
+    "statuses": {
+      "active": "Active",
+      "expired": "Expired",
+      "pending": "Pending"
+    },
+    "expiration": {
+      "lifetime": "Lifetime",
+      "no_expiry": "No expiry",
+      "today": "Expires today",
+      "days_expired": "{{count}} days expired",
+      "day_remaining": "1 day remaining",
+      "days_remaining": "{{count}} days remaining"
+    }
+  },
+  "tracks": {
+    "trilha1": {
+      "label": "Tikun of Impulse",
+      "description": "Focus on compulsion, emotional escape, dopamine, financial infidelity and secret spending."
+    },
+    "trilha2": {
+      "label": "Foundation of Wealth",
+      "description": "Luxury before the base, status, ego debt, assets before foundation, house without footing."
+    },
+    "trilha3": {
+      "label": "Abundance with Prudence",
+      "description": "Fear, scarcity, financial trauma, paralysis, lack of long-term vision."
+    }
+  },
+  "task_statuses": {
+    "none": "Not done",
+    "executed": "Done",
+    "partial": "Partial",
+    "skipped": "Not done",
+    "sent_ai": "Sent to Mentor"
+  },
+  "phase_names": {
+    "21days": "Seder HaKesef",
+    "6months": "Mahalach HaZera",
+    "completed": "Shnat HaKatzir"
+  },
+  "floating_proof": {
+    "movement_title": "17 people accessed this stage in the last few minutes",
+    "movement_subtitle": "Most started with the Seder HaKesef phase to identify their financial triggers.",
+    "value_title": "Price reserved for a few minutes",
+    "value_subtitle": "After the window closes, the next release may return at a different price.",
+    "started_title": "New journey started now",
+    "started_subtitle": "Another person started the 21 days to understand why money keeps escaping.",
+    "stripe_title": "Secure access via Stripe",
+    "stripe_subtitle": "Create your account and use the same email at payment for automatic access.",
+    "root_title": "Start at the root of the problem",
+    "root_subtitle": "Before prospering, you need to see the pattern that controls your decisions.",
+    "phase_title": "The first phase reveals the trigger",
+    "phase_subtitle": "The 21 days show where your money is being lost without you noticing.",
+    "not_cuts_title": "It's not about cutting expenses",
+    "not_cuts_subtitle": "It's financial mastery: living better, deciding better and building with awareness."
+  }
+}

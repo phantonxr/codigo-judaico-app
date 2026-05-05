@@ -1,32 +1,13 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import SectionCard from '../components/SectionCard.jsx'
 
-const extraOffers = [
-  {
-    title: 'Patrimonio Familiar',
-    image: 'placeholder',
-    description:
-      'Uma trilha premium para construir protecao, reserva e decisoes em familia com clareza.',
-    checkoutPath: '/checkout',
-  },
-  {
-    title: 'Mentalidade de Abundancia',
-    image: 'placeholder',
-    description:
-      'Reestrutura crencas, reduz culpa e fortalece proposito sem cair em excesso.',
-    checkoutPath: '/checkout',
-  },
-  {
-    title: 'Comunidade Premium',
-    image: 'placeholder',
-    description:
-      'Encontros exclusivos, estudos guiados, networking e desafios em grupo com acompanhamento.',
-    checkoutPath: '/checkout?plan=anual',
-  },
-]
+const offerCheckoutPaths = ['/checkout', '/checkout', '/checkout?plan=anual']
 
 export default function Mais() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const offers = t('more.offers', { returnObjects: true })
 
   function openOffer(path) {
     navigate(path)
@@ -35,11 +16,11 @@ export default function Mais() {
   return (
     <div className="container" style={{ display: 'grid', gap: 14 }}>
       <SectionCard
-        title="Mais"
-        description="Upsells premium e espaco para futuras integracoes e perfil."
+        title={t('more.title')}
+        description={t('more.description')}
       >
         <div className="grid grid-3">
-          {extraOffers.map((offer) => (
+          {Array.isArray(offers) && offers.map((offer, idx) => (
             <div key={offer.title} className="card">
               <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
                 <div className="offer-image" aria-hidden="true">
@@ -52,9 +33,9 @@ export default function Mais() {
                 <button
                   className="btn btn-primary"
                   type="button"
-                  onClick={() => openOffer(offer.checkoutPath)}
+                  onClick={() => openOffer(offerCheckoutPaths[idx] || '/checkout')}
                 >
-                  Comprar
+                  {t('common.buy')}
                 </button>
               </div>
             </div>

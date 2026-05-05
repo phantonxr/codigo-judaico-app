@@ -1,7 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import useCurrentUser, { signOutUser } from '../hooks/useCurrentUser.js'
 import { computeDailyStreak, computeWeeklyProgressPct } from '../utils/progress.js'
+import LanguageSwitcher from './LanguageSwitcher.jsx'
 
 function clampPct(value) {
   if (Number.isNaN(value)) return 0
@@ -9,9 +11,10 @@ function clampPct(value) {
 }
 
 export default function Topbar({ title, onMenuToggle = function () {} }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const currentUser = useCurrentUser()
-  const greetingName = currentUser?.name || 'Aluno'
+  const greetingName = currentUser?.name || t('common.student_fallback')
 
   const initials = useMemo(() => {
     const name = String(currentUser?.name ?? '').trim()
@@ -54,27 +57,27 @@ export default function Topbar({ title, onMenuToggle = function () {} }) {
           <button
             className="icon-btn topbar-menu-btn"
             type="button"
-            aria-label="Abrir menu"
+            aria-label={t('common.open_menu')}
             onClick={onMenuToggle}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
-          <Link className="topbar-brand" to="/dashboard" aria-label="Ir para o dashboard">
-            Codigo Judaico
+          <Link className="topbar-brand" to="/dashboard" aria-label={t('common.go_to_dashboard')}>
+            {t('brand.name')}
           </Link>
           <div className="topbar-greeting">
-            <div className="topbar-hello">Shalom, {greetingName}</div>
+            <div className="topbar-hello">{t('topbar.greeting', { name: greetingName })}</div>
             <h1>{title}</h1>
           </div>
-          <div className="topbar-stats" aria-label="Indicadores">
+          <div className="topbar-stats" aria-label={t('common.notifications')}>
             <div className="stat-pill">
-              <span className="stat-label">Streak</span>
-              <span className="stat-value">{streakDays} dias</span>
+              <span className="stat-label">{t('topbar.streak_label')}</span>
+              <span className="stat-value">{t('topbar.streak_value', { count: streakDays })}</span>
             </div>
-            <div className="stat-pill" aria-label="Progresso semanal">
-              <span className="stat-label">Semana</span>
+            <div className="stat-pill" aria-label={t('topbar.week_label')}>
+              <span className="stat-label">{t('topbar.week_label')}</span>
               <span className="stat-value">{weeklyPct}%</span>
               <span className="mini-bar" aria-hidden="true">
                 <span className="mini-bar-fill" style={{ width: `${weeklyPct}%` }} />
@@ -84,7 +87,8 @@ export default function Topbar({ title, onMenuToggle = function () {} }) {
         </div>
 
         <div className="topbar-actions">
-          <button className="icon-btn" type="button" aria-label="Notificações">
+          <LanguageSwitcher />
+          <button className="icon-btn" type="button" aria-label={t('common.notifications')}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 22a2.4 2.4 0 0 0 2.4-2.4H9.6A2.4 2.4 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5L3.6 17.4V19h16.8v-1.6L19 16Z"
@@ -94,13 +98,13 @@ export default function Topbar({ title, onMenuToggle = function () {} }) {
               />
             </svg>
           </button>
-          <Link className="icon-btn" to="/mais" aria-label="Perfil">
+          <Link className="icon-btn" to="/mais" aria-label={t('common.profile')}>
             <span className="avatar avatar-sm" aria-hidden="true">
               {initials}
             </span>
           </Link>
           <button className="btn btn-soft" type="button" onClick={onLogout}>
-            Sair
+            {t('common.logout')}
           </button>
         </div>
       </div>

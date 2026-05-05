@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, Download, ShoppingCart, Check } from 'lucide-react'
 import { getMyBooks, createBookCheckoutSession, getBookDownloadUrl } from '../services/books.js'
 
-function BookCard({ book, onBuy, onDownload, buying }) {
+function BookCard({ book, onBuy, buying, t }) {
   return (
     <div
       className="card"
@@ -49,11 +50,11 @@ function BookCard({ book, onBuy, onDownload, buying }) {
               <strong style={{ fontSize: 16, lineHeight: 1.3 }}>{book.title}</strong>
               {book.isPurchased && (
                 <span className="badge" style={{ background: 'rgba(80, 200, 120, 0.15)', color: '#6ecc8a', border: '1px solid rgba(80,200,120,0.3)', fontSize: 11 }}>
-                  Adquirido
+                  {t('books.acquired_badge')}
                 </span>
               )}
               {!book.isPurchasable && !book.isPurchased && (
-                <span className="badge" style={{ fontSize: 11 }}>Em breve</span>
+                <span className="badge" style={{ fontSize: 11 }}>{t('books.coming_soon')}</span>
               )}
             </div>
             <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{book.description}</div>
@@ -70,7 +71,7 @@ function BookCard({ book, onBuy, onDownload, buying }) {
             style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}
           >
             <Download size={16} />
-            Baixar PDF
+            {t('books.download_pdf')}
           </a>
         ) : book.isPurchasable ? (
           <button
@@ -80,7 +81,7 @@ function BookCard({ book, onBuy, onDownload, buying }) {
             style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}
           >
             <ShoppingCart size={16} />
-            {buying ? 'Abrindo checkout...' : `Comprar — ${book.priceLabel}`}
+            {buying ? t('books.buying') : t('books.buy_btn', { price: book.priceLabel })}
           </button>
         ) : null}
       </div>
@@ -89,6 +90,7 @@ function BookCard({ book, onBuy, onDownload, buying }) {
 }
 
 export default function Livros() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -105,10 +107,10 @@ export default function Livros() {
         setLoading(false)
       })
       .catch(function (err) {
-        setError(err?.message || 'Erro ao carregar livros.')
+        setError(err?.message || t('books.error_load'))
         setLoading(false)
       })
-  }, [])
+  }, [t])
 
   async function handleBuy(bookId) {
     setBuyError('')
@@ -118,7 +120,7 @@ export default function Livros() {
       const response = await createBookCheckoutSession([bookId])
 
       if (!response?.url) {
-        throw new Error('Checkout sem URL.')
+        throw new Error(t('checkout.errors.no_url'))
       }
 
       window.location.href = response.url
@@ -127,7 +129,7 @@ export default function Livros() {
         caught?.data?.detail ||
         caught?.data?.message ||
         caught?.message ||
-        'Nao consegui abrir o checkout agora. Tente novamente.'
+        t('books.error_checkout')
       setBuyError(String(msg).replace(/^API \d+:\s*/u, ''))
       setBuyingBookId(null)
     }
@@ -144,10 +146,10 @@ export default function Livros() {
           <div className="card-inner" style={{ display: 'grid', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <BookOpen size={20} style={{ color: 'var(--gold-2)' }} />
-              <h1 style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>Livros</h1>
+              <h1 style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>{t('books.title')}</h1>
             </div>
             <div className="muted" style={{ lineHeight: 1.6 }}>
-              Obras com sabedoria judaica sobre finanças, prosperidade e herança geracional.
+              {t('books.description')}
             </div>
           </div>
         </div>
@@ -160,9 +162,9 @@ export default function Livros() {
             <div className="card-inner" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Check size={20} style={{ color: '#6ecc8a', flexShrink: 0 }} />
               <div>
-                <div style={{ fontWeight: 900, color: '#6ecc8a' }}>Livro adquirido com sucesso!</div>
+                <div style={{ fontWeight: 900, color: '#6ecc8a' }}>{t('books.purchased_success_title')}</div>
                 <div className="muted" style={{ fontSize: 13 }}>
-                  O PDF ja esta disponivel para download abaixo.
+                  {t('books.purchased_success_desc')}
                 </div>
               </div>
             </div>
@@ -170,7 +172,7 @@ export default function Livros() {
         )}
 
         {loading && (
-          <div className="muted" style={{ textAlign: 'center', padding: 32 }}>Carregando...</div>
+          <div className="muted" style={{ textAlign: 'center', padding: 32 }}>{t('common.loading')}</div>
         )}
 
         {error && (
@@ -183,15 +185,15 @@ export default function Livros() {
 
         {!loading && purchasedBooks.length > 0 && (
           <div style={{ display: 'grid', gap: 14 }}>
-            <div style={{ fontWeight: 900, fontSize: 18 }}>Minha Biblioteca</div>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>{t('books.my_library')}</div>
             {purchasedBooks.map(function (book) {
               return (
                 <BookCard
                   key={book.id}
                   book={book}
                   onBuy={handleBuy}
-                  onDownload={function () {}}
                   buying={buyingBookId === book.id}
+                  t={t}
                 />
               )
             })}
@@ -201,7 +203,7 @@ export default function Livros() {
         {!loading && availableBooks.length > 0 && (
           <div style={{ display: 'grid', gap: 14 }}>
             <div style={{ fontWeight: 900, fontSize: 18 }}>
-              {purchasedBooks.length > 0 ? 'Outros Livros Disponíveis' : 'Livros Disponíveis'}
+              {purchasedBooks.length > 0 ? t('books.more_available') : t('books.available')}
             </div>
             {availableBooks.map(function (book) {
               return (
@@ -209,8 +211,8 @@ export default function Livros() {
                   key={book.id}
                   book={book}
                   onBuy={handleBuy}
-                  onDownload={function () {}}
                   buying={buyingBookId === book.id}
+                  t={t}
                 />
               )
             })}
@@ -220,7 +222,7 @@ export default function Livros() {
         {!loading && books.length === 0 && !error && (
           <div className="card">
             <div className="card-inner muted" style={{ textAlign: 'center', padding: 32 }}>
-              Nenhum livro disponivel no momento.
+              {t('books.empty')}
             </div>
           </div>
         )}

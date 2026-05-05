@@ -1,8 +1,10 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getCheckoutSessionStatus } from '../services/payments.js'
 
 export default function CheckoutSuccess() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const [loading, setLoading] = useState(Boolean(sessionId))
@@ -12,12 +14,11 @@ export default function CheckoutSuccess() {
   useEffect(() => {
     if (!sessionId) {
       setLoading(false)
-      setError('Nao encontrei a sessao de checkout para confirmar o pagamento.')
+      setError(t('checkout_success.errors.no_session'))
       return
     }
 
     let active = true
-
     let timeoutId
 
     async function poll(attempt = 0) {
@@ -41,7 +42,7 @@ export default function CheckoutSuccess() {
         if (!active) return
 
         if (attempt >= 4) {
-          setError('Recebemos seu retorno, mas ainda nao consegui consultar o status agora.')
+          setError(t('checkout_success.errors.status_error'))
           setLoading(false)
           return
         }
@@ -58,18 +59,18 @@ export default function CheckoutSuccess() {
       active = false
       window.clearTimeout(timeoutId)
     }
-  }, [sessionId])
+  }, [sessionId, t])
 
   return (
     <div className="container" style={{ padding: '48px 0 72px' }}>
       <div className="card" style={{ maxWidth: 720, marginInline: 'auto' }}>
         <div className="card-inner" style={{ display: 'grid', gap: 16 }}>
-          <span className="badge" style={{ width: 'fit-content' }}>Pagamento recebido</span>
-          <h1 style={{ margin: 0, fontSize: 30 }}>Estamos liberando seu acesso</h1>
+          <span className="badge" style={{ width: 'fit-content' }}>{t('checkout_success.badge')}</span>
+          <h1 style={{ margin: 0, fontSize: 30 }}>{t('checkout_success.title')}</h1>
 
           {loading ? (
             <div className="muted">
-              Conferindo a confirmacao do checkout e liberando o login da sua conta...
+              {t('checkout_success.loading')}
             </div>
           ) : error ? (
             <div className="muted" style={{ color: '#f3b0b0' }}>{error}</div>
@@ -77,14 +78,14 @@ export default function CheckoutSuccess() {
             <>
               <div className="muted">
                 {status?.accessGranted
-                  ? `Seu acesso ja foi liberado para ${status?.email || 'o e-mail informado'}. Entre com a senha criada no checkout.`
-                  : 'O pagamento voltou com sucesso. Se o acesso ainda nao apareceu, aguarde alguns instantes para a confirmacao final do Stripe.'}
+                  ? t('checkout_success.access_granted', { email: status?.email || t('checkout_success.access_email_fallback') })
+                  : t('checkout_success.pending')}
               </div>
               <div className="card" style={{ boxShadow: 'none' }}>
                 <div className="card-inner" style={{ display: 'grid', gap: 6 }}>
-                  <div><strong>Plano:</strong> {status?.planName || 'Premium'}</div>
-                  <div><strong>E-mail:</strong> {status?.email || 'nao informado'}</div>
-                  <div><strong>Status Stripe:</strong> {status?.paymentStatus || 'processando'}</div>
+                  <div><strong>{t('checkout_success.plan_label')}</strong> {status?.planName || t('checkout_success.plan_default')}</div>
+                  <div><strong>{t('checkout_success.email_label')}</strong> {status?.email || t('checkout_success.email_not_provided')}</div>
+                  <div><strong>{t('checkout_success.status_label')}</strong> {status?.paymentStatus || t('checkout_success.status_processing')}</div>
                 </div>
               </div>
             </>
@@ -92,10 +93,10 @@ export default function CheckoutSuccess() {
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link className="btn btn-primary" to="/login">
-              Ir para o login
+              {t('checkout_success.go_to_login')}
             </Link>
             <Link className="btn" to="/checkout">
-              Voltar ao checkout
+              {t('checkout_success.back_to_checkout')}
             </Link>
           </div>
         </div>

@@ -1,36 +1,39 @@
 import { NavLink, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import useCurrentUser from '../hooks/useCurrentUser.js'
 
-const navItems = [
-  { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Avaliacao', to: '/avaliacao' },
-  { label: 'Rabino Mentor IA', to: '/mentor' },
-  { label: 'Desafios', to: '/desafios' },
-  { label: 'Calendario', to: '/calendario' },
-  { label: 'Biblioteca', to: '/biblioteca' },
-  { label: 'Livros', to: '/livros' },
-  { label: 'Mais', to: '/mais' },
-  { label: 'Assinatura', to: '/assinatura' },
-]
-
-const masterNavItems = [
-  { label: 'Assinantes', to: '/admin/assinantes' },
-]
-
 export default function Sidebar({ open = false, onClose = function () {} }) {
+  const { t } = useTranslation()
   const currentUser = useCurrentUser()
-  const name = currentUser?.name || 'Aluno'
+  const name = currentUser?.name || t('common.user_profile')
   const plan = currentUser?.plan || '-'
   const hasActiveAccess = currentUser?.hasActiveAccess !== false
-  const visibleNavItems = currentUser?.isMasterUser
-    ? [...navItems, ...masterNavItems]
-    : navItems
   const initials = (name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'CJ')
+
+  const navItems = [
+    { key: 'dashboard', to: '/dashboard' },
+    { key: 'assessment', to: '/avaliacao' },
+    { key: 'mentor', to: '/mentor' },
+    { key: 'challenges', to: '/desafios' },
+    { key: 'calendar', to: '/calendario' },
+    { key: 'library', to: '/biblioteca' },
+    { key: 'books', to: '/livros' },
+    { key: 'more', to: '/mais' },
+    { key: 'subscription', to: '/assinatura' },
+  ]
+
+  const masterNavItems = [
+    { key: 'subscribers', to: '/admin/assinantes' },
+  ]
+
+  const visibleNavItems = currentUser?.isMasterUser
+    ? [...navItems, ...masterNavItems]
+    : navItems
 
   return (
     <>
@@ -39,9 +42,9 @@ export default function Sidebar({ open = false, onClose = function () {} }) {
         role="presentation"
         onClick={onClose}
       />
-      <aside className={'sidebar' + (open ? ' sidebar--open' : '')} aria-label="Menu lateral">
+      <aside className={'sidebar' + (open ? ' sidebar--open' : '')} aria-label={t('common.navigation')}>
         <div className="sidebar-inner">
-        <Link to="/" className="brand" aria-label="Ir para a landing page" onClick={onClose}>
+        <Link to="/" className="brand" aria-label={t('common.go_to_landing')} onClick={onClose}>
           <div className="brand-mark" aria-hidden="true">
             <svg
               width="18"
@@ -59,11 +62,11 @@ export default function Sidebar({ open = false, onClose = function () {} }) {
             </svg>
           </div>
           <div className="brand-text">
-            <strong>Codigo Judaico</strong>
-            <span>da Prosperidade</span>
+            <strong>{t('brand.name')}</strong>
+            <span>{t('brand.tagline')}</span>
           </div>
         </Link>
-        <nav className="nav" aria-label="Navegacao">
+        <nav className="nav" aria-label={t('common.navigation')}>
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
@@ -72,12 +75,12 @@ export default function Sidebar({ open = false, onClose = function () {} }) {
               className={({ isActive }) => (isActive ? 'active' : undefined)}
               onClick={onClose}
             >
-              {item.label}
+              {t('nav.' + item.key)}
             </NavLink>
           ))}
         </nav>
 
-        <div className="sidebar-footer" aria-label="Perfil do usuario">
+        <div className="sidebar-footer" aria-label={t('common.user_profile')}>
           <div className="mini-profile">
             <div className="avatar" aria-hidden="true">
               {initials}
@@ -85,7 +88,7 @@ export default function Sidebar({ open = false, onClose = function () {} }) {
             <div className="mini-profile-text">
               <div className="mini-name">{name}</div>
               <div className="mini-meta">
-                {hasActiveAccess ? `Plano: ${plan}` : 'Assinatura: renovar agora'}
+                {hasActiveAccess ? t('sidebar.plan_label', { plan }) : t('sidebar.renew')}
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import SectionCard from '../components/SectionCard.jsx'
 import { useRabinoMentor } from '../hooks/useRabinoMentor.js'
 import useCurrentUser from '../hooks/useCurrentUser.js'
@@ -13,10 +14,11 @@ function computeInitials(name) {
 }
 
 export default function RabinoMentorIA() {
+  const { t } = useTranslation()
   const currentUser = useCurrentUser()
   const mentorProfile = {
     id: currentUser?.id || currentUser?.email || 'anon',
-    name: currentUser?.name || 'Aluno',
+    name: currentUser?.name || t('common.student_fallback'),
     plan: currentUser?.plan || '',
   }
 
@@ -56,10 +58,10 @@ export default function RabinoMentorIA() {
   return (
     <div className="container" style={{ display: 'grid', gap: 14 }}>
       <SectionCard
-        title="Rabino Mentor"
-        description="Pergunte sobre o Código Judaico da Prosperidade: gatilhos de gasto, autocontrole, organização e patrimônio — com orientação prática e sabedoria judaica."
+        title={t('mentor.title')}
+        description={t('mentor.description')}
       >
-        <div className="chat-shell" aria-label="Chat do Rabino Mentor">
+        <div className="chat-shell" aria-label={t('mentor.chat_history_label')}>
           <div
             style={{
               display: 'flex',
@@ -70,20 +72,20 @@ export default function RabinoMentorIA() {
             }}
           >
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span className="badge">Online agora</span>
+              <span className="badge">{t('mentor.online_badge')}</span>
               {usage ? (
                 <span className="badge" style={{ opacity: 0.9 }}>
-                  Interações hoje: {usage.interactionsToday}/{usage.dailyLimit}
+                  {t('mentor.interactions_badge', { today: usage.interactionsToday, limit: usage.dailyLimit })}
                 </span>
               ) : null}
             </div>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-soft" onClick={exportHistory}>
-                Exportar
+                {t('mentor.export_btn')}
               </button>
               <button type="button" className="btn btn-soft" onClick={clear}>
-                Limpar
+                {t('mentor.clear_btn')}
               </button>
               <button
                 type="button"
@@ -91,7 +93,7 @@ export default function RabinoMentorIA() {
                 onClick={retryLast}
                 disabled={isAsking}
               >
-                Tentar novamente
+                {t('mentor.retry_btn')}
               </button>
             </div>
           </div>
@@ -106,7 +108,7 @@ export default function RabinoMentorIA() {
                   onClick={retryLast}
                   disabled={isAsking}
                 >
-                  Retry
+                  {t('mentor.retry_short')}
                 </button>
               </div>
             </div>
@@ -115,7 +117,7 @@ export default function RabinoMentorIA() {
           {blocked ? (
             <div className="card" style={{ padding: 12, borderColor: 'rgba(215, 178, 74, 0.55)' }}>
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontWeight: 900 }}>Limite diário atingido</div>
+                <div style={{ fontWeight: 900 }}>{t('mentor.daily_limit_title')}</div>
                 <div className="muted" style={{ lineHeight: 1.6 }}>
                   {blocked.message}
                 </div>
@@ -131,7 +133,7 @@ export default function RabinoMentorIA() {
             </div>
           ) : null}
 
-          <div className="chat-log" aria-label="Histórico do chat">
+          <div className="chat-log" aria-label={t('mentor.chat_history_label')}>
             {messages.map((m) => (
               <div
                 key={m.id}
@@ -145,7 +147,7 @@ export default function RabinoMentorIA() {
                       <span className="bubble-avatar user">{initials}</span>
                     )}
                     <strong>
-                      {m.role === 'assistant' ? 'Rabino Mentor' : 'Você'}
+                      {m.role === 'assistant' ? t('mentor.role_assistant') : t('mentor.role_user')}
                     </strong>
                   </div>
                   <span className="muted">{m.timestamp}</span>
@@ -158,7 +160,7 @@ export default function RabinoMentorIA() {
           </div>
 
           <div className="chat-inputbar">
-            <div className="chips" aria-label="Sugestões rápidas">
+            <div className="chips" aria-label={t('mentor.suggestions_label')}>
               {quickSuggestions.map((s) => (
                 <button
                   key={s}
@@ -176,12 +178,12 @@ export default function RabinoMentorIA() {
                 className="input"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Escreva sua mensagem…"
-                aria-label="Mensagem"
+                placeholder={t('mentor.placeholder')}
+                aria-label={t('mentor.message_label')}
                 disabled={isAsking || blocked}
               />
               <button className="btn btn-primary" type="submit" disabled={isAsking || blocked}>
-                Enviar
+                {t('mentor.send_btn')}
               </button>
             </form>
           </div>

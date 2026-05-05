@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Flame, Star, Crown, Sprout, Target, ChevronRight, Lock, Trophy, BookOpen, TrendingUp, Sparkles, Shield } from 'lucide-react'
 import MetricCard from '../components/MetricCard.jsx'
 import useDailyWisdom from '../hooks/useDailyWisdom.js'
@@ -26,14 +27,8 @@ var PHASE_ICONS = {
   star: Star,
 }
 
-var PHASE_BENEFITS = [
-  'Voce identifica exatamente onde perde dinheiro, quais emocoes disparam seus gastos e cria a fundacao para nunca mais viver no piloto automatico financeiro.',
-  'Voce domina os impulsos de compra, constroi resistencia emocional e assume o comando total da sua vida financeira com clareza e estrategia.',
-  'Voce planta patrimonio real — reserva de emergencia, bens, investimentos. Cada dia e um tijolo no edificio da sua liberdade financeira.',
-  'Voce colhe abundancia. Desfruta do melhor da terra, consolida seu legado e vive a prosperidade que as geracoes judaicas ensinaram.',
-]
-
 export default function Dashboard() {
+  const { t } = useTranslation()
   var navigate = useNavigate()
   var { diagnosis, assignedTrack } = useFinancialDiagnosis()
 
@@ -60,18 +55,17 @@ export default function Dashboard() {
   var wisdom = useDailyWisdom()
   var discipline = getDisciplineScore()
   var lastFeedback = getLastAIFeedback()
+  var phaseBenefits = t('dashboard.phase_benefits', { returnObjects: true })
 
   if (!diagnosis || !assignedTrack) {
     return (
       <div className="container" style={{ display: 'grid', gap: 20, paddingTop: 12 }}>
         <div className="glass-card" style={{ padding: 24, display: 'grid', gap: 16 }}>
           <div style={{ fontWeight: 900, fontSize: 22, color: 'var(--gold-2)', lineHeight: 1.25, letterSpacing: '-0.02em' }}>
-            A Jornada Milenar da Prosperidade Judaica
+            {t('dashboard.journey_title')}
           </div>
           <div style={{ fontSize: 14, lineHeight: 1.8, color: 'rgba(255,255,255,0.75)' }}>
-            Este metodo e inspirado em principios ensinados por geracoes na tradicao judaica,
-            onde prosperidade nao nasce do corte cego de gastos, mas da <span style={{ color: 'var(--gold-2)', fontWeight: 700 }}>ordem, disciplina emocional,
-            construcao patrimonial e visao de legado</span>.
+            {t('dashboard.start_diagnosis_hint')}
           </div>
           <div style={{
             padding: 18, borderRadius: 16,
@@ -81,14 +75,13 @@ export default function Dashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Sparkles size={16} style={{ color: 'var(--gold-2)' }} />
-              <div style={{ fontWeight: 900, fontSize: 15, color: 'var(--gold-2)' }}>Comece sua transformacao</div>
+              <div style={{ fontWeight: 900, fontSize: 15, color: 'var(--gold-2)' }}>{t('dashboard.start_transformation')}</div>
             </div>
             <div className="muted" style={{ fontSize: 13, lineHeight: 1.7 }}>
-              Descubra sua trilha personalizada respondendo ao diagnostico financeiro.
-              Ele identifica seu perfil e inicia sua jornada de 365 dias rumo a prosperidade plena.
+              {t('dashboard.start_diagnosis_hint')}
             </div>
             <button className="btn btn-primary btn-mentor-glow" type="button" onClick={function () { navigate('/avaliacao') }} style={{ marginTop: 4 }}>
-              <Target size={16} /> Iniciar Avaliacao Financeira
+              <Target size={16} /> {t('dashboard.start_assessment_btn')}
             </button>
           </div>
           {wisdom && (
@@ -109,12 +102,10 @@ export default function Dashboard() {
       {/* ══════ HERO BLOCK ══════ */}
       <div className="dash-hero">
         <div style={{ fontWeight: 900, fontSize: 22, color: 'var(--gold-2)', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
-          A Jornada Milenar da Prosperidade Judaica
+          {t('dashboard.journey_title')}
         </div>
         <div style={{ fontSize: 13, lineHeight: 1.8, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
-          Este metodo e inspirado em principios ensinados por geracoes na tradicao judaica,
-          onde prosperidade nao nasce do corte cego de gastos, mas da <span style={{ color: 'var(--gold-2)', fontWeight: 700 }}>ordem, disciplina emocional,
-          construcao patrimonial e visao de legado</span>.
+          {t('dashboard.start_diagnosis_hint')}
         </div>
       </div>
 
@@ -122,7 +113,7 @@ export default function Dashboard() {
       <div className="journey-bar">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12 }}>
           <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <TrendingUp size={14} style={{ color: 'var(--gold-2)' }} /> Jornada Total
+            <TrendingUp size={14} style={{ color: 'var(--gold-2)' }} /> {t('dashboard.total_journey')}
           </span>
           <span style={{ fontWeight: 900, color: 'var(--gold-2)' }}>{totalProgress.percent}%</span>
         </div>
@@ -130,24 +121,24 @@ export default function Dashboard() {
           <div className="progress-fill" style={{ width: totalProgress.percent + '%' }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' }}>
-          <span>Dia {dayIndex + 1} &middot; {trackLabel}</span>
-          <span>Streak: {streak} dias</span>
+          <span>{t('dashboard.day_label', { day: dayIndex + 1 })} &middot; {trackLabel}</span>
+          <span>{t('dashboard.streak_days', { count: streak })}</span>
         </div>
       </div>
 
       {/* ══════ SCORE METRICS ══════ */}
       <div className="dashboard-metrics">
-        <MetricCard label="Streak" value={streak + 'd'} hint="Consecutivos" />
-        <MetricCard label="Emocional" value={emotional + '%'} hint="Autoconhecimento" />
-        <MetricCard label="Patrimonio" value={patrimony + '%'} hint="Construcao" />
-        <MetricCard label="Disciplina" value={discipline + '%'} hint="Consistencia" />
+        <MetricCard label={t('dashboard.metrics.streak')} value={streak + 'd'} hint={t('dashboard.metrics.streak_hint')} />
+        <MetricCard label={t('dashboard.metrics.emotional')} value={emotional + '%'} hint={t('dashboard.metrics.emotional_hint')} />
+        <MetricCard label={t('dashboard.metrics.patrimony')} value={patrimony + '%'} hint={t('dashboard.metrics.patrimony_hint')} />
+        <MetricCard label={t('dashboard.metrics.discipline')} value={discipline + '%'} hint={t('dashboard.metrics.discipline_hint')} />
       </div>
 
       {/* ══════ 4 PHASE CARDS — ESCADA DE ASCENSÃO ══════ */}
       <div style={{ display: 'grid', gap: 6 }}>
-        <div style={{ fontWeight: 900, fontSize: 16, letterSpacing: '-0.01em' }}>Escada de Ascensao</div>
+        <div style={{ fontWeight: 900, fontSize: 16, letterSpacing: '-0.01em' }}>{t('dashboard.ascension_ladder')}</div>
         <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
-          4 fases progressivas. Cada fase desbloqueia a proxima. A progressao e obrigatoria — nao existe atalho.
+          {t('dashboard.ascension_description')}
         </div>
       </div>
 
@@ -158,40 +149,38 @@ export default function Dashboard() {
           var isCurrent = currentPhase.id === ph.id
           var isCompleted = pp.percent >= 100
           var Icon = PHASE_ICONS[ph.icon] || Star
-          var benefit = PHASE_BENEFITS[idx]
+          var benefit = Array.isArray(phaseBenefits) ? phaseBenefits[idx] : ''
           var isMahalachRewardCta = String(ph.reward || '').indexOf('Desbloqueia Mahalach HaZera') >= 0
 
           var lockedCtaLabel = idx === 1
-            ? 'Liberar Chodesh HaMelech'
+            ? t('dashboard.unlock_phase.1')
             : idx === 2
-              ? 'Desbloquear Mahalach HaZera'
+              ? t('dashboard.unlock_phase.2')
               : idx === 3
-                ? 'Desbloquear Shnat HaKatzir'
-                : 'Desbloquear próxima fase'
+                ? t('dashboard.unlock_phase.3')
+                : t('dashboard.unlock_phase.default')
 
           return (
             <div
               key={ph.id}
               className={'escada-card' + (isCurrent ? ' escada-current' : '') + (isCompleted ? ' escada-done' : '') + (!unlocked ? ' escada-locked' : '')}
             >
-              {/* Badge: Fase Atual / Concluida / Bloqueado */}
               {isCurrent && (
                 <div className="escada-badge escada-badge-current">
-                  <Sparkles size={10} /> Fase Atual
+                  <Sparkles size={10} /> {t('dashboard.phase_current')}
                 </div>
               )}
               {isCompleted && !isCurrent && (
                 <div className="escada-badge escada-badge-done">
-                  <Star size={10} /> Concluida
+                  <Star size={10} /> {t('dashboard.phase_done')}
                 </div>
               )}
               {!unlocked && (
                 <div className="escada-badge escada-badge-locked">
-                  <Lock size={10} /> Bloqueado
+                  <Lock size={10} /> {t('dashboard.phase_locked')}
                 </div>
               )}
 
-              {/* Icon + Name */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: (isCurrent || isCompleted || !unlocked) ? 6 : 0 }}>
                 <div className={'escada-icon' + (isCurrent ? ' escada-icon-active' : '')} style={{ '--phase-color': ph.color }}>
                   <Icon size={20} />
@@ -206,21 +195,18 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Promise */}
               <div style={{ fontSize: 13, lineHeight: 1.6, color: unlocked ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.35)', fontWeight: 600 }}>
                 {ph.promise}
               </div>
 
-              {/* Benefit */}
               <div style={{ fontSize: 12, lineHeight: 1.65, color: unlocked ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.25)' }}>
                 {benefit}
               </div>
 
-              {/* Progress (unlocked) */}
               {unlocked && (
                 <div style={{ display: 'grid', gap: 6, marginTop: 2 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 800 }}>
-                    <span>{pp.completed}/{pp.total} dias</span>
+                    <span>{t('dashboard.completed_days', { completed: pp.completed, total: pp.total })}</span>
                     <span style={{ color: ph.color }}>{pp.percent}%</span>
                   </div>
                   <div className="progress" style={{ height: 5 }}>
@@ -228,23 +214,18 @@ export default function Dashboard() {
                   </div>
                   {pp.daysRemaining > 0 && !isCompleted && (
                     <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                      Faltam {pp.daysRemaining} dias para completar esta fase
+                      {t('dashboard.days_remaining', { count: pp.daysRemaining })}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Reward / Next level */}
               {isMahalachRewardCta ? (
                 <button
                   type="button"
                   className="btn btn-primary btn-block btn-mentor-glow"
                   onClick={function () { navigate('/assinatura') }}
-                  style={{
-                    marginTop: 10,
-                    width: '100%',
-                    justifyContent: 'center',
-                  }}
+                  style={{ marginTop: 10, width: '100%', justifyContent: 'center' }}
                 >
                   {ph.reward}
                 </button>
@@ -267,11 +248,7 @@ export default function Dashboard() {
                   type="button"
                   className="btn btn-primary btn-block btn-mentor-glow"
                   onClick={function () { navigate('/assinatura') }}
-                  style={{
-                    marginTop: 12,
-                    width: '100%',
-                    fontWeight: 900,
-                  }}
+                  style={{ marginTop: 12, width: '100%', fontWeight: 900 }}
                 >
                   {lockedCtaLabel}
                 </button>
@@ -281,17 +258,12 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* ══════ RETENTION COPY — PERSUASIVE ══════ */}
+      {/* ══════ RETENTION COPY ══════ */}
       <div className="retention-block">
         <div className="retention-block-title">
-          <Shield size={14} /> Por que a progressao e obrigatoria
+          <Shield size={14} /> {t('dashboard.retention_title')}
         </div>
-        <div className="retention-block-body">
-          Quem abandona a jornada volta a servir aos mesmos gatilhos que o mantinham preso.
-          Na tradicao judaica, prosperidade e construida em camadas:
-          <strong> estabilidade &rarr; dominio &rarr; plantacao &rarr; colheita</strong>.
-          Nao existe atalho. Existe consistencia diaria.
-        </div>
+        <div className="retention-block-body" dangerouslySetInnerHTML={{ __html: t('dashboard.retention_body') }} />
       </div>
 
       {/* ══════ LAST AI FEEDBACK ══════ */}
@@ -303,7 +275,7 @@ export default function Dashboard() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <BookOpen size={14} style={{ color: '#b388ff' }} />
-            <span style={{ fontWeight: 800, fontSize: 11, color: '#b388ff', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ultimo feedback do Rabino Mentor</span>
+            <span style={{ fontWeight: 800, fontSize: 11, color: '#b388ff', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('dashboard.last_feedback_label')}</span>
           </div>
           <div style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,0.7)' }}>
             {(lastFeedback.summary || '').slice(0, 200)}{(lastFeedback.summary || '').length > 200 ? '...' : ''}
@@ -327,7 +299,7 @@ export default function Dashboard() {
       {/* ══════ FIXED BOTTOM CTA ══════ */}
       <div className="sticky-cta-bar">
         <Link to="/desafios" className="btn btn-primary btn-mentor-glow sticky-cta-btn">
-          Continuar minha ascensao <ChevronRight size={16} />
+          {t('dashboard.continue_btn')} <ChevronRight size={16} />
         </Link>
       </div>
     </div>

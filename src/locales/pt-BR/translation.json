@@ -1,0 +1,808 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "assessment": "Avaliação",
+    "mentor": "Rabino Mentor IA",
+    "challenges": "Desafios",
+    "calendar": "Calendário",
+    "library": "Biblioteca",
+    "books": "Livros",
+    "more": "Mais",
+    "subscription": "Assinatura",
+    "subscribers": "Assinantes"
+  },
+  "brand": {
+    "name": "Código Judaico",
+    "tagline": "da Prosperidade"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "close": "Fechar",
+    "retry": "Tentar novamente",
+    "student_fallback": "Aluno",
+    "send": "Enviar",
+    "logout": "Sair",
+    "days": "dias",
+    "day": "Dia",
+    "week": "Semana",
+    "streak": "Streak",
+    "export": "Exportar",
+    "clear": "Limpar",
+    "consult": "Consultar",
+    "buy": "Comprar",
+    "back": "Voltar",
+    "open_menu": "Abrir menu",
+    "notifications": "Notificações",
+    "profile": "Perfil",
+    "go_to_dashboard": "Ir para o dashboard",
+    "go_to_landing": "Ir para a landing page",
+    "navigation": "Navegação",
+    "user_profile": "Perfil do usuário"
+  },
+  "topbar": {
+    "greeting": "Shalom, {{name}}",
+    "streak_label": "Streak",
+    "streak_value": "{{count}} dias",
+    "week_label": "Semana"
+  },
+  "sidebar": {
+    "plan_label": "Plano: {{plan}}",
+    "renew": "Assinatura: renovar agora"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "description": "Entre com o e-mail e a senha criados no checkout. Se o pagamento ainda não estiver confirmado, vamos te levar de volta para finalizar a assinatura.",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Entrar",
+      "loading": "Entrando...",
+      "forgot_password": "Esqueci a senha",
+      "no_access": "Ainda não tenho acesso",
+      "back_to_landing": "Voltar para a Landing",
+      "errors": {
+        "invalid_credentials": "E-mail ou senha incorretos. Tente novamente.",
+        "generic": "Não consegui entrar. Confira o e-mail, a senha e se o acesso já foi liberado."
+      }
+    },
+    "forgot_password": {
+      "title": "Recuperar senha",
+      "description": "Informe seu e-mail para receber um link de redefinição de senha.",
+      "email": "E-mail",
+      "submit": "Enviar link",
+      "loading": "Enviando...",
+      "back_to_login": "Voltar para o login",
+      "success": "Se o e-mail existir na base, enviamos o link para redefinir a senha.",
+      "error": "Não foi possível enviar o e-mail agora. Tente novamente em instantes."
+    },
+    "reset_password": {
+      "title": "Definir nova senha",
+      "description": "Escolha sua nova senha para entrar no sistema.",
+      "new_password": "Nova senha",
+      "confirm_password": "Confirmar senha",
+      "submit": "Salvar nova senha",
+      "loading": "Salvando...",
+      "back_to_login": "Voltar para o login",
+      "success": "Senha atualizada com sucesso. Redirecionando para o login...",
+      "errors": {
+        "invalid_link": "Link inválido. Solicite um novo e-mail de recuperação.",
+        "too_short": "A nova senha precisa ter pelo menos {{min}} caracteres.",
+        "mismatch": "As senhas não conferem.",
+        "generic": "Não foi possível redefinir a senha. Solicite um novo link."
+      }
+    }
+  },
+  "landing": {
+    "badge": "Método milenar judaico • Experiência premium",
+    "headline": "DESCUBRA O MÉTODO QUE OS JUDEUS USAM POR 21 DIAS PARA TER UMA VIDA FINANCEIRA PRÓSPERA",
+    "subheadline_1": "Mesmo em tempos de crise, instabilidade e escassez, existe um sistema seguido há gerações para construir riqueza, disciplina emocional, patrimônio e legado.",
+    "subheadline_2": "Um método em 4 fases e atividades diárias que mudarão sua vida financeira, inspirado nos princípios que fizeram um povo prosperar até no deserto.",
+    "cta_primary": "Quero desbloquear o método",
+    "cta_secondary": "Já tenho acesso (Entrar)",
+    "phases_title": "Prosperidade é uma transformação em 4 fases",
+    "phases_subtitle": "Primeiro você aprende a enxergar o que faz você perder dinheiro. Depois, domina o impulso. Em seguida, constrói seus primeiros patrimônios com equilíbrio. Por fim, colhe os grandes frutos da prosperidade e constrói um legado.",
+    "phase_start_badge": "Comece aqui • Início da jornada",
+    "phases": [
+      {
+        "days": "21 dias",
+        "name": "Consciência dos gatilhos",
+        "desc": "Você identifica os gatilhos que fazem você perder dinheiro (impulso, ansiedade, comparação, medo) e passa a enxergar o padrão antes que ele te controle."
+      },
+      {
+        "days": "1 mês",
+        "name": "Autocontrole e disciplina",
+        "desc": "Você desenvolve autocontrole sobre esses gatilhos e aprende a tomar decisões com clareza — mesmo em dias ruins, sem voltar para o velho ciclo."
+      },
+      {
+        "days": "6 meses",
+        "name": "Primeiros patrimônios",
+        "desc": "Você constrói seus primeiros patrimônios com equilíbrio: reservas, consistência e escolhas inteligentes — sem extremos e sem culpa."
+      },
+      {
+        "days": "365 dias",
+        "name": "Colheita máxima e legado",
+        "desc": "Você colhe os grandes frutos da prosperidade: estabilidade, crescimento real e um legado que permanece — com paz e direção."
+      }
+    ],
+    "benefits_title": "O que você recebe dentro do método",
+    "benefits": [
+      {
+        "title": "Direção",
+        "text": "Saiba exatamente o que fazer todos os dias para reorganizar sua vida financeira — sem depender de motivação."
+      },
+      {
+        "title": "Mentoria",
+        "text": "Receba orientação do Rabino Mentor IA para interpretar decisões, corrigir padrões e acelerar sua jornada."
+      },
+      {
+        "title": "Execução",
+        "text": "Tarefas diárias reais que geram mudança financeira concreta — não teoria, ação."
+      },
+      {
+        "title": "Legado",
+        "text": "Construa patrimônio e desfrute da riqueza sem viver como refém da escassez."
+      }
+    ],
+    "authority_title": "Por que esse método funciona há milênios?",
+    "authority_body_1": "Porque a prosperidade não nasce de cortes cegos.",
+    "authority_body_2": "Ela nasce de <strong>ordem, disciplina emocional, visão de longo prazo e construção de patrimônio</strong>.",
+    "authority_body_3": "É assim que um povo atravessou desertos, guerras e crises sem perder sua capacidade de prosperar.",
+    "final_cta_title": "Se você quer descobrir o método e ainda não tem acesso, comece sua jornada agora.",
+    "final_cta_sub": "Desbloqueie a experiência premium e siga a mesma progressão diária usada há gerações para construir riqueza e legado.",
+    "final_cta_btn": "Quero começar minha ascensão"
+  },
+  "subscription_notice": {
+    "badge": "Renovação necessária",
+    "title": "Sua jornada premium ficou pausada",
+    "description": "Seu acesso premium não está mais ativo. Renove agora para voltar a liberar o Rabino Mentor, os desafios, a biblioteca e toda a progressão da jornada.",
+    "current_plan": "Plano atual",
+    "valid_until": "Válido até",
+    "plan_paused": "Assinatura pausada",
+    "renew_btn": "Ver planos e renovar agora"
+  },
+  "page_titles": {
+    "/dashboard": "Dashboard",
+    "/mentor": "Rabino Mentor IA",
+    "/desafios": "Desafios",
+    "/biblioteca": "Biblioteca",
+    "/mais": "Mais",
+    "/assinatura": "Assinatura",
+    "/admin/assinantes": "Assinantes",
+    "/avaliacao": "Avaliação Financeira",
+    "/calendario": "Calendário",
+    "/relatorio-final": "Relatório Final",
+    "/livros": "Livros",
+    "default": "Código Judaico da Prosperidade"
+  },
+  "dashboard": {
+    "journey_title": "A Jornada Milenar da Prosperidade Judaica",
+    "journey_description": "Este método é inspirado em princípios ensinados por gerações na tradição judaica, onde prosperidade não nasce do corte cego de gastos, mas da <gold>ordem, disciplina emocional, construção patrimonial e visão de legado</gold>.",
+    "start_transformation": "Comece sua transformação",
+    "start_diagnosis_hint": "Descubra sua trilha personalizada respondendo ao diagnóstico financeiro. Ele identifica seu perfil e inicia sua jornada de 365 dias rumo à prosperidade plena.",
+    "start_assessment_btn": "Iniciar Avaliação Financeira",
+    "total_journey": "Jornada Total",
+    "day_label": "Dia {{day}}",
+    "streak_days": "Streak: {{count}} dias",
+    "metrics": {
+      "streak": "Streak",
+      "streak_hint": "Consecutivos",
+      "emotional": "Emocional",
+      "emotional_hint": "Autoconhecimento",
+      "patrimony": "Patrimônio",
+      "patrimony_hint": "Construção",
+      "discipline": "Disciplina",
+      "discipline_hint": "Consistência"
+    },
+    "ascension_ladder": "Escada de Ascensão",
+    "ascension_description": "4 fases progressivas. Cada fase desbloqueia a próxima. A progressão é obrigatória — não existe atalho.",
+    "phase_current": "Fase Atual",
+    "phase_done": "Concluída",
+    "phase_locked": "Bloqueado",
+    "days_remaining": "Faltam {{count}} dias para completar esta fase",
+    "completed_days": "{{completed}}/{{total}} dias",
+    "unlock_phase": {
+      "1": "Liberar Chodesh HaMelech",
+      "2": "Desbloquear Mahalach HaZera",
+      "3": "Desbloquear Shnat HaKatzir",
+      "default": "Desbloquear próxima fase"
+    },
+    "retention_title": "Por que a progressão é obrigatória",
+    "retention_body": "Quem abandona a jornada volta a servir aos mesmos gatilhos que o mantinham preso. Na tradição judaica, prosperidade é construída em camadas: <strong>estabilidade → domínio → plantação → colheita</strong>. Não existe atalho. Existe consistência diária.",
+    "last_feedback_label": "Último feedback do Rabino Mentor",
+    "continue_btn": "Continuar minha ascensão",
+    "phase_benefits": [
+      "Você identifica exatamente onde perde dinheiro, quais emoções disparam seus gastos e cria a fundação para nunca mais viver no piloto automático financeiro.",
+      "Você domina os impulsos de compra, constrói resistência emocional e assume o comando total da sua vida financeira com clareza e estratégia.",
+      "Você planta patrimônio real — reserva de emergência, bens, investimentos. Cada dia é um tijolo no edifício da sua liberdade financeira.",
+      "Você colhe abundância. Desfruta do melhor da terra, consolida seu legado e vive a prosperidade que as gerações judaicas ensinaram."
+    ]
+  },
+  "checkout": {
+    "badge": "Checkout oficial via Stripe",
+    "title": "Desbloqueie o Método Judaico da Prosperidade",
+    "social_proof": "Mais de 1.247 pessoas já iniciaram essa jornada",
+    "existing_account": "Sua conta já foi encontrada. Falta só concluir o pagamento para liberar o acesso.",
+    "new_account": "Crie sua conta agora. Assim que o Stripe confirmar, a liberação acontece imediatamente.",
+    "window_alert_title": "⚠️ ESTE VALOR ESTÁ DISPONÍVEL SOMENTE NESTA JANELA DE ACESSO.",
+    "window_alert_sub": "APÓS O ENCERRAMENTO, A PRÓXIMA LIBERAÇÃO PODE VOLTAR COM OUTRO VALOR.",
+    "timer_urgent_title": "⚠️ ÚLTIMOS MINUTOS PARA MANTER ESSE VALOR",
+    "timer_normal_title": "⚡ JANELA DE ACESSO COM VALOR REDUZIDO",
+    "timer_urgent_label": "TEMPO RESTANTE:",
+    "timer_normal_label": "ESSE VALOR FICA RESERVADO POR:",
+    "benefits": {
+      "triggers": "✔ Identifique seus gatilhos de gasto",
+      "mentor": "✔ Receba orientação do Rabino Mentor IA",
+      "journey": "✔ Comece sua jornada de domínio financeiro"
+    },
+    "access_period": "Fase inicial: <gold>{{phase}}</gold>",
+    "books_section_title": "Adicione livros ao seu pedido",
+    "books_section_hint": "Livros físicos com sabedoria judaica — adquira junto com seu plano e economize na entrega.",
+    "form_title_existing": "Conta encontrada",
+    "form_title_new": "Dados para liberar o acesso",
+    "existing_account_note": "Vamos continuar com <strong>{{email}}</strong> e com a senha que você já cadastrou. Agora falta só finalizar o checkout para ativar o acesso.",
+    "name_label": "Nome",
+    "name_placeholder": "Como devemos te chamar",
+    "email_label": "E-mail",
+    "password_label": "Senha",
+    "password_placeholder": "Crie sua senha de acesso",
+    "confirm_password_label": "Confirmar senha",
+    "confirm_password_placeholder": "Repita a senha",
+    "account_note_existing": "O login será liberado para <strong>{{email}}</strong> assim que o Stripe confirmar o pagamento.",
+    "account_note_new": "Sua conta será criada para <strong>{{email}}</strong>. O login será liberado depois da confirmação do Stripe, usando a senha criada acima.",
+    "account_note_placeholder": "o e-mail informado acima",
+    "other_account_link": "usar outra conta",
+    "other_account_note": "Se quiser usar outro e-mail, abra um checkout novo em",
+    "submit_loading": "Abrindo checkout...",
+    "submit_success_text": "Seu acesso começa após a confirmação segura do pagamento.",
+    "security_notes": {
+      "stripe": "🔒 Pagamento 100% seguro via Stripe",
+      "immediate": "✔ Liberação imediata após confirmação",
+      "access": "🔑 Acesso com e-mail e senha"
+    },
+    "back_to_landing": "Voltar para a landing",
+    "already_have_account": "Já tenho conta",
+    "back_to_login": "Voltar ao login",
+    "email_placeholder": "voce@exemplo.com",
+    "timer_aria": "Tempo restante {{time}}",
+    "errors": {
+      "password_too_short": "Crie uma senha com pelo menos {{min}} caracteres.",
+      "password_mismatch": "A confirmação da senha não confere.",
+      "no_url": "Checkout sem URL.",
+      "generic": "Não consegui abrir o checkout agora. Tente novamente em instantes."
+    },
+    "plans": {
+      "titles": {
+        "primeiro-acesso": "Seder HaKesef — 21 Dias",
+        "renovacao": "Seder HaKesef — 21 Dias",
+        "mensal": "Trilha Chodesh HaMelech",
+        "anual": "Jornada Anual Shnat HaKatzir",
+        "vitalicio": "Legado Vitalício Brit HaOsher"
+      },
+      "highlights": {
+        "primeiro-acesso": "Etapa inicial",
+        "renovacao": "Condição liberada",
+        "mensal": "Próxima fase natural",
+        "anual": "Melhor escolha",
+        "vitalicio": "Acesso definitivo"
+      },
+      "subtitles": {
+        "primeiro-acesso": "A fase inicial para estabilizar sua vida financeira e revelar os gatilhos que controlam suas decisões.",
+        "renovacao": "Condição especial para continuar a etapa inicial por mais 21 dias.",
+        "mensal": "O mês do domínio financeiro — acesso mensal à trilha para tratar os gatilhos e governar seus impulsos.",
+        "anual": "12 meses de jornada com economia de R$ 56,90 em relação ao mensal (12,5% de desconto).",
+        "vitalicio": "Acesso permanente ao método e às trilhas de prosperidade judaica. Ideal para quem quer acesso definitivo."
+      },
+      "access_labels": {
+        "mensal": "1 mês de acesso completo",
+        "anual": "12 meses de acesso completo",
+        "vitalicio": "Acesso vitalício ao método",
+        "default": "21 dias de acesso completo"
+      },
+      "cta_labels": {
+        "primeiro-acesso": "Liberar meu acesso de 21 dias agora",
+        "renovacao": "Liberar meu acesso de 21 dias agora",
+        "default": "Liberar meu acesso agora"
+      },
+      "promises": {
+        "mensal": "Você continua avançando: identifica o impulso, corrige o padrão e sustenta decisões financeiras mais conscientes.",
+        "anual": "Você consolida o domínio financeiro por 12 meses, reforçando hábitos e eliminando recaídas de impulso.",
+        "vitalicio": "Você garante acesso permanente ao método para evoluir no seu ritmo e voltar sempre que precisar recalibrar.",
+        "default": "Em 21 dias, você começa a enxergar os gatilhos invisíveis que fazem seu dinheiro escapar — e inicia o domínio sobre suas decisões financeiras."
+      }
+    }
+  },
+  "checkout_success": {
+    "badge": "Pagamento recebido",
+    "title": "Estamos liberando seu acesso",
+    "loading": "Conferindo a confirmação do checkout e liberando o login da sua conta...",
+    "access_granted": "Seu acesso já foi liberado para {{email}}. Entre com a senha criada no checkout.",
+    "access_email_fallback": "o e-mail informado",
+    "pending": "O pagamento voltou com sucesso. Se o acesso ainda não apareceu, aguarde alguns instantes para a confirmação final do Stripe.",
+    "plan_label": "Plano:",
+    "email_label": "E-mail:",
+    "status_label": "Status Stripe:",
+    "plan_default": "Premium",
+    "email_not_provided": "não informado",
+    "status_processing": "processando",
+    "go_to_login": "Ir para o login",
+    "back_to_checkout": "Voltar ao checkout",
+    "errors": {
+      "no_session": "Não encontrei a sessão de checkout para confirmar o pagamento.",
+      "status_error": "Recebemos seu retorno, mas ainda não consegui consultar o status agora."
+    }
+  },
+  "checkout_cancelled": {
+    "badge": "Checkout cancelado",
+    "title": "Seu acesso ainda não foi liberado",
+    "description": "O pagamento no Stripe não foi concluído. Sua conta continua salva, mas o login só será liberado depois que o checkout for finalizado.",
+    "try_again": "Tentar novamente",
+    "back_to_landing": "Voltar para a landing"
+  },
+  "mentor": {
+    "title": "Rabino Mentor",
+    "description": "Pergunte sobre o Código Judaico da Prosperidade: gatilhos de gasto, autocontrole, organização e patrimônio — com orientação prática e sabedoria judaica.",
+    "online_badge": "Online agora",
+    "interactions_badge": "Interações hoje: {{today}}/{{limit}}",
+    "export_btn": "Exportar",
+    "clear_btn": "Limpar",
+    "retry_btn": "Tentar novamente",
+    "send_btn": "Enviar",
+    "retry_short": "Retry",
+    "placeholder": "Escreva sua mensagem…",
+    "message_label": "Mensagem",
+    "chat_history_label": "Histórico do chat",
+    "suggestions_label": "Sugestões rápidas",
+    "role_assistant": "Rabino Mentor",
+    "role_user": "Você",
+    "daily_limit_title": "Limite diário atingido"
+  },
+  "challenges": {
+    "title": "Desafios",
+    "assessment_required": "Faça sua avaliação financeira para desbloquear sua trilha personalizada.",
+    "start_assessment_btn": "Iniciar Avaliação",
+    "program_6months": "Programa 6 Meses",
+    "journey_complete": "Jornada completa!",
+    "patrimonial_construction": "Construção Patrimonial",
+    "patrimonial_desc": "180 dias de transformação financeira profunda",
+    "monthly_milestones": "Marcos mensais",
+    "report_unlocked": "Relatório Final liberado",
+    "report_hint": "Veja seus padrões, gatilhos e próximos passos.",
+    "see_final_report": "Ver Relatório Final",
+    "day_label": "Dia {{day}}: {{title}}",
+    "done_badge": "Concluído",
+    "section_prayer": "Oração",
+    "section_morning": "Manhã",
+    "section_afternoon": "Tarde",
+    "section_evening": "Noite",
+    "tasks_title": "Tarefas do dia",
+    "tap_to_change": "Toque em cada tarefa para alterar o status",
+    "all_tasks_done": "Todas as tarefas executadas. Sua disciplina está construindo prosperidade.",
+    "keep_going": "Cada tarefa executada fortalece sua estrutura financeira. Continue.",
+    "reflections_title": "Reflexões do dia",
+    "what_i_did_label": "O que fiz hoje",
+    "what_i_did_placeholder": "Descreva o que aconteceu (impulso, decisão, contexto, justificativa mental)...",
+    "how_i_felt_label": "Como me senti",
+    "how_i_felt_placeholder": "Quais emoções vieram antes e depois (ansiedade, culpa, alívio, comparação, pressão, vazio)?",
+    "trigger_label": "Gatilho dominante do dia (possível)",
+    "trigger_placeholder": "Ex.: recompensa imediata, ansiedade, validação/status, comparação social, escassez/FOMO, fuga emocional, culpa, desorganização...",
+    "send_to_mentor_btn": "Enviar para Rabino Mentor",
+    "sending_to_mentor": "Enviando...",
+    "complete_day_btn": "Concluir dia {{day}}",
+    "complete_btn": "Concluir",
+    "offline_feedback": "Modo offline: feedback gerado localmente.",
+    "feedback_title": "Feedback do Rabino Mentor IA",
+    "feedback_day": "Dia {{day}}",
+    "feedback_trigger": "Gatilho detectado",
+    "feedback_pattern": "Padrão emocional",
+    "feedback_risk": "Risco financeiro",
+    "feedback_wisdom": "Sabedoria judaica",
+    "feedback_action": "Micro-ação",
+    "feedback_text": "Feedback",
+    "feedback_analysis": "Análise do dia",
+    "feedback_correction": "Correção de rota",
+    "feedback_tomorrow": "Foco para amanhã",
+    "feedback_received_at": "Recebido em {{date}}",
+    "retention_body": "Cada dia não executado é um passo para trás. A consistência é a chave da prosperidade. Não existe atalho — existe disciplina diária.",
+    "congrats_title": "Parabéns, você concluiu os 21 dias",
+    "congrats_body": "Você chegou ao fim da primeira etapa. Agora seus registros revelam padrões, gatilhos e decisões que podem estar controlando sua vida financeira. O próximo passo é entender o que o Rabino Mentor identificou sobre você.",
+    "see_final_report_btn": "Ver meu Relatório Final",
+    "completed_count": "{{completed}}/21 dias"
+  },
+  "library": {
+    "title": "Biblioteca",
+    "description": "{{count}} ensinamentos com progresso individual. Concluídas: {{completed}}/{{total}}."
+  },
+  "assessment": {
+    "title": "Avaliação do Rabino Mentor",
+    "description": "Diagnóstico personalizado da sua vida financeira.",
+    "completed_title": "Avaliação concluída",
+    "completed_description": "Sua trilha foi definida e a jornada já está em andamento.",
+    "your_track": "Sua trilha",
+    "diagnosis_summary": "Diagnóstico resumido",
+    "main_trigger": "Gatilho principal identificado",
+    "continue_journey_btn": "Continuar minha jornada",
+    "shalom": "Shalom. Vamos começar sua jornada.",
+    "intro_body_1": "O Rabino Mentor IA vai analisar seus padrões financeiros profundos — não apenas seus gastos, mas as emoções, crenças e comportamentos por trás deles.",
+    "intro_body_2": "Responda com honestidade. Não há respostas certas ou erradas. O diagnóstico identificará seu padrão raiz e designará sua trilha personalizada de transformação.",
+    "what_analyzed_title": "O que será analisado:",
+    "what_analyzed": [
+      "Gastos por ansiedade",
+      "Compras por validação",
+      "Gastos secretos",
+      "Busca de status",
+      "Fuga emocional",
+      "Crenças familiares",
+      "Medo de dinheiro",
+      "Paralisia financeira"
+    ],
+    "after_title": "Após a avaliação você receberá:",
+    "after_items": [
+      "Diagnóstico psicológico financeiro",
+      "Identificação do gatilho raiz",
+      "Sabedoria judaica aplicada",
+      "Provérbio inspirador",
+      "Método prático de transformação",
+      "Trilha personalizada de 21 dias + 6 meses"
+    ],
+    "start_btn": "Iniciar avaliação",
+    "question_progress": "Pergunta {{current}} de {{total}}",
+    "question_label": "Pergunta {{current}}/{{total}}",
+    "result_title": "Seu Diagnóstico",
+    "result_description": "Resultado da avaliação do Rabino Mentor IA.",
+    "result_track_label": "Sua trilha designada",
+    "result_track_unlocked": "Trilha desbloqueada",
+    "result_diagnosis": "Diagnóstico",
+    "result_root": "Raiz do problema",
+    "result_wisdom": "Sabedoria judaica",
+    "result_method": "Método judaico aplicado",
+    "start_21_days_btn": "Começar minha trilha de 21 dias",
+    "see_calendar_btn": "Ver calendário da jornada",
+    "go_to_dashboard_btn": "Ir para o Dashboard",
+    "questions": [
+      "Quando estou ansioso(a), costumo gastar dinheiro para aliviar a tensão.",
+      "Já comprei coisas que escondi do meu cônjuge ou família.",
+      "Sinto prazer momentâneo ao comprar, mas arrependimento depois.",
+      "Tenho gastos que prefiro que ninguém saiba.",
+      "Uso o consumo como fuga emocional (tédio, solidão, frustração).",
+      "Compro coisas para parecer bem-sucedido(a) para os outros.",
+      "Tenho bens (carro, roupas, eletrônicos) que custaram mais do que deviam para minha renda.",
+      "Tenho dívidas que surgiram por querer manter um estilo de vida acima do que posso.",
+      "Priorizo aparência e conforto antes de ter reserva de emergência.",
+      "Sinto que preciso mostrar progresso material para ser respeitado(a).",
+      "Tenho medo de olhar meus extratos bancários ou dívidas.",
+      "Acredito que dinheiro é algo 'difícil' ou 'não é para mim'.",
+      "Minha família sempre passou dificuldade e eu internalizei que é assim que deve ser.",
+      "Fico paralisado(a) quando preciso tomar decisões financeiras.",
+      "Não consigo pensar em investimentos ou crescimento — só sobrevivência."
+    ],
+    "scale_options": [
+      "Discordo totalmente",
+      "Discordo",
+      "Neutro",
+      "Concordo",
+      "Concordo totalmente"
+    ],
+    "content": {
+      "trilha1": {
+        "trackLabel": "Tikun do Impulso",
+        "diagnostico": "Seu padrão principal é o consumo por impulso emocional. Você usa compras como válvula de escape para ansiedade, tédio, solidão ou frustração. O prazer é momentâneo, mas o arrependimento se acumula. Pode haver gastos secretos ou \"adultério financeiro\" — consumo que você esconde de quem ama.",
+        "gatilho": "O gatilho raiz está ligado à busca por dopamina rápida. Quando a emoção é desconfortável, o cérebro busca alívio imediato no consumo. Com o tempo, isso se torna um ciclo: tensão → compra → alívio → culpa → mais tensão.",
+        "sabedoria": "Na tradição judaica, o \"yetzer hará\" (inclinação ao mal) não é destruído — é redirecionado. O impulso não é o inimigo; o impulso sem direção é. O Talmud ensina que quem governa seus impulsos é mais forte do que quem conquista cidades.",
+        "proverbio": "\"Quem governa seus impulsos é mais forte do que quem conquista cidades.\" — Pirkei Avot 4:1",
+        "metodo": "O método judaico para compulsão é o Tikun (reparo): pausa antes da ação, nomeação do sentimento e redirecionamento da energia. Em vez de lutar contra o impulso, você o observa, nomeia e escolhe conscientemente. A cada pausa de 90 segundos, você fortalece seu \"músculo da escolha\"."
+      },
+      "trilha2": {
+        "trackLabel": "Fundação do Patrimônio",
+        "diagnostico": "Seu padrão principal é construir \"por cima\" antes de ter a base. Você investe em aparência, conforto e status antes de ter reserva, quitação de dívidas e estrutura real. A casa parece bonita, mas o alicerce é frágil.",
+        "gatilho": "O gatilho raiz é a necessidade de validação externa. O ego busca reconhecimento através de posses materiais. Dívidas por status são o sintoma; a causa é confundir patrimônio com aparência.",
+        "sabedoria": "Provérbios 24:27 ensina: \"Primeiro prepare o campo, depois construa a casa.\" Na tradição judaica, a ordem importa. Antes de exibir, proteja. Antes de decorar, fundamente. O sábio constrói primeiro o que ninguém vê — a fundação.",
+        "proverbio": "\"Primeiro prepare o campo, depois construa a casa.\" — Provérbios 24:27",
+        "metodo": "O método judaico para ego financeiro é a inversão de prioridades: reserva antes de luxo, quitação antes de aquisição, simplicidade antes de ostentação. A cada decisão, pergunte: \"Isso fortalece minha fundação ou só minha fachada?\""
+      },
+      "trilha3": {
+        "trackLabel": "Abundância com Prudência",
+        "diagnostico": "Seu padrão principal é a paralisia por medo. Traumas financeiros passados, crenças de escassez herdadas e medo de perder criam uma prisão onde você não avança. Sobreviver virou o teto; prosperar parece impossível ou \"não é para você\".",
+        "gatilho": "O gatilho raiz é o trauma financeiro — seu ou da família. Memórias de dificuldade criaram uma narrativa interna de que dinheiro é perigoso, escasso ou \"não é para gente como eu\". Isso gera paralisia decisória.",
+        "sabedoria": "A Torá repete \"Não temas\" 365 vezes — uma para cada dia do ano. Na tradição judaica, o medo é reconhecido, mas não tem a palavra final. Deuteronômio 30:19 diz: \"A vida e a morte pus diante de ti; escolhe a vida.\" Você tem poder de escolha, mesmo com medo.",
+        "proverbio": "\"Não temas, pois Eu estou contigo.\" — Isaías 41:10",
+        "metodo": "O método judaico para medo financeiro é a ação gradual com fé. Não exige coragem total — exige o primeiro passo. Investir R$10, pedir um aumento, olhar o extrato. Cada pequena ação prova ao cérebro que o perigo não é tão grande quanto o medo sugere."
+      }
+    }
+  },
+  "calendar": {
+    "title": "Central Operacional",
+    "not_started": "Inicie sua jornada para visualizar o mapa da prosperidade.",
+    "phase_subs": {
+      "21days": "21 dias de fundação",
+      "6months": "6 meses de construção patrimonial",
+      "completed": "Jornada completa — colheita"
+    },
+    "streak_label": "Streak (dias)",
+    "discipline_label": "Disciplina",
+    "days_until": "Faltam {{count}} dias",
+    "challenge_21": "Desafio de 21 dias",
+    "program_6months": "Programa de 6 meses",
+    "progress_21": "21 Dias: {{completed}}/21",
+    "progress_total": "Programa: {{completed}}/{{total}}",
+    "achievements_title": "Conquistas",
+    "achievements_desc": "Badges conquistados na jornada",
+    "months_overview_title": "Visão 6 Meses",
+    "months_overview_desc": "Progresso mensal geral",
+    "month_label": "Mês {{month}}: {{title}}",
+    "weekdays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+    "drawer": {
+      "streak": "Streak",
+      "next_level": "Próximo nível",
+      "tasks_title": "Tarefas",
+      "not_executed": "Não executado",
+      "tap_status": "Toque para alterar status",
+      "reflections_title": "Reflexões",
+      "what_i_did_label": "O que fiz hoje",
+      "what_i_did_placeholder": "Descreva o que executou...",
+      "how_i_felt_label": "Como me senti",
+      "how_i_felt_placeholder": "Descreva suas emoções...",
+      "trigger_label": "Maior gatilho do dia",
+      "trigger_placeholder": "Qual foi o maior desafio emocional...",
+      "your_reflections": "Suas reflexões",
+      "what_i_did_done": "O que fiz:",
+      "how_i_felt_done": "Como me senti:",
+      "trigger_done": "Gatilho:",
+      "send_to_mentor": "Enviar para Rabino Mentor IA",
+      "consulting_mentor": "Consultando Rabino Mentor...",
+      "complete_day": "Concluir dia e liberar próximo",
+      "close": "Fechar",
+      "offline_feedback": "Modo offline: feedback gerado localmente.",
+      "feedback_title": "Feedback do Rabino Mentor IA",
+      "feedback_analysis": "Análise",
+      "feedback_wisdom": "Sabedoria judaica",
+      "feedback_tomorrow": "Foco para amanhã",
+      "activities": "Atividades do dia",
+      "checklist": "Checklist",
+      "lesson": "Lição patrimonial",
+      "blind_spot": "Ponto cego",
+      "extra_activity": "Atividade extra sugerida",
+      "day_subtitle": "Mês {{month}}, Dia {{day}}"
+    },
+    "month_badges": "Badges do mês",
+    "month_score": "Score do Mês {{month}}",
+    "month_completion": "Conclusão",
+    "day_completed_badge": "Dia concluído",
+    "back_to_month": "Voltar ao mês",
+    "month_card": {
+      "month_label": "{{n}}º Mês",
+      "complete": "Completo",
+      "start": "Começar mês",
+      "continue": "Continuar"
+    },
+    "milestones": {
+      "week1": "Semana 1",
+      "week2": "Semana 2",
+      "days21": "21 Dias!",
+      "month1": "Mês 1",
+      "month2": "Mês 2",
+      "month3": "Mês 3",
+      "month4": "Mês 4",
+      "month5": "Mês 5",
+      "complete": "Jornada Completa!"
+    }
+  },
+  "subscription": {
+    "title": "Continuar a jornada",
+    "description": "Você já descobriu seus gatilhos. Agora precisa dominá-los.",
+    "special_offer_badge": "Condição especial liberada hoje",
+    "special_offer_desc": "Seu relatório de 21 dias desbloqueou uma condição temporária para continuar a jornada.",
+    "time_remaining": "tempo restante",
+    "copy_title": "Você já descobriu seus gatilhos. Agora precisa dominá-los.",
+    "copy_body_1": "Os 21 dias revelam o padrão. A próxima trilha transforma consciência em domínio financeiro.",
+    "copy_body_2": "No método judaico, prosperidade não nasce de cortes desesperados, mas de domínio, repetição e construção de base. Primeiro você identifica o impulso. Depois aprende a governá-lo. Em seguida planta patrimônio. Por fim, colhe liberdade.",
+    "copy_body_3": "A condição especial abaixo foi liberada porque você chegou ao fim da primeira etapa. Ela não representa apenas acesso a conteúdos; representa a continuação da sua transformação.",
+    "reactivate_badge": "Volte para a jornada",
+    "reactivate_title": "Seu acesso precisa ser reativado para liberar novamente todo o método",
+    "reactivate_desc": "Escolha uma das opções abaixo para voltar a acessar o Rabino Mentor, os desafios, a biblioteca e a continuação completa da jornada.",
+    "current_plan": "Plano atual",
+    "plan_value": "Valor",
+    "plan_value_active": "Conforme plano ativo",
+    "valid_until": "Válido até",
+    "benefits_active": "Benefícios liberados",
+    "benefits_renew": "O que será liberado ao renovar",
+    "benefits": [
+      "Rabino Mentor (chat guiado)",
+      "Biblioteca de ensinamentos",
+      "Desafios interativos",
+      "Progresso e streak"
+    ],
+    "choose_track": "Escolha sua próxima trilha",
+    "annual_hint": "Plano anual libera 12 meses de jornada com economia de R$ 56,90 em relação ao mensal.",
+    "unavailable": "Indisponível agora",
+    "close_popup": "Fechar",
+    "popup_10": "Somente os 10 primeiros manterão o valor anual de R$ 397,90 nesta condição especial.",
+    "popup_20": "Quem para após os 21 dias apenas descobriu o padrão. Quem continua começa a dominar o padrão."
+  },
+  "books": {
+    "title": "Livros",
+    "description": "Obras com sabedoria judaica sobre finanças, prosperidade e herança geracional.",
+    "my_library": "Minha Biblioteca",
+    "available": "Livros Disponíveis",
+    "more_available": "Outros Livros Disponíveis",
+    "loading": "Carregando...",
+    "empty": "Nenhum livro disponível no momento.",
+    "acquired_badge": "Adquirido",
+    "coming_soon": "Em breve",
+    "download_pdf": "Baixar PDF",
+    "buy_btn": "Comprar — {{price}}",
+    "buying": "Abrindo checkout...",
+    "purchased_success_title": "Livro adquirido com sucesso!",
+    "purchased_success_desc": "O PDF já está disponível para download abaixo.",
+    "error_load": "Erro ao carregar livros.",
+    "error_checkout": "Não consegui abrir o checkout agora. Tente novamente."
+  },
+  "report": {
+    "title": "Relatório Rabínico da Sua Jornada Financeira",
+    "description": "Conclua os 21 dias para liberar seu relatório final personalizado com padrões, gatilhos e a virada para a próxima trilha.",
+    "go_to_challenges_btn": "Ir para os Desafios",
+    "generating": "Gerando seu relatório…",
+    "error": "Não consegui gerar seu relatório agora. Tente novamente em instantes.",
+    "block1_title": "Você <gold>não tem</gold> um problema com dinheiro.",
+    "block1_body": "Você tem um <gold>padrão</gold> que te faz perder dinheiro.",
+    "block2_trigger_title": "Gatilho principal identificado",
+    "block2_you_spend": "Você gasta quando:",
+    "block3_records_title": "Seus próprios registros mostraram que:",
+    "block3_repeated": "- Você repetiu esse padrão em <gold>{{count}}</gold> momentos",
+    "block3_context": "- Ele apareceu principalmente em <gold>{{context}}</gold>",
+    "block3_control": "Você tentou controlar, mas voltou ao mesmo comportamento em <gold>{{count}}</gold> dias.",
+    "block3_generic_1": "- Você repetiu esse padrão em vários momentos",
+    "block3_generic_2": "- Ele aparece quando a emoção sobe",
+    "block3_generic_3": "- Você tenta controlar, mas volta ao automático",
+    "block4_title": "Isso não é falta de dinheiro.",
+    "block4_body": "Isso é falta de <gold>controle emocional</gold> sobre decisões financeiras.",
+    "block5_title": "Se você continuar assim:",
+    "block5_items": [
+      "- vai continuar ganhando… e perdendo no mesmo ritmo",
+      "- nunca vai construir patrimônio de verdade",
+      "- sempre vai sentir que está recomeçando"
+    ],
+    "block6_title": "Mas existe uma diferença entre você de antes e você agora:",
+    "block6_body": "Agora você sabe exatamente o que te faz perder dinheiro.",
+    "block6_cta": "Isso muda tudo.",
+    "block7_title": "A próxima fase da jornada não é sobre aprender mais.",
+    "block7_body": "É sobre reprogramar esse <gold>padrão</gold>.",
+    "block7_body2": "Ela foi criada exatamente para isso.",
+    "block8_cta": "Quero assumir o controle do meu dinheiro",
+    "block8_note": "Acesso imediato à próxima fase",
+    "block8_pattern": "Quem ignora esse padrão, repete ele.",
+    "trigger_fallback": "gatilho emocional",
+    "tendency_anxiety": "Você tende a gastar para aliviar ansiedade e buscar sensação imediata de controle.",
+    "tendency_validation": "Você tende a gastar quando se compara, buscando validação e alívio emocional rápido.",
+    "tendency_reward": "Você tende a gastar em busca de recompensa imediata quando a emoção sobe.",
+    "tendency_pattern": "Você tende a gastar quando {{pattern}}.",
+    "tendency_default": "Você tende a gastar quando a decisão acontece no piloto automático — para aliviar a emoção do momento.",
+    "situation_anxiety": "sente ansiedade",
+    "situation_pressure": "fica sob pressão",
+    "situation_frustrated": "fica frustrado",
+    "situation_bored": "sente tédio",
+    "situation_empty": "sente carência",
+    "situation_default": "a emoção sobe",
+    "pattern_relief": "busca alívio imediato",
+    "pattern_validation": "busca validação",
+    "pattern_urgency": "cai na urgência",
+    "pattern_default": "repete o mesmo ciclo",
+    "behavior_impulse": "compra por impulso",
+    "behavior_default": "decide no automático",
+    "context_pressure": "pressão e prazos",
+    "context_fatigue": "cansaço e fim do dia",
+    "context_social": "comparação e redes sociais",
+    "context_promotions": "promoções e sensação de urgência",
+    "context_family": "situações familiares",
+    "context_default": "momentos de emoção intensa"
+  },
+  "more": {
+    "title": "Mais",
+    "description": "Upsells premium e espaço para futuras integrações e perfil.",
+    "offers": [
+      {
+        "title": "Patrimônio Familiar",
+        "description": "Uma trilha premium para construir proteção, reserva e decisões em família com clareza."
+      },
+      {
+        "title": "Mentalidade de Abundância",
+        "description": "Reestrutura crenças, reduz culpa e fortalece propósito sem cair em excesso."
+      },
+      {
+        "title": "Comunidade Premium",
+        "description": "Encontros exclusivos, estudos guiados, networking e desafios em grupo com acompanhamento."
+      }
+    ]
+  },
+  "admin": {
+    "restricted_title": "Acesso restrito",
+    "restricted_desc": "Área exclusiva para master user.",
+    "back_to_dashboard": "Voltar ao dashboard",
+    "title": "Assinantes",
+    "description": "Usuários com checkout, assinatura ativa, assinatura vencida ou pagamento pendente.",
+    "summary": {
+      "total": "Total",
+      "active": "Ativos",
+      "expired": "Vencidos",
+      "pending": "Pendentes"
+    },
+    "search_label": "Buscar",
+    "search_placeholder": "Nome, e-mail ou plano",
+    "status_label": "Status",
+    "status_options": {
+      "all": "Todos",
+      "active": "Ativos",
+      "expired": "Vencidos",
+      "pending": "Pendentes"
+    },
+    "consult_btn": "Consultar",
+    "loading": "Carregando assinantes...",
+    "empty": "Nenhum assinante encontrado.",
+    "error_load": "Não foi possível carregar os assinantes.",
+    "table": {
+      "student": "Aluno",
+      "plan": "Plano",
+      "status": "Status",
+      "valid_until": "Válido até",
+      "created_at": "Criado em",
+      "stripe": "Stripe",
+      "customer": "Cliente",
+      "subscription": "Assinatura",
+      "student_fallback": "Aluno"
+    },
+    "statuses": {
+      "active": "Ativo",
+      "expired": "Vencido",
+      "pending": "Pendente"
+    },
+    "expiration": {
+      "lifetime": "Vitalício",
+      "no_expiry": "Sem vencimento",
+      "today": "Vence hoje",
+      "days_expired": "{{count}} dias vencido",
+      "day_remaining": "1 dia restante",
+      "days_remaining": "{{count}} dias restantes"
+    }
+  },
+  "tracks": {
+    "trilha1": {
+      "label": "Tikun do Impulso",
+      "description": "Foco em compulsão, luxúria, fuga emocional, dopamina, adultério financeiro e gastos secretos."
+    },
+    "trilha2": {
+      "label": "Fundação do Patrimônio",
+      "description": "Luxo antes da base, status, dívida por ego, bens antes da fundação, casa sem alicerce."
+    },
+    "trilha3": {
+      "label": "Abundância com Prudência",
+      "description": "Medo, escassez, trauma financeiro, paralisia, falta de visão de longo prazo."
+    }
+  },
+  "task_statuses": {
+    "none": "Não executado",
+    "executed": "Executado",
+    "partial": "Parcial",
+    "skipped": "Não executado",
+    "sent_ai": "Enviado ao Mentor"
+  },
+  "phase_names": {
+    "21days": "Seder HaKesef",
+    "6months": "Mahalach HaZera",
+    "completed": "Shnat HaKatzir"
+  },
+  "floating_proof": {
+    "movement_title": "17 pessoas acessaram esta etapa nos últimos minutos",
+    "movement_subtitle": "A maioria começou pela fase Seder HaKesef para identificar seus gatilhos financeiros.",
+    "value_title": "Valor reservado por poucos minutos",
+    "value_subtitle": "Depois que a janela encerra, a próxima liberação pode voltar com outro valor.",
+    "started_title": "Nova jornada iniciada agora",
+    "started_subtitle": "Mais uma pessoa começou os 21 dias para entender por que o dinheiro escapa.",
+    "stripe_title": "Acesso seguro via Stripe",
+    "stripe_subtitle": "Crie sua conta e use o mesmo e-mail no pagamento para liberação automática.",
+    "root_title": "Comece pela raiz do problema",
+    "root_subtitle": "Antes de prosperar, você precisa enxergar o padrão que controla suas decisões.",
+    "phase_title": "A primeira fase revela o gatilho",
+    "phase_subtitle": "Os 21 dias mostram onde seu dinheiro está sendo perdido sem perceber.",
+    "not_cuts_title": "Não é corte de gastos",
+    "not_cuts_subtitle": "É domínio financeiro: viver melhor, decidir melhor e construir com consciência."
+  }
+}

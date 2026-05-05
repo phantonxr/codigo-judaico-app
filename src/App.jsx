@@ -1,5 +1,6 @@
 import { Link, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import Sidebar from './components/Sidebar.jsx'
 import Topbar from './components/Topbar.jsx'
@@ -50,8 +51,9 @@ function RequireAuth() {
 }
 
 function SubscriptionRequiredNotice() {
+  const { t } = useTranslation()
   const currentUser = useCurrentUser()
-  const nextChargeDate = currentUser?.nextChargeDate || 'agora'
+  const nextChargeDate = currentUser?.nextChargeDate || t('common.now', 'agora')
 
   return (
     <div className="container" style={{ paddingTop: 18 }}>
@@ -64,31 +66,30 @@ function SubscriptionRequiredNotice() {
         }}
       >
         <div className="card-inner" style={{ display: 'grid', gap: 16 }}>
-          <span className="badge" style={{ width: 'fit-content' }}>Renovacao necessaria</span>
+          <span className="badge" style={{ width: 'fit-content' }}>{t('subscription_notice.badge')}</span>
           <h2 style={{ margin: 0, fontSize: 30, lineHeight: 1.1 }}>
-            Sua jornada premium ficou pausada
+            {t('subscription_notice.title')}
           </h2>
           <div className="muted" style={{ fontSize: 15, lineHeight: 1.7 }}>
-            Seu acesso premium nao esta mais ativo. Renove agora para voltar a liberar o Rabino Mentor,
-            os desafios, a biblioteca e toda a progressao da jornada.
+            {t('subscription_notice.description')}
           </div>
           <div className="grid grid-2">
             <div className="card" style={{ boxShadow: 'none' }}>
               <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
-                <div className="muted">Plano atual</div>
-                <div style={{ fontWeight: 900 }}>{currentUser?.plan || 'Assinatura pausada'}</div>
+                <div className="muted">{t('subscription_notice.current_plan')}</div>
+                <div style={{ fontWeight: 900 }}>{currentUser?.plan || t('subscription_notice.plan_paused')}</div>
               </div>
             </div>
             <div className="card" style={{ boxShadow: 'none' }}>
               <div className="card-inner" style={{ display: 'grid', gap: 4 }}>
-                <div className="muted">Valido ate</div>
+                <div className="muted">{t('subscription_notice.valid_until')}</div>
                 <div style={{ fontWeight: 900 }}>{nextChargeDate}</div>
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link className="btn btn-primary" to="/assinatura">
-              Ver planos e renovar agora
+              {t('subscription_notice.renew_btn')}
             </Link>
           </div>
         </div>
@@ -121,6 +122,7 @@ function RequireSubscriptionAccess() {
 }
 
 function AppLayout() {
+  const { t } = useTranslation()
   const location = useLocation()
   const pathname = location.pathname
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -130,19 +132,19 @@ function AppLayout() {
   }, [location.pathname])
 
   const titleMap = {
-    '/dashboard': 'Dashboard',
-    '/mentor': 'Rabino Mentor IA',
-    '/desafios': 'Desafios',
-    '/biblioteca': 'Biblioteca',
-    '/mais': 'Mais',
-    '/assinatura': 'Assinatura',
-    '/admin/assinantes': 'Assinantes',
-    '/avaliacao': 'Avaliação Financeira',
-    '/calendario': 'Calendário',
-    '/relatorio-final': 'Relatório Final',
-    '/livros': 'Livros',
+    '/dashboard': t('page_titles./dashboard'),
+    '/mentor': t('page_titles./mentor'),
+    '/desafios': t('page_titles./desafios'),
+    '/biblioteca': t('page_titles./biblioteca'),
+    '/mais': t('page_titles./mais'),
+    '/assinatura': t('page_titles./assinatura'),
+    '/admin/assinantes': t('page_titles./admin/assinantes'),
+    '/avaliacao': t('page_titles./avaliacao'),
+    '/calendario': t('page_titles./calendario'),
+    '/relatorio-final': t('page_titles./relatorio-final'),
+    '/livros': t('page_titles./livros'),
   }
-  const title = titleMap[pathname] ?? 'Código Judaico da Prosperidade'
+  const title = titleMap[pathname] ?? t('page_titles.default')
 
   return (
     <div className="app-shell">

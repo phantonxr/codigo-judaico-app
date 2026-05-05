@@ -39,10 +39,21 @@ public static class AdminEndpoints
                     && (!x.AccessEnabled || (x.NextChargeDate.HasValue && x.NextChargeDate.Value < today)),
                 cancellationToken);
 
-            var subscribers = await ApplyStatus(scopedQuery, status, today)
+            var subscriberData = await ApplyStatus(scopedQuery, status, today)
                 .OrderByDescending(x => x.UpdatedAt)
                 .ThenBy(x => x.Email)
                 .Take(MaxSubscribersResultSize)
+                .Select(x => new
+                {
+                    User = x,
+                    LastLoginAt = x.Sessions
+                        .OrderByDescending(s => s.CreatedAt)
+                        .Select(s => (DateTimeOffset?)s.CreatedAt)
+                        .FirstOrDefault(),
+                    TotalLogins = x.Sessions.Count(),
+                    LessonsCompleted = x.LessonProgressEntries.Count(lp => lp.Completed),
+                    MentorMessagesCount = x.MentorMessages.Count(m => m.Role == "user"),
+                })
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(new AdminSubscribersResponse(
@@ -50,7 +61,8 @@ public static class AdminEndpoints
                 activeSubscribers,
                 expiredSubscribers,
                 pendingSubscribers,
-                subscribers.Select(x => x.ToAdminSubscriberDto(today)).ToList()));
+                subscriberData.Select(x => x.User.ToAdminSubscriberDto(
+                    today, x.LastLoginAt, x.TotalLogins, x.LessonsCompleted, x.MentorMessagesCount)).ToList()));
         })
         .WithName("ListAdminSubscribers");
 
@@ -104,7 +116,13 @@ public static class AdminEndpoints
         };
     }
 
-    private static AdminSubscriberDto ToAdminSubscriberDto(this AppUser user, DateOnly today)
+    private static AdminSubscriberDto ToAdminSubscriberDto(
+        this AppUser user,
+        DateOnly today,
+        DateTimeOffset? lastLoginAt,
+        int totalLogins,
+        int lessonsCompleted,
+        int mentorMessagesCount)
     {
         var daysUntilExpiration = user.NextChargeDate.HasValue
             ? user.NextChargeDate.Value.DayNumber - today.DayNumber
@@ -126,6 +144,12 @@ public static class AdminEndpoints
             user.StripeCustomerId,
             user.StripeSubscriptionId,
             user.LastStripeCheckoutSessionId,
-            user.HasUsedRenewalOffer);
+            user.HasUsedRenewalOffer,
+            lastLoginAt?.ToString("O"),
+            totalLogins,
+            user.HasCompletedAssessment,
+            lessonsCompleted,
+            mentorMessagesCount,
+            user.UtmSource);
     }
 }

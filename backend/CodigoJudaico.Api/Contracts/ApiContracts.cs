@@ -29,7 +29,13 @@ public sealed record AdminSubscriberDto(
     string StripeCustomerId,
     string StripeSubscriptionId,
     string LastStripeCheckoutSessionId,
-    bool HasUsedRenewalOffer);
+    bool HasUsedRenewalOffer,
+    string? LastLoginAt,
+    int TotalLogins,
+    bool HasCompletedAssessment,
+    int LessonsCompleted,
+    int MentorMessagesCount,
+    string? UtmSource);
 
 public sealed record AdminSubscribersResponse(
     int TotalSubscribers,

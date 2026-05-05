@@ -744,10 +744,17 @@
       "status": "Status",
       "valid_until": "Válido até",
       "created_at": "Criado em",
+      "activity": "Atividade",
       "stripe": "Stripe",
       "customer": "Cliente",
       "subscription": "Assinatura",
-      "student_fallback": "Aluno"
+      "student_fallback": "Aluno",
+      "never_logged": "Nunca logou",
+      "logins_count": "{{count}} logins",
+      "assessment_done": "✓ Avaliação feita",
+      "assessment_pending": "○ Sem avaliação",
+      "lessons_completed": "{{count}} lições",
+      "mentor_msgs": "{{count}} msgs mentor"
     },
     "statuses": {
       "active": "Ativo",

@@ -257,6 +257,7 @@ export default function AdminAssinantes() {
                     <th>{t('admin.table.status')}</th>
                     <th>{t('admin.table.valid_until')}</th>
                     <th>{t('admin.table.created_at')}</th>
+                    <th>{t('admin.table.activity')}</th>
                     <th>{t('admin.table.stripe')}</th>
                   </tr>
                 </thead>
@@ -267,6 +268,9 @@ export default function AdminAssinantes() {
                         <div style={{ display: 'grid', gap: 4 }}>
                           <strong>{subscriber.name || t('admin.table.student_fallback')}</strong>
                           <span className="muted">{subscriber.email}</span>
+                          {subscriber.utmSource ? (
+                            <code style={{ fontSize: 11 }}>{subscriber.utmSource}</code>
+                          ) : null}
                         </div>
                       </td>
                       <td>
@@ -285,6 +289,28 @@ export default function AdminAssinantes() {
                         </div>
                       </td>
                       <td>{formatDateTime(subscriber.createdAt)}</td>
+                      <td>
+                        <div style={{ display: 'grid', gap: 4 }}>
+                          <strong>
+                            {subscriber.lastLoginAt
+                              ? formatDateTime(subscriber.lastLoginAt)
+                              : t('admin.table.never_logged')}
+                          </strong>
+                          <span className="muted">
+                            {t('admin.table.logins_count', { count: subscriber.totalLogins })}
+                          </span>
+                          <span className="muted">
+                            {subscriber.hasCompletedAssessment
+                              ? t('admin.table.assessment_done')
+                              : t('admin.table.assessment_pending')}
+                          </span>
+                          <span className="muted">
+                            {t('admin.table.lessons_completed', { count: subscriber.lessonsCompleted })}
+                            {' · '}
+                            {t('admin.table.mentor_msgs', { count: subscriber.mentorMessagesCount })}
+                          </span>
+                        </div>
+                      </td>
                       <td>
                         <div style={{ display: 'grid', gap: 4 }}>
                           <span className="muted">{t('admin.table.customer')}</span>

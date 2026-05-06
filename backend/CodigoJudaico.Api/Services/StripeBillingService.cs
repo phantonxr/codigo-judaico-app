@@ -293,7 +293,7 @@ public sealed class StripeBillingService(
             paymentCoreMetadata.OrderId,
             plan.Id);
 
-        return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty, session.AmountTotal ?? 0);
+        return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty, session.AmountTotal ?? 0, paymentCoreMetadata.OrderId);
     }
 
     public async Task<Session> GetCheckoutSessionAsync(string sessionId, CancellationToken cancellationToken)

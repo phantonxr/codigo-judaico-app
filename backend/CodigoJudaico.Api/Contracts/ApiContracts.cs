@@ -314,7 +314,8 @@ public sealed record BookCheckoutRequest
 public sealed record CheckoutSessionCreateResponse(
     string SessionId,
     string Url,
-    long AmountInCents = 0);
+    long AmountInCents = 0,
+    string OrderId = "");
 
 public sealed record LoginBlockedResponse(
     string Code,

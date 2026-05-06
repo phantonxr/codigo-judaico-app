@@ -308,7 +308,7 @@ public static class PaymentEndpoints
             await dbContext.SaveChangesAsync(cancellationToken);
 
             // Notifica UTMfy que o checkout foi iniciado (waiting_payment)
-            var orderId = response.SessionId;
+            var orderId = response.OrderId;
 
             await utmfyService.TrackAsync(new UtmfyConversionRequest(
                 OrderId: orderId,

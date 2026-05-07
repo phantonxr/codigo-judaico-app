@@ -22,8 +22,8 @@ const MINIMUM_PASSWORD_LENGTH = 8
 const DEFAULT_PLAN_ID = 'primeiro-acesso'
 const METHOD_BOOK_ID = 'metodo-judaico-riqueza'
 const METHOD_BONUS_BOOK_IDS = [
-  'identidade-nome-dinheiro',
-  'prosperidade-geracoes',
+  '7-gatilhos-dinheiro-desaparecer',
+  '7-gatilhos-dinheiro-escapar',
 ]
 
 const PLAN_CATALOG = {

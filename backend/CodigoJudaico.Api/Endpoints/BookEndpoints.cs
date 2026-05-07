@@ -55,7 +55,10 @@ public static class BookEndpoints
             var hasMethodBookPurchase = purchasedBookIds.Contains(BookCatalog.MethodBookId);
 
             var books = BookCatalog.All
-                .Where(b => b.IsVisibleInCatalog)
+                .Where(b =>
+                    b.IsVisibleInCatalog
+                    || purchasedBookIds.Contains(b.Id)
+                    || (BookCatalog.IsMethodBookLimitedTimeBonus(b.Id) && hasMethodBookPurchase))
                 .Select(b => new BookLibraryDto(
                 b.Id,
                 b.Title,

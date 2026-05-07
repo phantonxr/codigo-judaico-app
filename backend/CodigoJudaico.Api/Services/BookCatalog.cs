@@ -17,8 +17,8 @@ public static class BookCatalog
 
     public static readonly IReadOnlyList<string> MethodBookLimitedTimeBonusBookIds =
     [
-        "identidade-nome-dinheiro",
-        "prosperidade-geracoes",
+        "7-gatilhos-dinheiro-desaparecer",
+        "7-gatilhos-dinheiro-escapar",
     ];
 
     public static readonly IReadOnlyList<BookDefinition> All =

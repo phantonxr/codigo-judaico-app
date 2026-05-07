@@ -6,8 +6,8 @@ import { getMyBooks, createBookCheckoutSession, getBookDownloadUrl } from '../se
 
 const METHOD_BOOK_ID = 'metodo-judaico-riqueza'
 const METHOD_BONUS_BOOK_IDS = [
-  'identidade-nome-dinheiro',
-  'prosperidade-geracoes',
+  '7-gatilhos-dinheiro-desaparecer',
+  '7-gatilhos-dinheiro-escapar',
 ]
 
 function isMethodBonusBook(bookId) {
@@ -81,7 +81,7 @@ function BookCard({ book, onBuy, buying, t }) {
               <strong style={{ fontSize: 16, lineHeight: 1.3 }}>{book.title}</strong>
               {book.isPurchased && (
                 <span className="badge" style={{ background: 'rgba(80, 200, 120, 0.15)', color: '#6ecc8a', border: '1px solid rgba(80,200,120,0.3)', fontSize: 11 }}>
-                  {book.isAccessBonus ? t('books.bonus_badge') : t('books.acquired_badge')}
+                  {book.isAccessBonus || isMethodBonus ? t('books.bonus_badge') : t('books.acquired_badge')}
                 </span>
               )}
               {isLockedAccessBonus && (

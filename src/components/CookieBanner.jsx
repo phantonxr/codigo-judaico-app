@@ -1,28 +1,70 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-
-var STORAGE_KEY = 'cookie_consent'
+import {
+  hasPrivacyConsentChoice,
+  readPrivacyConsent,
+  writePrivacyConsent,
+} from '../services/privacyConsent.js'
 
 export default function CookieBanner() {
   const { t } = useTranslation()
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(() => !hasPrivacyConsentChoice())
+  const [expanded, setExpanded] = useState(false)
+  const [choices, setChoices] = useState(() => readPrivacyConsent())
 
-  useEffect(function () {
-    if (!localStorage.getItem(STORAGE_KEY)) setVisible(true)
-  }, [])
-
-  function handleAccept() {
-    localStorage.setItem(STORAGE_KEY, 'accepted')
-    setVisible(false)
+  function openPreferences() {
+    setChoices(readPrivacyConsent())
+    setExpanded(true)
+    setVisible(true)
   }
 
   function handleReject() {
-    localStorage.setItem(STORAGE_KEY, 'rejected')
+    writePrivacyConsent({ preferences: false, marketing: false })
     setVisible(false)
+    setExpanded(false)
   }
 
-  if (!visible) return null
+  function handleAcceptAll() {
+    writePrivacyConsent({ preferences: true, marketing: true })
+    setVisible(false)
+    setExpanded(false)
+  }
+
+  function handleSave() {
+    writePrivacyConsent(choices)
+    setVisible(false)
+    setExpanded(false)
+  }
+
+  function toggleChoice(name) {
+    setChoices((current) => ({ ...current, [name]: !current[name] }))
+  }
+
+  if (!visible) {
+    return (
+      <button
+        type="button"
+        onClick={openPreferences}
+        style={{
+          position: 'fixed',
+          left: 14,
+          bottom: 14,
+          zIndex: 9998,
+          border: '1px solid rgba(215, 178, 74, 0.35)',
+          background: 'rgba(12, 10, 6, 0.82)',
+          color: 'rgba(255,255,255,0.76)',
+          borderRadius: 6,
+          padding: '7px 10px',
+          fontSize: 12,
+          cursor: 'pointer',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
+        {t('cookie_banner.settings')}
+      </button>
+    )
+  }
 
   return (
     <div
@@ -36,25 +78,64 @@ export default function CookieBanner() {
         zIndex: 9999,
         background: 'rgba(12, 10, 6, 0.97)',
         borderTop: '1px solid rgba(215, 178, 74, 0.25)',
-        padding: '14px 24px',
+        padding: '16px 24px',
         display: 'flex',
-        alignItems: 'center',
-        gap: 16,
+        alignItems: 'flex-start',
         flexWrap: 'wrap',
+        gap: 16,
         backdropFilter: 'blur(10px)',
       }}
     >
-      <p style={{ margin: 0, flex: 1, minWidth: 200, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.75)' }}>
-        {t('cookie_banner.message')}{' '}
-        <Link
-          to="/politica-de-privacidade"
-          style={{ color: 'rgba(215, 178, 74, 0.95)', textDecoration: 'underline' }}
-        >
-          {t('cookie_banner.policy_link')}
-        </Link>
-        .
-      </p>
-      <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+      <div style={{ display: 'grid', gap: 10, flex: '1 1 280px' }}>
+        <p style={{ margin: 0, minWidth: 200, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.75)' }}>
+          {t('cookie_banner.message')}{' '}
+          <Link
+            to="/politica-de-privacidade"
+            style={{ color: 'rgba(215, 178, 74, 0.95)', textDecoration: 'underline' }}
+          >
+            {t('cookie_banner.policy_link')}
+          </Link>
+          .
+        </p>
+
+        {expanded ? (
+          <div style={{ display: 'grid', gap: 8, maxWidth: 780 }}>
+            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: 'rgba(255,255,255,0.72)' }}>
+              <input type="checkbox" checked disabled style={{ marginTop: 2 }} />
+              <span>
+                <strong style={{ color: 'rgba(255,255,255,0.86)' }}>{t('cookie_banner.essential_title')}</strong>
+                {' '}{t('cookie_banner.essential_description')}
+              </span>
+            </label>
+            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: 'rgba(255,255,255,0.72)' }}>
+              <input
+                type="checkbox"
+                checked={choices.preferences}
+                onChange={() => toggleChoice('preferences')}
+                style={{ marginTop: 2, accentColor: 'var(--gold-2)' }}
+              />
+              <span>
+                <strong style={{ color: 'rgba(255,255,255,0.86)' }}>{t('cookie_banner.preferences_title')}</strong>
+                {' '}{t('cookie_banner.preferences_description')}
+              </span>
+            </label>
+            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: 'rgba(255,255,255,0.72)' }}>
+              <input
+                type="checkbox"
+                checked={choices.marketing}
+                onChange={() => toggleChoice('marketing')}
+                style={{ marginTop: 2, accentColor: 'var(--gold-2)' }}
+              />
+              <span>
+                <strong style={{ color: 'rgba(255,255,255,0.86)' }}>{t('cookie_banner.marketing_title')}</strong>
+                {' '}{t('cookie_banner.marketing_description')}
+              </span>
+            </label>
+          </div>
+        ) : null}
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
         <button
           onClick={handleReject}
           style={{
@@ -70,12 +151,29 @@ export default function CookieBanner() {
         >
           {t('cookie_banner.reject')}
         </button>
+        {expanded ? (
+          <button
+            onClick={handleSave}
+            className="btn btn-soft"
+            style={{ padding: '8px 18px', fontSize: 14 }}
+          >
+            {t('cookie_banner.save')}
+          </button>
+        ) : (
+          <button
+            onClick={() => setExpanded(true)}
+            className="btn btn-soft"
+            style={{ padding: '8px 18px', fontSize: 14 }}
+          >
+            {t('cookie_banner.customize')}
+          </button>
+        )}
         <button
-          onClick={handleAccept}
+          onClick={handleAcceptAll}
           className="btn btn-primary"
           style={{ padding: '8px 20px', fontSize: 14 }}
         >
-          {t('cookie_banner.accept')}
+          {t('cookie_banner.accept_all')}
         </button>
       </div>
     </div>

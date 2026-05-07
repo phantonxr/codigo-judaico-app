@@ -11,6 +11,241 @@ public static class UserStateEndpoints
 {
     public static IEndpointRouteBuilder MapUserStateEndpoints(this IEndpointRouteBuilder app)
     {
+        var privacyGroup = app.MapGroup("/api/users")
+            .WithTags("Users")
+            .RequireAuthorization();
+
+        privacyGroup.MapGet("/{userId:guid}/privacy/export", async (
+            Guid userId,
+            ClaimsPrincipal userPrincipal,
+            AppDbContext dbContext,
+            CancellationToken cancellationToken) =>
+        {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
+            var user = await dbContext.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return Results.NotFound();
+            }
+
+            var diagnosis = await dbContext.UserDiagnoses.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            var journey = await dbContext.UserJourneyStates.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            var lessonProgress = await dbContext.UserLessonProgressEntries.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.LessonId)
+                .ToListAsync(cancellationToken);
+            var mentorMessages = await dbContext.MentorChatMessages.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+            var dailyFeedbacks = await dbContext.MentorDailyFeedbacks.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.Phase)
+                .ThenBy(x => x.DayNumber)
+                .ToListAsync(cancellationToken);
+            var finalReports = await dbContext.MentorFinalReports.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+            var mentorUsage = await dbContext.MentorUsages.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.Date)
+                .ToListAsync(cancellationToken);
+            var subscriptions = await dbContext.Subscriptions.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+            var bookPurchases = await dbContext.UserBookPurchases.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.PurchasedAt)
+                .ToListAsync(cancellationToken);
+            var legalAcceptances = await dbContext.UserLegalAcceptances.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.AcceptedAt)
+                .ToListAsync(cancellationToken);
+            var sessions = await dbContext.AppSessions.AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+
+            return Results.Ok(new
+            {
+                ExportedAt = DateTimeOffset.UtcNow,
+                Account = new
+                {
+                    user.Id,
+                    user.Email,
+                    user.Name,
+                    user.IsMasterUser,
+                    user.HasCompletedAssessment,
+                    user.AccessEnabled,
+                    user.AccountCreatedEmailSentAt,
+                    user.AccessGrantedAt,
+                    user.AccessEmailSentAt,
+                    user.PlanName,
+                    user.PlanStatus,
+                    user.NextChargeDate,
+                    user.StripeCustomerId,
+                    user.StripeSubscriptionId,
+                    user.LastStripeCheckoutSessionId,
+                    user.HasUsedRenewalOffer,
+                    user.UtmSource,
+                    user.UtmMedium,
+                    user.UtmCampaign,
+                    user.UtmTerm,
+                    user.UtmContent,
+                    user.CreatedAt,
+                    user.UpdatedAt,
+                },
+                Diagnosis = diagnosis is null ? null : new
+                {
+                    diagnosis.TrackId,
+                    diagnosis.TrackLabel,
+                    diagnosis.ScoresJson,
+                    diagnosis.Diagnostico,
+                    diagnosis.Gatilho,
+                    diagnosis.Sabedoria,
+                    diagnosis.Proverbio,
+                    diagnosis.Metodo,
+                    diagnosis.AnsweredAt,
+                    diagnosis.UpdatedAt,
+                },
+                Journey = journey is null ? null : new
+                {
+                    journey.AssignedTrack,
+                    journey.JourneyStartDate,
+                    journey.ProgressJson,
+                    journey.CalendarJson,
+                    journey.UpdatedAt,
+                },
+                LessonProgress = lessonProgress.Select(x => new
+                {
+                    x.LessonId,
+                    x.Completed,
+                    x.UpdatedAt,
+                }),
+                MentorMessages = mentorMessages.Select(x => new
+                {
+                    x.Id,
+                    x.Role,
+                    x.Content,
+                    x.CreatedAt,
+                }),
+                MentorDailyFeedbacks = dailyFeedbacks.Select(x => new
+                {
+                    x.Id,
+                    x.Phase,
+                    x.DayNumber,
+                    x.DetectedEmotion,
+                    x.TriggerType,
+                    x.ObservedPattern,
+                    x.DetectedTrigger,
+                    x.EmotionalPattern,
+                    x.FinancialRisk,
+                    x.JewishWisdom,
+                    x.PracticalAction,
+                    x.FeedbackText,
+                    x.CreatedAt,
+                }),
+                MentorFinalReports = finalReports.Select(x => new
+                {
+                    x.Id,
+                    x.ReportText,
+                    x.TopTriggersJson,
+                    x.EmotionalPattern,
+                    x.FinancialRiskPattern,
+                    x.NextStepRecommendation,
+                    x.OfferShown,
+                    x.CreatedAt,
+                }),
+                MentorUsage = mentorUsage.Select(x => new
+                {
+                    x.Id,
+                    x.Date,
+                    x.InteractionsCount,
+                    x.PlanType,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                }),
+                Subscriptions = subscriptions.Select(x => new
+                {
+                    x.Id,
+                    x.PlanName,
+                    x.PlanType,
+                    x.Status,
+                    x.Price,
+                    x.CheckoutUrl,
+                    x.CreatedAt,
+                    x.UpdatedAt,
+                }),
+                BookPurchases = bookPurchases.Select(x => new
+                {
+                    x.Id,
+                    x.BookId,
+                    x.StripeSessionId,
+                    x.PurchasedAt,
+                }),
+                LegalAcceptances = legalAcceptances.Select(x => new
+                {
+                    x.Id,
+                    x.TermsVersion,
+                    x.PrivacyVersion,
+                    x.DisclaimerVersion,
+                    x.Language,
+                    x.AcceptedAt,
+                }),
+                Sessions = sessions.Select(x => new
+                {
+                    x.Id,
+                    x.CreatedAt,
+                    x.ExpiresAt,
+                    x.RevokedAt,
+                }),
+            });
+        });
+
+        privacyGroup.MapPost("/{userId:guid}/privacy/account-deletion", async (
+            Guid userId,
+            PrivacyDeleteAccountRequest request,
+            ClaimsPrincipal userPrincipal,
+            AppDbContext dbContext,
+            CancellationToken cancellationToken) =>
+        {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (!string.Equals(ApiMappers.NormalizeEmail(request.Email), user.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["email"] = ["Confirm your account e-mail before deleting this account."]
+                });
+            }
+
+            dbContext.Users.Remove(user);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return Results.NoContent();
+        });
+
         var group = app.MapGroup("/api/users")
             .WithTags("Users")
             .RequireAuthorization()

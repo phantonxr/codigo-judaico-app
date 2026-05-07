@@ -12,6 +12,7 @@ import {
   normalizeLegalLanguage,
 } from '../services/legal.js'
 import { useUtmParams } from '../hooks/useUtmParams.js'
+import { hasMarketingConsent } from '../services/privacyConsent.js'
 import FloatingProof from '../components/FloatingProof.jsx'
 import DisclaimerBanner from '../components/legal/DisclaimerBanner.jsx'
 import LegalDocumentModal from '../components/legal/LegalDocumentModal.jsx'
@@ -214,6 +215,7 @@ export default function CheckoutPage() {
         utmCampaign: utm.utm_campaign ?? null,
         utmTerm: utm.utm_term ?? null,
         utmContent: utm.utm_content ?? null,
+        marketingConsent: hasMarketingConsent(),
         bookIds: selectedBookIds,
         legalAcceptance: buildLegalAcceptancePayload(legalData.activeVersions, legalLanguage),
       })

@@ -713,7 +713,18 @@
         "title": "Premium Community",
         "description": "Exclusive meetings, guided studies, networking and group challenges with ongoing support."
       }
-    ]
+    ],
+    "privacy": {
+      "title": "Privacy and data",
+      "description": "Export your personal data or request deletion of the local platform account.",
+      "export_btn": "Export my data",
+      "delete_btn": "Delete my account",
+      "export_success": "Export generated.",
+      "export_error": "Could not export your data right now.",
+      "delete_error": "Could not delete your account right now.",
+      "delete_prompt": "Type exactly {{email}} to confirm account deletion.",
+      "delete_mismatch": "The e-mail does not match. The account was not deleted."
+    }
   },
   "admin": {
     "restricted_title": "Restricted access",
@@ -800,10 +811,19 @@
   },
   "cookie_banner": {
     "aria_label": "Cookie notice",
-    "message": "We use essential cookies for authentication and preferences. By continuing, you agree to our",
+    "message": "We use essential storage for login and security. With your permission, we also store preferences and campaign attribution data.",
     "policy_link": "Privacy Policy",
-    "accept": "Accept",
-    "reject": "Decline"
+    "accept_all": "Accept all",
+    "customize": "Customize",
+    "save": "Save choices",
+    "settings": "Privacy",
+    "reject": "Reject optional",
+    "essential_title": "Essential.",
+    "essential_description": "Required for login, checkout, security, and platform operation.",
+    "preferences_title": "Preferences.",
+    "preferences_description": "Store choices such as language and local app settings.",
+    "marketing_title": "Marketing and attribution.",
+    "marketing_description": "Allow UTMs to be stored and conversion data to be sent to attribution providers such as UTMfy."
   },
   "footer": {
     "privacy": "Privacy Policy",

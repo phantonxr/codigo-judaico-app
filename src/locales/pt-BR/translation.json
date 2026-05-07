@@ -713,7 +713,18 @@
         "title": "Comunidade Premium",
         "description": "Encontros exclusivos, estudos guiados, networking e desafios em grupo com acompanhamento."
       }
-    ]
+    ],
+    "privacy": {
+      "title": "Privacidade e dados",
+      "description": "Exporte seus dados pessoais ou solicite exclusão da conta local da plataforma.",
+      "export_btn": "Exportar meus dados",
+      "delete_btn": "Excluir minha conta",
+      "export_success": "Exportação gerada.",
+      "export_error": "Não foi possível exportar seus dados agora.",
+      "delete_error": "Não foi possível excluir sua conta agora.",
+      "delete_prompt": "Digite exatamente {{email}} para confirmar a exclusão da conta.",
+      "delete_mismatch": "O e-mail informado não confere. A conta não foi excluída."
+    }
   },
   "admin": {
     "restricted_title": "Acesso restrito",
@@ -800,10 +811,19 @@
   },
   "cookie_banner": {
     "aria_label": "Aviso de cookies",
-    "message": "Usamos cookies essenciais para autenticação e preferências. Ao continuar, você concorda com nossa",
+    "message": "Usamos armazenamento essencial para login e segurança. Com sua permissão, também guardamos preferências e dados de atribuição de campanha.",
     "policy_link": "Política de Privacidade",
-    "accept": "Aceitar",
-    "reject": "Recusar"
+    "accept_all": "Aceitar tudo",
+    "customize": "Personalizar",
+    "save": "Salvar escolhas",
+    "settings": "Privacidade",
+    "reject": "Recusar opcionais",
+    "essential_title": "Essenciais.",
+    "essential_description": "Necessários para login, checkout, segurança e funcionamento da plataforma.",
+    "preferences_title": "Preferências.",
+    "preferences_description": "Guardam escolhas como idioma e ajustes locais do aplicativo.",
+    "marketing_title": "Marketing e atribuição.",
+    "marketing_description": "Permitem salvar UTMs e enviar dados de conversão para provedores de atribuição como UTMfy."
   },
   "footer": {
     "privacy": "Política de Privacidade",

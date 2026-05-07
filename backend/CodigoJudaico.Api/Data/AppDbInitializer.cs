@@ -139,13 +139,21 @@ public sealed class AppDbInitializer(
         foreach (var seed in seeds)
         {
             var exists = await dbContext.LegalDocuments.AnyAsync(
-                x => x.Type == seed.Type && x.Language == seed.Language,
+                x => x.Type == seed.Type && x.Language == seed.Language && x.Version == seed.Version,
                 cancellationToken);
 
             if (exists)
             {
                 continue;
             }
+
+            await dbContext.LegalDocuments
+                .Where(x => x.Type == seed.Type && x.Language == seed.Language && x.IsActive)
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(x => x.IsActive, false)
+                        .SetProperty(x => x.UpdatedAt, now),
+                    cancellationToken);
 
             dbContext.LegalDocuments.Add(new LegalDocument
             {
@@ -166,7 +174,7 @@ public sealed class AppDbInitializer(
 
     private static IReadOnlyList<LegalDocumentSeed> BuildLegalDocumentSeeds(DateTimeOffset now)
     {
-        const string version = "1.0.0";
+        const string version = "1.1.0";
         var lastUpdated = now.ToString("yyyy-MM-dd");
 
         var enTerms = $"""
@@ -194,17 +202,19 @@ public sealed class AppDbInitializer(
 
         We may collect account information such as name, email, authentication status, plan, payment status, access history, and support interactions.
 
-        We may collect financial inputs, preferences, assessment answers, goals, spending patterns, debts, assets, reflections, chat prompts, AI interaction history, progress data, and other information you submit to receive insights or recommendations.
+        We may collect financial inputs, preferences, assessment answers, goals, spending patterns, debts, assets, reflections, chat prompts, AI interaction history, progress data, local storage preferences, legal acceptance records, and other information you submit to receive insights or recommendations.
 
-        We use data to operate accounts, process subscriptions, provide access, generate app experiences, personalize content, support AI-assisted features, improve reliability, perform analytics, protect the platform, comply with law, and support payments.
+        We use data to operate accounts, process subscriptions, provide access, generate app experiences, personalize content, support AI-assisted features, improve reliability, protect the platform, comply with law, support payments, and respond to privacy requests.
+
+        With your optional marketing and attribution consent, we may store UTM campaign parameters and send checkout/conversion events to attribution providers such as UTMfy. If you reject or withdraw this optional consent, we do not intentionally store new UTMs or send new UTMfy attribution events.
 
         Relevant inputs may be used by or made available to systems operating under Phantom Systems responsibility when needed to provide business content, financial recommendations, AI outputs, rules, or domain-specific logic.
 
-        We do not sell your personal financial inputs as standalone data. We limit sharing to service providers and situations reasonably needed for hosting, analytics, support, security, payment processing, legal compliance, app stores, fraud prevention, AI generation, and Phantom Systems content responsibilities.
+        We do not sell your personal financial inputs as standalone data. We limit sharing to service providers and situations reasonably needed for hosting, support, security, payment processing, legal compliance, app stores, fraud prevention, AI generation, optional marketing attribution, and Phantom Systems content responsibilities.
 
         We use reasonable administrative, technical, and organizational safeguards, but no online service can guarantee perfect security. You are responsible for protecting your credentials and using secure devices and networks.
 
-        Depending on applicable law, you may request access, correction, deletion, or export of certain personal information. Some records may be retained for legal, tax, security, backup, dispute, payment, and compliance purposes.
+        Depending on applicable law, including LGPD, GDPR, PIPEDA/Canada, Quebec privacy law, and US state privacy laws where applicable, you may request access, correction, deletion, export, restriction, objection, opt-out of sale/sharing, or withdrawal of consent. Some records may be retained for legal, tax, security, backup, dispute, payment, and compliance purposes.
         """;
 
         var enDisclaimer = $"""
@@ -250,17 +260,19 @@ public sealed class AppDbInitializer(
 
         Podemos coletar informacoes de conta, como nome, e-mail, status de autenticacao, plano, status de pagamento, historico de acesso e interacoes de suporte.
 
-        Podemos coletar entradas financeiras, preferencias, respostas de avaliacao, objetivos, padroes de gastos, dividas, ativos, reflexoes, prompts de chat, historico de interacao com IA, dados de progresso e outras informacoes que voce envia para receber insights ou recomendacoes.
+        Podemos coletar entradas financeiras, preferencias, respostas de avaliacao, objetivos, padroes de gastos, dividas, ativos, reflexoes, prompts de chat, historico de interacao com IA, dados de progresso, preferencias em armazenamento local, registros de aceite legal e outras informacoes que voce envia para receber insights ou recomendacoes.
 
-        Usamos dados para operar contas, processar assinaturas, fornecer acesso, gerar experiencias no aplicativo, personalizar conteudo, apoiar recursos assistidos por IA, melhorar confiabilidade, realizar analises, proteger a plataforma, cumprir a lei e apoiar pagamentos.
+        Usamos dados para operar contas, processar assinaturas, fornecer acesso, gerar experiencias no aplicativo, personalizar conteudo, apoiar recursos assistidos por IA, melhorar confiabilidade, proteger a plataforma, cumprir a lei, apoiar pagamentos e responder a solicitacoes de privacidade.
+
+        Com seu consentimento opcional para marketing e atribuicao, podemos armazenar parametros UTM de campanha e enviar eventos de checkout/conversao para provedores de atribuicao como UTMfy. Se voce recusar ou retirar esse consentimento opcional, nao armazenamos novas UTMs intencionalmente nem enviamos novos eventos de atribuicao para a UTMfy.
 
         Entradas relevantes podem ser usadas por sistemas sob responsabilidade da Phantom Systems quando necessario para fornecer conteudo de negocio, recomendacoes financeiras, saidas de IA, regras ou logica especifica de dominio.
 
-        Nao vendemos suas entradas financeiras pessoais como dados independentes. Limitamos o compartilhamento a prestadores e situacoes razoavelmente necessarias para hospedagem, analises, suporte, seguranca, processamento de pagamentos, conformidade legal, lojas de aplicativos, prevencao a fraude, geracao de IA e responsabilidades de conteudo da Phantom Systems.
+        Nao vendemos suas entradas financeiras pessoais como dados independentes. Limitamos o compartilhamento a prestadores e situacoes razoavelmente necessarias para hospedagem, suporte, seguranca, processamento de pagamentos, conformidade legal, lojas de aplicativos, prevencao a fraude, geracao de IA, atribuicao opcional de marketing e responsabilidades de conteudo da Phantom Systems.
 
         Usamos salvaguardas administrativas, tecnicas e organizacionais razoaveis, mas nenhum servico online pode garantir seguranca perfeita. Voce e responsavel por proteger suas credenciais e usar dispositivos e redes seguros.
 
-        Dependendo da lei aplicavel, voce pode solicitar acesso, correcao, exclusao ou exportacao de determinadas informacoes pessoais. Alguns registros podem ser mantidos para fins legais, fiscais, de seguranca, backup, disputa, pagamento e conformidade.
+        Dependendo da lei aplicavel, incluindo LGPD, GDPR, PIPEDA/Canada, lei de privacidade de Quebec e leis estaduais dos EUA quando aplicaveis, voce pode solicitar acesso, correcao, exclusao, exportacao, restricao, oposicao, opt-out de venda/compartilhamento ou retirada de consentimento. Alguns registros podem ser mantidos para fins legais, fiscais, de seguranca, backup, disputa, pagamento e conformidade.
         """;
 
         var ptDisclaimer = $"""

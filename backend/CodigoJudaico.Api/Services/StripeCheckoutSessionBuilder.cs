@@ -79,6 +79,24 @@ internal static class StripeCheckoutSessionBuilder
         string baseUrl,
         Dictionary<string, string> metadata,
         StripePlanDefinition plan,
+        decimal platformRetentionPercent,
+        string connectedAccountId,
+        StripeConnectRouting routing) =>
+        BuildSubscriptionSessionOptions(
+            email,
+            baseUrl,
+            metadata,
+            plan,
+            [],
+            platformRetentionPercent,
+            connectedAccountId,
+            routing);
+
+    internal static SessionCreateOptions BuildSubscriptionSessionOptions(
+        string email,
+        string baseUrl,
+        Dictionary<string, string> metadata,
+        StripePlanDefinition plan,
         IReadOnlyList<StripeBookLineItem> books,
         decimal platformRetentionPercent,
         string connectedAccountId,
@@ -91,7 +109,7 @@ internal static class StripeCheckoutSessionBuilder
 
         foreach (var book in books)
         {
-            lineItems.Add(new SessionLineItemOptions { Price = book.PriceId, Quantity = 1 });
+            lineItems.Add(BuildBookLineItemOptions(book));
         }
 
         var sessionOptions = new SessionCreateOptions
@@ -143,6 +161,24 @@ internal static class StripeCheckoutSessionBuilder
         string baseUrl,
         Dictionary<string, string> metadata,
         StripePlanDefinition plan,
+        long feeAmount,
+        string connectedAccountId,
+        StripeConnectRouting routing) =>
+        BuildOneTimePaymentSessionOptions(
+            email,
+            baseUrl,
+            metadata,
+            plan,
+            [],
+            feeAmount,
+            connectedAccountId,
+            routing);
+
+    internal static SessionCreateOptions BuildOneTimePaymentSessionOptions(
+        string email,
+        string baseUrl,
+        Dictionary<string, string> metadata,
+        StripePlanDefinition plan,
         IReadOnlyList<StripeBookLineItem> books,
         long feeAmount,
         string connectedAccountId,
@@ -169,7 +205,7 @@ internal static class StripeCheckoutSessionBuilder
 
         foreach (var book in books)
         {
-            lineItems.Add(new SessionLineItemOptions { Price = book.PriceId, Quantity = 1 });
+            lineItems.Add(BuildBookLineItemOptions(book));
         }
 
         var sessionOptions = new SessionCreateOptions
@@ -201,6 +237,32 @@ internal static class StripeCheckoutSessionBuilder
         }
 
         return sessionOptions;
+    }
+
+    internal static SessionLineItemOptions BuildBookLineItemOptions(StripeBookLineItem book)
+    {
+        if (!string.IsNullOrWhiteSpace(book.PriceId))
+        {
+            return new SessionLineItemOptions
+            {
+                Price = book.PriceId,
+                Quantity = 1,
+            };
+        }
+
+        return new SessionLineItemOptions
+        {
+            Quantity = 1,
+            PriceData = new SessionLineItemPriceDataOptions
+            {
+                Currency = book.Currency,
+                UnitAmount = book.UnitAmountInCents,
+                ProductData = new SessionLineItemPriceDataProductDataOptions
+                {
+                    Name = book.Title,
+                },
+            },
+        };
     }
 
     private static void EnsureRequiredPaymentCoreMetadata(PaymentCoreCheckoutMetadata paymentCoreMetadata)

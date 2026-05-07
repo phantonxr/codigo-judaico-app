@@ -137,7 +137,8 @@ public sealed class StripeWebhookProcessor(
     {
         var subscription = await stripeBillingService.GetSubscriptionAsync(session.SubscriptionId, cancellationToken);
         var matchedPlan = await ResolveTrackedPlanAsync(session, subscription, cancellationToken);
-        var bookIds = ParseBookIds(ReadMetadata(session.Metadata, StripeBillingService.BookIdsMetadataKey));
+        var bookIds = BookCatalog.ExpandWithPurchaseBonuses(
+            ParseBookIds(ReadMetadata(session.Metadata, StripeBillingService.BookIdsMetadataKey)));
 
         if (matchedPlan is null && (bookIds.Count == 0 || !stripeBillingService.HasExpectedMetadata(session.Metadata)))
         {

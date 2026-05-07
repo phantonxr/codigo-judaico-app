@@ -5,7 +5,8 @@ var GOLD = 'rgba(215, 178, 74, 0.9)'
 var GOLD_TEXT = 'rgba(240, 210, 122, 0.95)'
 var MUTED = 'rgba(255, 255, 255, 0.65)'
 
-function Section({ title, children }) {
+function Section({ title, children })
+{
   return (
     <section style={{ display: 'grid', gap: 12 }}>
       <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0, color: GOLD_TEXT }}>{title}</h2>
@@ -14,7 +15,8 @@ function Section({ title, children }) {
   )
 }
 
-export default function PoliticaDePrivacidade() {
+export default function PoliticaDePrivacidade()
+{
   const { t } = useTranslation()
 
   return (
@@ -90,19 +92,19 @@ export default function PoliticaDePrivacidade() {
                 <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Resend (EUA):</strong>{' '}
                 envio de e-mails transacionais.
               </li>
-	              <li>
-	                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>OpenAI (EUA):</strong>{' '}
-	                geração de feedback do Rabino Mentor IA a partir das suas reflexões e mensagens. Evite
-	                inserir dados sensíveis que não sejam necessários para usar a funcionalidade.
-	              </li>
-	              <li>
-	                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>UTMfy (Brasil):</strong>{' '}
-	                atribuição de campanhas e eventos de checkout quando você autoriza marketing e atribuição.
-	              </li>
-	              <li>
-	                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Hospedagem, banco de dados e mídia:</strong>{' '}
-	                infraestrutura usada para disponibilizar a aplicação, armazenar registros da conta e servir conteúdos.
-	              </li>
+              <li>
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>OpenAI (EUA):</strong>{' '}
+                geração de feedback do Rabino Mentor IA a partir das suas reflexões e mensagens. Evite
+                inserir dados sensíveis que não sejam necessários para usar a funcionalidade.
+              </li>
+              <li>
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>UTMfy (Brasil):</strong>{' '}
+                atribuição de campanhas e eventos de checkout quando você autoriza marketing e atribuição.
+              </li>
+              <li>
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Hospedagem, banco de dados e mídia:</strong>{' '}
+                infraestrutura usada para disponibilizar a aplicação, armazenar registros da conta e servir conteúdos.
+              </li>
             </ul>
             <p style={{ marginTop: 14 }}>
               Não vendemos seus dados pessoais como produto independente. Quando a lei tratar atribuição,
@@ -156,14 +158,14 @@ export default function PoliticaDePrivacidade() {
                 necessários para autenticação e funcionamento da plataforma. Não podem ser desativados
                 sem comprometer o acesso ao serviço.
               </li>
-	              <li>
-	                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Preferência:</strong>{' '}
-	                armazenam configurações como idioma escolhido.
-	              </li>
-	              <li>
-	                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Marketing e atribuição:</strong>{' '}
-	                armazenam UTMs e permitem mensuração de campanhas somente com sua autorização.
-	              </li>
+              <li>
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Preferência:</strong>{' '}
+                armazenam configurações como idioma escolhido.
+              </li>
+              <li>
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Marketing e atribuição:</strong>{' '}
+                armazenam UTMs e permitem mensuração de campanhas somente com sua autorização.
+              </li>
             </ul>
             <p style={{ marginTop: 14 }}>
               Você pode aceitar, recusar ou alterar preferências pelo botão "Privacidade" exibido no site.
@@ -193,7 +195,7 @@ export default function PoliticaDePrivacidade() {
                 <div>
                   <span style={{ color: MUTED, fontSize: 13 }}>Nome</span>
                   <div style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, marginTop: 2 }}>
-                    Wallace Torres
+                    Anderson Albuquerque
                   </div>
                 </div>
                 <div>

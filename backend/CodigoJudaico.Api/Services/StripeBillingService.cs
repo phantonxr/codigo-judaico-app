@@ -5,7 +5,12 @@ using Stripe.Checkout;
 
 namespace CodigoJudaico.Api.Services;
 
-public sealed record StripeBookLineItem(string BookId, string PriceId);
+public sealed record StripeBookLineItem(
+    string BookId,
+    string Title,
+    string? PriceId,
+    long UnitAmountInCents,
+    string Currency);
 
 public sealed record StripePlanDefinition(
     string Id,
@@ -139,23 +144,49 @@ public sealed class StripeBillingService(
         }
 
         var result = new List<StripeBookLineItem>();
+        var normalizedIds = bookIds
+            .Select(bookId => ApiMappers.Clean(bookId).ToLowerInvariant())
+            .Where(bookId => !string.IsNullOrWhiteSpace(bookId))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var hasMethodBook = normalizedIds.Contains(BookCatalog.MethodBookId, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var bookId in bookIds)
+        foreach (var normalizedId in normalizedIds)
         {
-            var normalizedId = ApiMappers.Clean(bookId).ToLowerInvariant();
-
-            if (string.IsNullOrWhiteSpace(normalizedId))
+            if (hasMethodBook && BookCatalog.IsMethodBookLimitedTimeBonus(normalizedId))
             {
                 continue;
             }
 
-            if (!_options.BookPriceIds.TryGetValue(normalizedId, out var priceId) || string.IsNullOrWhiteSpace(priceId))
+            var book = BookCatalog.FindById(normalizedId);
+
+            if (book is null)
             {
-                _logger.LogWarning("Livro '{BookId}' sem PriceId configurado — ignorado no checkout.", normalizedId);
+                _logger.LogWarning("Livro '{BookId}' nao existe no catalogo — ignorado no checkout.", normalizedId);
                 continue;
             }
 
-            result.Add(new StripeBookLineItem(normalizedId, ApiMappers.Clean(priceId)));
+            if (book.IsAccessBonus)
+            {
+                _logger.LogWarning("Livro '{BookId}' e bonus de acesso e nao pode ser comprado separadamente.", normalizedId);
+                continue;
+            }
+
+            _options.BookPriceIds.TryGetValue(normalizedId, out var configuredPriceId);
+            var priceId = ApiMappers.Clean(configuredPriceId);
+
+            if (string.IsNullOrWhiteSpace(priceId) && book.PriceAmountInCents <= 0)
+            {
+                _logger.LogWarning("Livro '{BookId}' sem PriceId ou preco configurado — ignorado no checkout.", normalizedId);
+                continue;
+            }
+
+            result.Add(new StripeBookLineItem(
+                normalizedId,
+                book.Title,
+                string.IsNullOrWhiteSpace(priceId) ? null : priceId,
+                book.PriceAmountInCents,
+                RequiredCurrency));
         }
 
         return result;
@@ -163,7 +194,7 @@ public sealed class StripeBillingService(
 
     public IReadOnlyList<BookDefinition> GetPurchasableBooks() =>
         BookCatalog.All
-            .Where(b => _options.BookPriceIds.ContainsKey(b.Id) && !string.IsNullOrWhiteSpace(_options.BookPriceIds[b.Id]))
+            .Where(IsBookPurchasable)
             .ToList();
 
     public async Task<CheckoutSessionCreateResponse> CreateBookOnlyCheckoutSessionAsync(
@@ -180,7 +211,7 @@ public sealed class StripeBillingService(
         }
 
         var baseUrl = _options.FrontendBaseUrl.TrimEnd('/');
-        var bookIdsJoined = string.Join(",", books.Select(b => b.BookId));
+        var bookIdsJoined = BuildBookIdsMetadata(books);
         var orderId = BuildOrderId();
 
         var metadata = new Dictionary<string, string>
@@ -212,7 +243,7 @@ public sealed class StripeBillingService(
             ClientReferenceId = email,
             Metadata = metadata,
             PaymentIntentData = new SessionPaymentIntentDataOptions { Metadata = metadata },
-            LineItems = books.Select(b => new SessionLineItemOptions { Price = b.PriceId, Quantity = 1 }).ToList(),
+            LineItems = books.Select(StripeCheckoutSessionBuilder.BuildBookLineItemOptions).ToList(),
             AllowPromotionCodes = true,
         };
 
@@ -248,7 +279,7 @@ public sealed class StripeBillingService(
             utmCampaign: ApiMappers.Clean(request.UtmCampaign),
             utmTerm: ApiMappers.Clean(request.UtmTerm),
             utmContent: ApiMappers.Clean(request.UtmContent),
-            bookIds: books is { Count: > 0 } ? string.Join(",", books.Select(b => b.BookId)) : null);
+            bookIds: books is { Count: > 0 } ? BuildBookIdsMetadata(books) : null);
         var routing = StripeConnectRouting.Direct;
 
         _logger.LogInformation(
@@ -589,6 +620,21 @@ public sealed class StripeBillingService(
     {
         return $"{ApplicationKey}-{Guid.NewGuid():N}";
     }
+
+    private bool IsBookPurchasable(BookDefinition book)
+    {
+        if (book.IsAccessBonus)
+        {
+            return false;
+        }
+
+        return book.PriceAmountInCents > 0
+            || (_options.BookPriceIds.TryGetValue(book.Id, out var priceId)
+                && !string.IsNullOrWhiteSpace(priceId));
+    }
+
+    private static string BuildBookIdsMetadata(IReadOnlyList<StripeBookLineItem> books) =>
+        string.Join(",", BookCatalog.ExpandWithPurchaseBonuses(books.Select(b => b.BookId)));
 
     private static string ReadMetadata(Dictionary<string, string>? metadata, string key)
     {

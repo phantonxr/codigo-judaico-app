@@ -4,8 +4,33 @@ import { useTranslation } from 'react-i18next'
 import { BookOpen, Download, ShoppingCart, Check, Gift } from 'lucide-react'
 import { getMyBooks, createBookCheckoutSession, getBookDownloadUrl } from '../services/books.js'
 
+const METHOD_BOOK_ID = 'metodo-judaico-riqueza'
+const METHOD_BONUS_BOOK_IDS = [
+  '7-gatilhos-dinheiro-desaparecer',
+  '7-gatilhos-dinheiro-escapar',
+]
+
+function isMethodBonusBook(bookId) {
+  return METHOD_BONUS_BOOK_IDS.includes(String(bookId || ''))
+}
+
+function sortBooksForOffer(books) {
+  return [...books].sort(function (a, b) {
+    const score = function (book) {
+      if (book.id === METHOD_BOOK_ID) return 0
+      if (isMethodBonusBook(book.id)) return 1
+      return 2
+    }
+
+    const scoreDiff = score(a) - score(b)
+    return scoreDiff || String(a.title || '').localeCompare(String(b.title || ''), 'pt-BR')
+  })
+}
+
 function BookCard({ book, onBuy, buying, t }) {
   const isLockedAccessBonus = book.isAccessBonus && !book.isPurchased
+  const isMethodBook = book.id === METHOD_BOOK_ID
+  const isMethodBonus = isMethodBonusBook(book.id)
 
   return (
     <div
@@ -65,9 +90,27 @@ function BookCard({ book, onBuy, buying, t }) {
               {!book.isAccessBonus && !book.isPurchasable && !book.isPurchased && (
                 <span className="badge" style={{ fontSize: 11 }}>{t('books.coming_soon')}</span>
               )}
+              {isMethodBook && !book.isPurchased && (
+                <span className="badge" style={{ fontSize: 11 }}>{t('books.method_bonus_badge')}</span>
+              )}
+              {isMethodBonus && !book.isPurchased && (
+                <span className="badge" style={{ fontSize: 11 }}>{t('books.method_bonus_hint_badge')}</span>
+              )}
             </div>
             <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{book.description}</div>
-            <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 18 }}>{book.priceLabel}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 18 }}>{book.priceLabel}</div>
+              {isMethodBonus && !book.isPurchased && (
+                <span className="checkout-book-mini-badge checkout-book-mini-badge--free">
+                  {t('books.method_bonus_free_with_method')}
+                </span>
+              )}
+            </div>
+            {isMethodBook && !book.isPurchased && (
+              <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+                {t('books.method_bonus_card_note')}
+              </div>
+            )}
             {isLockedAccessBonus && (
               <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
                 {t('books.access_bonus_locked')}
@@ -95,7 +138,7 @@ function BookCard({ book, onBuy, buying, t }) {
             style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}
           >
             <ShoppingCart size={16} />
-            {buying ? t('books.buying') : t('books.buy_btn', { price: book.priceLabel })}
+            {buying ? t('books.buying') : t(isMethodBook ? 'books.buy_method_bundle_btn' : 'books.buy_btn', { price: book.priceLabel })}
           </button>
         ) : null}
       </div>
@@ -117,7 +160,7 @@ export default function Livros() {
   useEffect(function () {
     getMyBooks()
       .then(function (data) {
-        setBooks(data)
+        setBooks(sortBooksForOffer(data || []))
         setLoading(false)
       })
       .catch(function (err) {
@@ -166,6 +209,16 @@ export default function Livros() {
             <div className="muted" style={{ lineHeight: 1.6 }}>
               {t('books.description')}
             </div>
+          </div>
+        </div>
+
+        <div className="checkout-book-promo">
+          <div className="checkout-book-promo__icon" aria-hidden="true">
+            <Gift size={17} />
+          </div>
+          <div className="checkout-book-promo__copy">
+            <div className="checkout-book-promo__title">{t('books.method_bonus_title')}</div>
+            <div className="checkout-book-promo__text">{t('books.method_bonus_desc')}</div>
           </div>
         </div>
 

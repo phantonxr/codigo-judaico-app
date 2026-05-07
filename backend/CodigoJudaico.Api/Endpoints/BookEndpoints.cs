@@ -50,6 +50,7 @@ public static class BookEndpoints
                 .Select(x => x.BookId)
                 .ToHashSetAsync(cancellationToken);
             var hasAccessBonusEntitlement = AppAccessEvaluator.HasAccessBonusEntitlement(user);
+            var hasMethodBookPurchase = purchasedBookIds.Contains(BookCatalog.MethodBookId);
 
             var books = BookCatalog.All.Select(b => new BookLibraryDto(
                 b.Id,
@@ -57,7 +58,9 @@ public static class BookEndpoints
                 b.Description,
                 b.PriceLabel,
                 BuildCoverImageUrl(b),
-                purchasedBookIds.Contains(b.Id) || (b.IsAccessBonus && hasAccessBonusEntitlement),
+                purchasedBookIds.Contains(b.Id)
+                    || (b.IsAccessBonus && hasAccessBonusEntitlement)
+                    || (BookCatalog.IsMethodBookLimitedTimeBonus(b.Id) && hasMethodBookPurchase),
                 IsPurchasable(b, bookPriceIds),
                 b.IsAccessBonus));
 
@@ -157,10 +160,14 @@ public static class BookEndpoints
 
             var hasPurchased = await dbContext.UserBookPurchases
                 .AnyAsync(x => x.UserId == userId && x.BookId == normalizedId, cancellationToken);
+            var hasMethodBookPurchase =
+                BookCatalog.IsMethodBookLimitedTimeBonus(normalizedId)
+                && await dbContext.UserBookPurchases
+                    .AnyAsync(x => x.UserId == userId && x.BookId == BookCatalog.MethodBookId, cancellationToken);
             var hasAccessBonusEntitlement =
                 book.IsAccessBonus && AppAccessEvaluator.HasAccessBonusEntitlement(user);
 
-            if (!hasPurchased && !hasAccessBonusEntitlement)
+            if (!hasPurchased && !hasAccessBonusEntitlement && !hasMethodBookPurchase)
             {
                 return Results.Forbid();
             }
@@ -191,8 +198,9 @@ public static class BookEndpoints
         BookDefinition book,
         IReadOnlyDictionary<string, string> bookPriceIds) =>
         !book.IsAccessBonus &&
-        bookPriceIds.TryGetValue(book.Id, out var priceId) &&
-        !string.IsNullOrWhiteSpace(priceId);
+        (book.PriceAmountInCents > 0 ||
+            (bookPriceIds.TryGetValue(book.Id, out var priceId) &&
+                !string.IsNullOrWhiteSpace(priceId)));
 
     private static string BuildCoverImageUrl(BookDefinition book) =>
         string.IsNullOrWhiteSpace(book.CoverImageFileName)

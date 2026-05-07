@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createCheckoutSession } from '../services/payments.js'
 import { getBookCatalog } from '../services/books.js'
@@ -16,10 +16,15 @@ import { hasMarketingConsent } from '../services/privacyConsent.js'
 import FloatingProof from '../components/FloatingProof.jsx'
 import DisclaimerBanner from '../components/legal/DisclaimerBanner.jsx'
 import LegalDocumentModal from '../components/legal/LegalDocumentModal.jsx'
-import { Zap, Clock, BookOpen } from 'lucide-react'
+import { Zap, Clock, BookOpen, Gift } from 'lucide-react'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 const DEFAULT_PLAN_ID = 'primeiro-acesso'
+const METHOD_BOOK_ID = 'metodo-judaico-riqueza'
+const METHOD_BONUS_BOOK_IDS = [
+  '7-gatilhos-dinheiro-desaparecer',
+  '7-gatilhos-dinheiro-escapar',
+]
 
 const PLAN_CATALOG = {
   'primeiro-acesso': {
@@ -94,6 +99,23 @@ function resolveCtaLabel(planId, t) {
   return t('checkout.plans.cta_labels.' + (known.includes(pid) ? pid : 'default'))
 }
 
+function isMethodBonusBook(bookId) {
+  return METHOD_BONUS_BOOK_IDS.includes(String(bookId || ''))
+}
+
+function sortBooksForOffer(books) {
+  return [...books].sort(function (a, b) {
+    const score = function (book) {
+      if (book.id === METHOD_BOOK_ID) return 0
+      if (isMethodBonusBook(book.id)) return 1
+      return 2
+    }
+
+    const scoreDiff = score(a) - score(b)
+    return scoreDiff || String(a.title || '').localeCompare(String(b.title || ''), 'pt-BR')
+  })
+}
+
 export default function CheckoutPage() {
   const { t, i18n } = useTranslation()
   const legalLanguage = normalizeLegalLanguage(i18n.language)
@@ -121,14 +143,25 @@ export default function CheckoutPage() {
   const [selectedLegalDocument, setSelectedLegalDocument] = useState(null)
   const redirectedFromLogin = searchParams.get('reason') === 'payment_required'
   const existingAccountFlow = redirectedFromLogin && Boolean(email)
+  const planSectionRef = useRef(null)
 
   useEffect(function () {
     getBookCatalog()
       .then(function (data) {
-        setAvailableBooks((data || []).filter(function (b) { return b.isPurchasable }))
+        setAvailableBooks(sortBooksForOffer((data || []).filter(function (b) { return b.isPurchasable })))
       })
       .catch(function () {})
   }, [])
+
+  useEffect(function () {
+    var frameId = window.requestAnimationFrame(function () {
+      planSectionRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' })
+    })
+
+    return function () {
+      window.cancelAnimationFrame(frameId)
+    }
+  }, [selectedPlan.id])
 
   useEffect(function () {
     let alive = true
@@ -177,6 +210,10 @@ export default function CheckoutPage() {
   }, [secondsLeft])
 
   const isUrgentWindow = secondsLeft > 0 && secondsLeft <= 5 * 60
+  const hasMethodBookSelected = selectedBookIds.includes(METHOD_BOOK_ID)
+  const checkoutBookIds = hasMethodBookSelected
+    ? selectedBookIds.filter(function (id) { return !isMethodBonusBook(id) })
+    : selectedBookIds
 
   async function onSubmit(event) {
     event.preventDefault()
@@ -216,7 +253,7 @@ export default function CheckoutPage() {
         utmTerm: utm.utm_term ?? null,
         utmContent: utm.utm_content ?? null,
         marketingConsent: hasMarketingConsent(),
-        bookIds: selectedBookIds,
+        bookIds: checkoutBookIds,
         legalAcceptance: buildLegalAcceptancePayload(legalData.activeVersions, legalLanguage),
       })
 
@@ -266,7 +303,7 @@ export default function CheckoutPage() {
         </div>
 
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 22 }}>
-          <div className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.85)' }}>
+          <div ref={planSectionRef} className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.85)' }}>
             <div
               className="card-inner"
               style={{
@@ -339,30 +376,59 @@ export default function CheckoutPage() {
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
                   {t('checkout.books_section_hint')}
                 </div>
+
+                <div className={'checkout-book-promo' + (hasMethodBookSelected ? ' checkout-book-promo--active' : '')}>
+                  <div className="checkout-book-promo__icon" aria-hidden="true">
+                    <Gift size={17} />
+                  </div>
+                  <div className="checkout-book-promo__copy">
+                    <div className="checkout-book-promo__title">
+                      {t('checkout.method_bonus_title')}
+                    </div>
+                    <div className="checkout-book-promo__text">
+                      {hasMethodBookSelected ? t('checkout.method_bonus_active') : t('checkout.method_bonus_sub')}
+                    </div>
+                  </div>
+                </div>
+
                 <div style={{ display: 'grid', gap: 10 }}>
                   {availableBooks.map(function (book) {
                     const isSelected = selectedBookIds.includes(book.id)
+                    const isMethodBook = book.id === METHOD_BOOK_ID
+                    const isBonusBook = isMethodBonusBook(book.id)
+                    const isFreeWithMethod = hasMethodBookSelected && isBonusBook
+                    const checked = isSelected || isFreeWithMethod
                     return (
                       <label
                         key={book.id}
+                        className={'checkout-book-option' + (checked ? ' checkout-book-option--selected' : '') + (isFreeWithMethod ? ' checkout-book-option--free' : '')}
                         style={{
                           display: 'flex',
                           alignItems: 'flex-start',
                           gap: 12,
-                          cursor: 'pointer',
+                          cursor: isFreeWithMethod ? 'default' : 'pointer',
                           padding: '12px 14px',
                           borderRadius: 12,
-                          border: `1px solid ${isSelected ? 'rgba(215, 178, 74, 0.6)' : 'rgba(255,255,255,0.1)'}`,
-                          background: isSelected ? 'rgba(215, 178, 74, 0.08)' : 'transparent',
+                          border: `1px solid ${checked ? 'rgba(215, 178, 74, 0.6)' : 'rgba(255,255,255,0.1)'}`,
+                          background: checked ? 'rgba(215, 178, 74, 0.08)' : 'transparent',
                           transition: 'all 0.15s',
                         }}
                       >
                         <input
                           type="checkbox"
-                          checked={isSelected}
+                          checked={checked}
+                          disabled={isFreeWithMethod}
                           onChange={function (e) {
                             if (e.target.checked) {
-                              setSelectedBookIds(function (prev) { return [...prev, book.id] })
+                              setSelectedBookIds(function (prev) {
+                                if (isMethodBook) {
+                                  return [...prev.filter(function (id) {
+                                    return id !== METHOD_BOOK_ID && !isMethodBonusBook(id)
+                                  }), book.id]
+                                }
+
+                                return prev.includes(book.id) ? prev : [...prev, book.id]
+                              })
                             } else {
                               setSelectedBookIds(function (prev) { return prev.filter(function (id) { return id !== book.id }) })
                             }
@@ -370,17 +436,36 @@ export default function CheckoutPage() {
                           style={{ marginTop: 2, accentColor: 'var(--gold-2)', width: 16, height: 16, flexShrink: 0 }}
                         />
                         <div style={{ display: 'flex', gap: 10, flex: 1, alignItems: 'flex-start' }}>
-                          {book.coverImageUrl && (
+                          {book.coverImageUrl ? (
                             <img
                               src={book.coverImageUrl}
                               alt={book.title}
                               style={{ width: 44, height: 60, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
                             />
+                          ) : (
+                            <div className="checkout-book-cover-fallback" aria-hidden="true">
+                              <BookOpen size={18} />
+                            </div>
                           )}
                           <div style={{ display: 'grid', gap: 3 }}>
-                            <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{book.title}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{book.title}</div>
+                              {isMethodBook ? (
+                                <span className="checkout-book-mini-badge">{t('checkout.method_bonus_badge')}</span>
+                              ) : null}
+                              {isFreeWithMethod ? (
+                                <span className="checkout-book-mini-badge checkout-book-mini-badge--free">{t('checkout.method_bonus_free_badge')}</span>
+                              ) : null}
+                            </div>
                             <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>{book.description}</div>
-                            <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 14 }}>+ {book.priceLabel}</div>
+                            {isFreeWithMethod ? (
+                              <div className="checkout-book-free-price">
+                                <span>{book.priceLabel}</span>
+                                <strong>{t('checkout.method_bonus_free_label')}</strong>
+                              </div>
+                            ) : (
+                              <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 14 }}>+ {book.priceLabel}</div>
+                            )}
                           </div>
                         </div>
                       </label>

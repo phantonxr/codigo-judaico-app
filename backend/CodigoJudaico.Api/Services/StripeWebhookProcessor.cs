@@ -321,14 +321,9 @@ public sealed class StripeWebhookProcessor(
         var utmTerm = ReadMetadata(session.Metadata, StripeBillingService.UtmTermMetadataKey);
         var utmContent = ReadMetadata(session.Metadata, StripeBillingService.UtmContentMetadataKey);
 
-        // Fallback para UTMs salvos no usuário, caso a session não tenha
-        if (string.IsNullOrWhiteSpace(utmSource))
+        if (!HasAnyUtm(utmSource, utmMedium, utmCampaign, utmTerm, utmContent))
         {
-            utmSource = user.UtmSource ?? string.Empty;
-            utmMedium = user.UtmMedium ?? string.Empty;
-            utmCampaign = user.UtmCampaign ?? string.Empty;
-            utmTerm = user.UtmTerm ?? string.Empty;
-            utmContent = user.UtmContent ?? string.Empty;
+            return;
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -350,6 +345,18 @@ public sealed class StripeWebhookProcessor(
             UtmContent: string.IsNullOrWhiteSpace(utmContent) ? null : utmContent),
             cancellationToken);
     }
+
+    private static bool HasAnyUtm(
+        string? utmSource,
+        string? utmMedium,
+        string? utmCampaign,
+        string? utmTerm,
+        string? utmContent) =>
+        !string.IsNullOrWhiteSpace(utmSource)
+        || !string.IsNullOrWhiteSpace(utmMedium)
+        || !string.IsNullOrWhiteSpace(utmCampaign)
+        || !string.IsNullOrWhiteSpace(utmTerm)
+        || !string.IsNullOrWhiteSpace(utmContent);
 
     private async Task HandleSubscriptionChangedAsync(
         Subscription subscription,

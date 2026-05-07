@@ -285,6 +285,7 @@ public sealed record CheckoutSessionCreateRequest
     public string? UtmCampaign { get; init; }
     public string? UtmTerm { get; init; }
     public string? UtmContent { get; init; }
+    public bool MarketingConsent { get; init; }
     public IReadOnlyList<string> BookIds { get; init; } = [];
     public LegalAcceptanceRequest? LegalAcceptance { get; init; }
 }
@@ -348,6 +349,11 @@ public sealed record ProfileUpsertRequest
     public string? Plan { get; init; }
     public string? PlanStatus { get; init; }
     public string? NextChargeDate { get; init; }
+}
+
+public sealed record PrivacyDeleteAccountRequest
+{
+    public string Email { get; init; } = string.Empty;
 }
 
 public sealed record DiagnosisUpsertRequest

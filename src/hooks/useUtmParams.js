@@ -1,5 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import {
+  hasMarketingConsent,
+  PRIVACY_CONSENT_CHANGED_EVENT,
+} from '../services/privacyConsent.js'
 
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
 const STORAGE_KEY = 'cj_utm'
@@ -21,8 +25,27 @@ function persistUtm(params) {
   }
 }
 
+function clearStoredUtm() {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // localStorage indisponivel (ex: modo privado bloqueado)
+  }
+}
+
 export function useUtmParams() {
   const [searchParams] = useSearchParams()
+  const [marketingConsent, setMarketingConsent] = useState(() => hasMarketingConsent())
+
+  useEffect(() => {
+    const syncConsent = () => setMarketingConsent(hasMarketingConsent())
+    window.addEventListener(PRIVACY_CONSENT_CHANGED_EVENT, syncConsent)
+    window.addEventListener('storage', syncConsent)
+    return () => {
+      window.removeEventListener(PRIVACY_CONSENT_CHANGED_EVENT, syncConsent)
+      window.removeEventListener('storage', syncConsent)
+    }
+  }, [])
 
   const urlUtm = useMemo(() => {
     const result = {}
@@ -33,15 +56,21 @@ export function useUtmParams() {
     return result
   }, [searchParams])
 
-  // Salva no localStorage sempre que a URL tiver UTMs
+  // UTMs sao marketing/atribuicao: so persistimos apos consentimento explicito.
   useEffect(() => {
+    if (!marketingConsent) {
+      clearStoredUtm()
+      return
+    }
+
     if (Object.keys(urlUtm).length > 0) {
       persistUtm(urlUtm)
     }
-  }, [urlUtm])
+  }, [marketingConsent, urlUtm])
 
   // Prioridade: URL > localStorage (first-touch via storage, last-touch via URL)
   return useMemo(() => {
+    if (!marketingConsent) return {}
     return Object.keys(urlUtm).length > 0 ? urlUtm : readStoredUtm()
-  }, [urlUtm])
+  }, [marketingConsent, urlUtm])
 }

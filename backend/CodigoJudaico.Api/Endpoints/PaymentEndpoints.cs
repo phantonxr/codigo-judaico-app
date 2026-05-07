@@ -222,6 +222,7 @@ public static class PaymentEndpoints
             }
 
             var cleanedName = ApiMappers.Clean(request.Name);
+            var marketingConsent = request.MarketingConsent;
             var books = stripeBillingService.ResolveBookLineItems(request.BookIds);
             CheckoutSessionCreateResponse response;
 
@@ -233,6 +234,11 @@ public static class PaymentEndpoints
                         Email = email,
                         Name = cleanedName,
                         Password = string.Empty,
+                        UtmSource = marketingConsent ? request.UtmSource : null,
+                        UtmMedium = marketingConsent ? request.UtmMedium : null,
+                        UtmCampaign = marketingConsent ? request.UtmCampaign : null,
+                        UtmTerm = marketingConsent ? request.UtmTerm : null,
+                        UtmContent = marketingConsent ? request.UtmContent : null,
                     },
                     plan,
                     cancellationToken,
@@ -295,8 +301,8 @@ public static class PaymentEndpoints
                 request.LegalAcceptance,
                 cancellationToken);
 
-            // Salva UTMs no usuário (first-touch: só se ainda não tiver)
-            if (string.IsNullOrWhiteSpace(user.UtmSource) && !string.IsNullOrWhiteSpace(request.UtmSource))
+            // Salva UTMs no usuário somente com consentimento de marketing (first-touch: só se ainda não tiver).
+            if (marketingConsent && string.IsNullOrWhiteSpace(user.UtmSource) && !string.IsNullOrWhiteSpace(request.UtmSource))
             {
                 user.UtmSource = request.UtmSource;
                 user.UtmMedium = request.UtmMedium;
@@ -307,25 +313,28 @@ public static class PaymentEndpoints
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            // Notifica UTMfy que o checkout foi iniciado (waiting_payment)
-            var orderId = response.OrderId;
+            if (marketingConsent && HasAnyUtm(request))
+            {
+                // Notifica UTMfy que o checkout foi iniciado (waiting_payment).
+                var orderId = response.OrderId;
 
-            await utmfyService.TrackAsync(new UtmfyConversionRequest(
-                OrderId: orderId,
-                Email: email,
-                Name: cleanedName,
-                PlanId: plan.Id,
-                PlanName: plan.PlanName,
-                AmountInCents: response.AmountInCents,
-                Status: "waiting_payment",
-                CreatedAt: now,
-                ApprovedAt: null,
-                UtmSource: request.UtmSource,
-                UtmMedium: request.UtmMedium,
-                UtmCampaign: request.UtmCampaign,
-                UtmTerm: request.UtmTerm,
-                UtmContent: request.UtmContent),
-                cancellationToken);
+                await utmfyService.TrackAsync(new UtmfyConversionRequest(
+                    OrderId: orderId,
+                    Email: email,
+                    Name: cleanedName,
+                    PlanId: plan.Id,
+                    PlanName: plan.PlanName,
+                    AmountInCents: response.AmountInCents,
+                    Status: "waiting_payment",
+                    CreatedAt: now,
+                    ApprovedAt: null,
+                    UtmSource: request.UtmSource,
+                    UtmMedium: request.UtmMedium,
+                    UtmCampaign: request.UtmCampaign,
+                    UtmTerm: request.UtmTerm,
+                    UtmContent: request.UtmContent),
+                    cancellationToken);
+            }
 
             if (shouldSendAccountCreatedEmail)
             {
@@ -409,6 +418,13 @@ public static class PaymentEndpoints
 
         return app;
     }
+
+    private static bool HasAnyUtm(CheckoutSessionCreateRequest request) =>
+        !string.IsNullOrWhiteSpace(request.UtmSource)
+        || !string.IsNullOrWhiteSpace(request.UtmMedium)
+        || !string.IsNullOrWhiteSpace(request.UtmCampaign)
+        || !string.IsNullOrWhiteSpace(request.UtmTerm)
+        || !string.IsNullOrWhiteSpace(request.UtmContent);
 
     private static string? ValidatePlanEligibility(StripePlanDefinition plan, AppUser? user)
     {

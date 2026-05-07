@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { BookOpen, Download, ShoppingCart, Check } from 'lucide-react'
+import { BookOpen, Download, ShoppingCart, Check, Gift } from 'lucide-react'
 import { getMyBooks, createBookCheckoutSession, getBookDownloadUrl } from '../services/books.js'
 
 function BookCard({ book, onBuy, buying, t }) {
+  const isLockedAccessBonus = book.isAccessBonus && !book.isPurchased
+
   return (
     <div
       className="card"
       style={{
-        borderColor: book.isPurchased ? 'rgba(215, 178, 74, 0.6)' : 'rgba(255,255,255,0.08)',
-        opacity: !book.isPurchasable && !book.isPurchased ? 0.6 : 1,
+        borderColor: book.isPurchased || book.isAccessBonus ? 'rgba(215, 178, 74, 0.6)' : 'rgba(255,255,255,0.08)',
+        opacity: isLockedAccessBonus || (!book.isPurchasable && !book.isPurchased) ? 0.72 : 1,
       }}
     >
       <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
@@ -41,7 +43,11 @@ function BookCard({ book, onBuy, buying, t }) {
                 flexShrink: 0,
               }}
             >
-              <BookOpen size={28} style={{ color: 'var(--gold-2)' }} />
+              {book.isAccessBonus ? (
+                <Gift size={28} style={{ color: 'var(--gold-2)' }} />
+              ) : (
+                <BookOpen size={28} style={{ color: 'var(--gold-2)' }} />
+              )}
             </div>
           )}
 
@@ -50,15 +56,23 @@ function BookCard({ book, onBuy, buying, t }) {
               <strong style={{ fontSize: 16, lineHeight: 1.3 }}>{book.title}</strong>
               {book.isPurchased && (
                 <span className="badge" style={{ background: 'rgba(80, 200, 120, 0.15)', color: '#6ecc8a', border: '1px solid rgba(80,200,120,0.3)', fontSize: 11 }}>
-                  {t('books.acquired_badge')}
+                  {book.isAccessBonus ? t('books.bonus_badge') : t('books.acquired_badge')}
                 </span>
               )}
-              {!book.isPurchasable && !book.isPurchased && (
+              {isLockedAccessBonus && (
+                <span className="badge" style={{ fontSize: 11 }}>{t('books.access_bonus_badge')}</span>
+              )}
+              {!book.isAccessBonus && !book.isPurchasable && !book.isPurchased && (
                 <span className="badge" style={{ fontSize: 11 }}>{t('books.coming_soon')}</span>
               )}
             </div>
             <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>{book.description}</div>
             <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 18 }}>{book.priceLabel}</div>
+            {isLockedAccessBonus && (
+              <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>
+                {t('books.access_bonus_locked')}
+              </div>
+            )}
           </div>
         </div>
 
@@ -136,7 +150,8 @@ export default function Livros() {
   }
 
   const purchasedBooks = books.filter(function (b) { return b.isPurchased })
-  const availableBooks = books.filter(function (b) { return !b.isPurchased })
+  const lockedBonusBooks = books.filter(function (b) { return b.isAccessBonus && !b.isPurchased })
+  const availableBooks = books.filter(function (b) { return !b.isPurchased && !b.isAccessBonus })
 
   return (
     <div className="container" style={{ padding: '28px 0 72px' }}>
@@ -206,6 +221,23 @@ export default function Livros() {
               {purchasedBooks.length > 0 ? t('books.more_available') : t('books.available')}
             </div>
             {availableBooks.map(function (book) {
+              return (
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onBuy={handleBuy}
+                  buying={buyingBookId === book.id}
+                  t={t}
+                />
+              )
+            })}
+          </div>
+        )}
+
+        {!loading && lockedBonusBooks.length > 0 && (
+          <div style={{ display: 'grid', gap: 14 }}>
+            <div style={{ fontWeight: 900, fontSize: 18 }}>{t('books.access_bonus_section')}</div>
+            {lockedBonusBooks.map(function (book) {
               return (
                 <BookCard
                   key={book.id}

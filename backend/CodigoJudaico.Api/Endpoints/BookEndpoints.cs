@@ -17,17 +17,14 @@ public static class BookEndpoints
         group.MapGet("/catalog", (IOptions<StripeBillingOptions> options) =>
         {
             var bookPriceIds = options.Value.BookPriceIds;
-            var books = BookCatalog.All.Select(b =>
-            {
-                var isPurchasable = bookPriceIds.TryGetValue(b.Id, out var priceId) && !string.IsNullOrWhiteSpace(priceId);
-                return new BookCatalogDto(
-                    b.Id,
-                    b.Title,
-                    b.Description,
-                    b.PriceLabel,
-                    $"/books/{b.CoverImageFileName}",
-                    isPurchasable);
-            });
+            var books = BookCatalog.All.Select(b => new BookCatalogDto(
+                b.Id,
+                b.Title,
+                b.Description,
+                b.PriceLabel,
+                BuildCoverImageUrl(b),
+                IsPurchasable(b, bookPriceIds),
+                b.IsAccessBonus));
 
             return Results.Ok(books);
         })
@@ -41,24 +38,28 @@ public static class BookEndpoints
         {
             var userId = userPrincipal.GetRequiredUserId();
             var bookPriceIds = options.Value.BookPriceIds;
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return Results.Unauthorized();
+            }
 
             var purchasedBookIds = await dbContext.UserBookPurchases
                 .Where(x => x.UserId == userId)
                 .Select(x => x.BookId)
                 .ToHashSetAsync(cancellationToken);
+            var hasAccessBonusEntitlement = AppAccessEvaluator.HasAccessBonusEntitlement(user);
 
-            var books = BookCatalog.All.Select(b =>
-            {
-                var isPurchasable = bookPriceIds.TryGetValue(b.Id, out var priceId) && !string.IsNullOrWhiteSpace(priceId);
-                return new BookLibraryDto(
-                    b.Id,
-                    b.Title,
-                    b.Description,
-                    b.PriceLabel,
-                    $"/books/{b.CoverImageFileName}",
-                    purchasedBookIds.Contains(b.Id),
-                    isPurchasable);
-            });
+            var books = BookCatalog.All.Select(b => new BookLibraryDto(
+                b.Id,
+                b.Title,
+                b.Description,
+                b.PriceLabel,
+                BuildCoverImageUrl(b),
+                purchasedBookIds.Contains(b.Id) || (b.IsAccessBonus && hasAccessBonusEntitlement),
+                IsPurchasable(b, bookPriceIds),
+                b.IsAccessBonus));
 
             return Results.Ok(books);
         })
@@ -147,10 +148,19 @@ public static class BookEndpoints
                 return Results.NotFound();
             }
 
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return Results.Unauthorized();
+            }
+
             var hasPurchased = await dbContext.UserBookPurchases
                 .AnyAsync(x => x.UserId == userId && x.BookId == normalizedId, cancellationToken);
+            var hasAccessBonusEntitlement =
+                book.IsAccessBonus && AppAccessEvaluator.HasAccessBonusEntitlement(user);
 
-            if (!hasPurchased)
+            if (!hasPurchased && !hasAccessBonusEntitlement)
             {
                 return Results.Forbid();
             }
@@ -176,4 +186,16 @@ public static class BookEndpoints
 
         return app;
     }
+
+    private static bool IsPurchasable(
+        BookDefinition book,
+        IReadOnlyDictionary<string, string> bookPriceIds) =>
+        !book.IsAccessBonus &&
+        bookPriceIds.TryGetValue(book.Id, out var priceId) &&
+        !string.IsNullOrWhiteSpace(priceId);
+
+    private static string BuildCoverImageUrl(BookDefinition book) =>
+        string.IsNullOrWhiteSpace(book.CoverImageFileName)
+            ? string.Empty
+            : $"/books/{book.CoverImageFileName}";
 }

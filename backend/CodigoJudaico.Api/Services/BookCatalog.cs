@@ -6,7 +6,8 @@ public sealed record BookDefinition(
     string Description,
     string PriceLabel,
     string CoverImageFileName,
-    string PdfFileName);
+    string PdfFileName,
+    bool IsAccessBonus = false);
 
 public static class BookCatalog
 {
@@ -33,6 +34,22 @@ public static class BookCatalog
             "R$ 9,90",
             "prosperidade-geracoes.png",
             "prosperidade-geracoes.pdf"),
+        new BookDefinition(
+            "7-gatilhos-dinheiro-escapar",
+            "Os 7 Gatilhos Invisíveis que Fazem Seu Dinheiro Escapar",
+            "Bônus exclusivo para alunos com acesso ao site: identifique os impulsos ocultos que drenam seu dinheiro antes que eles conduzam suas decisões.",
+            "Bônus",
+            string.Empty,
+            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Escapar.pdf",
+            IsAccessBonus: true),
+        new BookDefinition(
+            "7-gatilhos-dinheiro-desaparecer",
+            "Os 7 Gatilhos Invisíveis que Fazem Seu Dinheiro Desaparecer",
+            "Bônus exclusivo para alunos com acesso ao site: aprofunde os padrões emocionais que fazem o dinheiro sumir no automático.",
+            "Bônus",
+            string.Empty,
+            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Desaparecer.pdf",
+            IsAccessBonus: true),
     ];
 
     public static BookDefinition? FindById(string? id) =>

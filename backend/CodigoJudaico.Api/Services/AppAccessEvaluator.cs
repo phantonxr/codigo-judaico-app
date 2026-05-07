@@ -27,6 +27,11 @@ public static class AppAccessEvaluator
         return user.NextChargeDate.Value >= DateOnly.FromDateTime(DateTime.UtcNow);
     }
 
+    public static bool HasAccessBonusEntitlement(AppUser? user) =>
+        user?.IsMasterUser == true ||
+        user?.AccessEnabled == true ||
+        user?.AccessGrantedAt is not null;
+
     public static bool HasPendingCheckout(AppUser? user)
     {
         return string.Equals(

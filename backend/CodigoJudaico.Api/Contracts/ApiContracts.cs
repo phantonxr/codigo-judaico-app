@@ -296,7 +296,8 @@ public sealed record BookCatalogDto(
     string Description,
     string PriceLabel,
     string CoverImageUrl,
-    bool IsPurchasable);
+    bool IsPurchasable,
+    bool IsAccessBonus);
 
 public sealed record BookLibraryDto(
     string Id,
@@ -305,7 +306,8 @@ public sealed record BookLibraryDto(
     string PriceLabel,
     string CoverImageUrl,
     bool IsPurchased,
-    bool IsPurchasable);
+    bool IsPurchasable,
+    bool IsAccessBonus);
 
 public sealed record BookCheckoutRequest
 {

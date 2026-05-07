@@ -718,9 +718,12 @@
       "title": "Privacy and data",
       "description": "Export your personal data or request deletion of the local platform account.",
       "export_btn": "Export my data",
+      "marketing_opt_out_btn": "Revoke marketing",
       "delete_btn": "Delete my account",
       "export_success": "Export generated.",
       "export_error": "Could not export your data right now.",
+      "marketing_opt_out_success": "Marketing and attribution have been disabled.",
+      "marketing_opt_out_error": "Could not revoke marketing right now.",
       "delete_error": "Could not delete your account right now.",
       "delete_prompt": "Type exactly {{email}} to confirm account deletion.",
       "delete_mismatch": "The e-mail does not match. The account was not deleted."
@@ -823,7 +826,8 @@
     "preferences_title": "Preferences.",
     "preferences_description": "Store choices such as language and local app settings.",
     "marketing_title": "Marketing and attribution.",
-    "marketing_description": "Allow UTMs to be stored and conversion data to be sent to attribution providers such as UTMfy."
+    "marketing_description": "Allow UTMs to be stored and conversion data to be sent to attribution providers such as UTMfy.",
+    "gpc_enabled": "Your browser is sending Global Privacy Control; marketing stays disabled."
   },
   "footer": {
     "privacy": "Privacy Policy",

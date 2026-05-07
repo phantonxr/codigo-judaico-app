@@ -2,6 +2,7 @@ export const PRIVACY_CONSENT_CHANGED_EVENT = 'privacy_consent_changed'
 
 const STORAGE_KEY = 'cj_privacy_consent_v1'
 const LEGACY_COOKIE_KEY = 'cookie_consent'
+const UTM_STORAGE_KEY = 'cj_utm'
 const VERSION = 1
 
 const DEFAULT_CONSENT = Object.freeze({
@@ -16,13 +17,25 @@ function safeBoolean(value) {
   return value === true
 }
 
+export function isGlobalPrivacyControlEnabled() {
+  return typeof navigator !== 'undefined' && navigator.globalPrivacyControl === true
+}
+
+function clearMarketingStorage() {
+  try {
+    localStorage.removeItem(UTM_STORAGE_KEY)
+  } catch {
+    // localStorage can be blocked in private or hardened browsers.
+  }
+}
+
 function normalizeConsent(value) {
   if (!value || typeof value !== 'object') return { ...DEFAULT_CONSENT }
 
   return {
     essential: true,
     preferences: safeBoolean(value.preferences),
-    marketing: safeBoolean(value.marketing),
+    marketing: isGlobalPrivacyControlEnabled() ? false : safeBoolean(value.marketing),
     version: VERSION,
     updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : null,
   }
@@ -55,6 +68,7 @@ export function writePrivacyConsent(nextConsent) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(consent))
     localStorage.setItem(LEGACY_COOKIE_KEY, consent.marketing || consent.preferences ? 'accepted' : 'rejected')
+    if (!consent.marketing) clearMarketingStorage()
   } catch {
     // localStorage can be blocked in private or hardened browsers.
   }

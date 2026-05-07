@@ -213,6 +213,31 @@ public static class UserStateEndpoints
             });
         });
 
+        privacyGroup.MapPost("/{userId:guid}/privacy/marketing-opt-out", async (
+            Guid userId,
+            ClaimsPrincipal userPrincipal,
+            AppDbContext dbContext,
+            CancellationToken cancellationToken) =>
+        {
+            if (userPrincipal.GetRequiredUserId() != userId)
+            {
+                return Results.Forbid();
+            }
+
+            var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+            if (user is null)
+            {
+                return Results.NotFound();
+            }
+
+            ClearMarketingAttribution(user);
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return Results.NoContent();
+        });
+
         privacyGroup.MapPost("/{userId:guid}/privacy/account-deletion", async (
             Guid userId,
             PrivacyDeleteAccountRequest request,
@@ -240,7 +265,16 @@ public static class UserStateEndpoints
                 });
             }
 
-            dbContext.Users.Remove(user);
+            if (user.IsMasterUser)
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["account"] = ["Master user accounts cannot be deleted from the self-service privacy screen."]
+                });
+            }
+
+            await RemoveUserPersonalStateAsync(dbContext, userId, cancellationToken);
+            AnonymizeUser(user);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             return Results.NoContent();
@@ -579,5 +613,73 @@ public static class UserStateEndpoints
         });
 
         return app;
+    }
+
+    private static void ClearMarketingAttribution(AppUser user)
+    {
+        user.UtmSource = null;
+        user.UtmMedium = null;
+        user.UtmCampaign = null;
+        user.UtmTerm = null;
+        user.UtmContent = null;
+    }
+
+    private static void AnonymizeUser(AppUser user)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        user.Email = $"deleted-{user.Id:N}@privacy.local";
+        user.Name = "Deleted account";
+        user.PasswordHash = string.Empty;
+        user.PasswordResetTokenHash = string.Empty;
+        user.PasswordResetTokenExpiresAt = null;
+        user.HasCompletedAssessment = false;
+        user.AccessEnabled = false;
+        user.AccountCreatedEmailSentAt = null;
+        user.AccessGrantedAt = null;
+        user.AccessEmailSentAt = null;
+        user.PlanName = string.Empty;
+        user.PlanStatus = "Account deleted";
+        user.NextChargeDate = null;
+        user.StripeCustomerId = string.Empty;
+        user.StripeSubscriptionId = string.Empty;
+        user.LastStripeCheckoutSessionId = string.Empty;
+        user.HasUsedRenewalOffer = false;
+        user.UpdatedAt = now;
+        ClearMarketingAttribution(user);
+    }
+
+    private static async Task RemoveUserPersonalStateAsync(
+        AppDbContext dbContext,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        dbContext.AppSessions.RemoveRange(await dbContext.AppSessions
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.PasswordResetTokens.RemoveRange(await dbContext.PasswordResetTokens
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.UserDiagnoses.RemoveRange(await dbContext.UserDiagnoses
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.UserJourneyStates.RemoveRange(await dbContext.UserJourneyStates
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.UserLessonProgressEntries.RemoveRange(await dbContext.UserLessonProgressEntries
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.MentorChatMessages.RemoveRange(await dbContext.MentorChatMessages
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.MentorDailyFeedbacks.RemoveRange(await dbContext.MentorDailyFeedbacks
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.MentorFinalReports.RemoveRange(await dbContext.MentorFinalReports
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
+        dbContext.MentorUsages.RemoveRange(await dbContext.MentorUsages
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken));
     }
 }

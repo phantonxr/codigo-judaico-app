@@ -4,7 +4,8 @@ import { useState } from 'react'
 import SectionCard from '../components/SectionCard.jsx'
 import useCurrentUser from '../hooks/useCurrentUser.js'
 import { clearSessionCache } from '../services/sessionSync.js'
-import { deletePrivacyAccount, exportPrivacyData } from '../services/privacy.js'
+import { deletePrivacyAccount, exportPrivacyData, optOutMarketingData } from '../services/privacy.js'
+import { readPrivacyConsent, writePrivacyConsent } from '../services/privacyConsent.js'
 
 const offerCheckoutPaths = ['/checkout', '/checkout', '/checkout?plan=anual']
 
@@ -68,6 +69,24 @@ export default function Mais() {
     }
   }
 
+  async function handleMarketingOptOut() {
+    setPrivacyBusy(true)
+    setPrivacyStatus('')
+
+    try {
+      const currentConsent = readPrivacyConsent()
+      writePrivacyConsent({ ...currentConsent, marketing: false })
+      if (currentUser?.id) {
+        await optOutMarketingData(currentUser.id)
+      }
+      setPrivacyStatus(t('more.privacy.marketing_opt_out_success'))
+    } catch (caught) {
+      setPrivacyStatus(String(caught?.message ?? t('more.privacy.marketing_opt_out_error')).replace(/^API \d+:\s*/u, ''))
+    } finally {
+      setPrivacyBusy(false)
+    }
+  }
+
   return (
     <div className="container" style={{ display: 'grid', gap: 14 }}>
       <SectionCard
@@ -110,6 +129,14 @@ export default function Mais() {
             disabled={privacyBusy || !currentUser?.id}
           >
             {t('more.privacy.export_btn')}
+          </button>
+          <button
+            className="btn btn-soft"
+            type="button"
+            onClick={handleMarketingOptOut}
+            disabled={privacyBusy}
+          >
+            {t('more.privacy.marketing_opt_out_btn')}
           </button>
           <button
             className="btn"

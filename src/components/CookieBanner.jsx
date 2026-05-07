@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   hasPrivacyConsentChoice,
+  isGlobalPrivacyControlEnabled,
   readPrivacyConsent,
   writePrivacyConsent,
 } from '../services/privacyConsent.js'
 
 export default function CookieBanner() {
   const { t } = useTranslation()
+  const gpcEnabled = isGlobalPrivacyControlEnabled()
   const [visible, setVisible] = useState(() => !hasPrivacyConsentChoice())
   const [expanded, setExpanded] = useState(false)
   const [choices, setChoices] = useState(() => readPrivacyConsent())
@@ -123,12 +125,14 @@ export default function CookieBanner() {
               <input
                 type="checkbox"
                 checked={choices.marketing}
+                disabled={gpcEnabled}
                 onChange={() => toggleChoice('marketing')}
                 style={{ marginTop: 2, accentColor: 'var(--gold-2)' }}
               />
               <span>
                 <strong style={{ color: 'rgba(255,255,255,0.86)' }}>{t('cookie_banner.marketing_title')}</strong>
                 {' '}{t('cookie_banner.marketing_description')}
+                {gpcEnabled ? ` ${t('cookie_banner.gpc_enabled')}` : ''}
               </span>
             </label>
           </div>

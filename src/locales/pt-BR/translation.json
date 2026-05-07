@@ -718,9 +718,12 @@
       "title": "Privacidade e dados",
       "description": "Exporte seus dados pessoais ou solicite exclusão da conta local da plataforma.",
       "export_btn": "Exportar meus dados",
+      "marketing_opt_out_btn": "Revogar marketing",
       "delete_btn": "Excluir minha conta",
       "export_success": "Exportação gerada.",
       "export_error": "Não foi possível exportar seus dados agora.",
+      "marketing_opt_out_success": "Marketing e atribuição foram desativados.",
+      "marketing_opt_out_error": "Não foi possível revogar marketing agora.",
       "delete_error": "Não foi possível excluir sua conta agora.",
       "delete_prompt": "Digite exatamente {{email}} para confirmar a exclusão da conta.",
       "delete_mismatch": "O e-mail informado não confere. A conta não foi excluída."
@@ -823,7 +826,8 @@
     "preferences_title": "Preferências.",
     "preferences_description": "Guardam escolhas como idioma e ajustes locais do aplicativo.",
     "marketing_title": "Marketing e atribuição.",
-    "marketing_description": "Permitem salvar UTMs e enviar dados de conversão para provedores de atribuição como UTMfy."
+    "marketing_description": "Permitem salvar UTMs e enviar dados de conversão para provedores de atribuição como UTMfy.",
+    "gpc_enabled": "Seu navegador está enviando Global Privacy Control; marketing permanece desativado."
   },
   "footer": {
     "privacy": "Política de Privacidade",

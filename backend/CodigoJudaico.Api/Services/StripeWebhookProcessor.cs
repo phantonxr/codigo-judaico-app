@@ -13,6 +13,7 @@ public sealed class StripeWebhookProcessor(
     PasswordHashService passwordHashService,
     AccessEmailService accessEmailService,
     UtmfyService utmfyService,
+    EvolutionApiService evolutionApiService,
     ILogger<StripeWebhookProcessor> logger)
 {
     private const string MentorUnlimitedPlanId = "mentor-ilimitado";
@@ -158,6 +159,7 @@ public sealed class StripeWebhookProcessor(
         var planName = ReadMetadata(session.Metadata, StripeBillingService.PlanNameMetadataKey);
         var user = await dbContext.Users.SingleOrDefaultAsync(x => x.Email == email, cancellationToken);
         var now = DateTimeOffset.UtcNow;
+        var accessWasEnabledBefore = user?.AccessEnabled ?? false;
 
         if (matchedPlan is not null)
         {
@@ -187,7 +189,6 @@ public sealed class StripeWebhookProcessor(
             }
             else
             {
-                var accessWasEnabled = user?.AccessEnabled ?? false;
                 var lastCompletedCheckoutSessionId = user?.LastStripeCheckoutSessionId;
 
                 if (user is null)
@@ -223,7 +224,7 @@ public sealed class StripeWebhookProcessor(
 
                 await PersistUserAndMaybeSendAccessEmailAsync(
                     user,
-                    accessWasEnabled,
+                    accessWasEnabledBefore,
                     lastCompletedCheckoutSessionId,
                     session.Id,
                     cancellationToken);
@@ -242,6 +243,23 @@ public sealed class StripeWebhookProcessor(
             {
                 await GrantBookPurchasesAsync(user.Id, bookIds, session.Id, cancellationToken);
             }
+        }
+
+        if (user is not null)
+        {
+            var resolvedPlanName = string.IsNullOrWhiteSpace(planName)
+                ? (matchedPlan?.PlanName ?? string.Empty)
+                : planName;
+
+            await evolutionApiService.NotifySaleAsync(new EvolutionSaleNotification(
+                BuyerName: user.Name,
+                BuyerEmail: user.Email,
+                PlanName: resolvedPlanName,
+                AmountInCents: session.AmountTotal ?? 0,
+                IsFirstPurchase: !accessWasEnabledBefore,
+                HasBooks: bookIds.Count > 0,
+                BookIds: bookIds),
+                cancellationToken);
         }
     }
 

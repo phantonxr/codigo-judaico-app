@@ -29,6 +29,8 @@ builder.Services.Configure<OpenAIOptions>(
     builder.Configuration.GetSection(OpenAIOptions.SectionName));
 builder.Services.Configure<UtmfyOptions>(
     builder.Configuration.GetSection(UtmfyOptions.SectionName));
+builder.Services.Configure<EvolutionApiOptions>(
+    builder.Configuration.GetSection(EvolutionApiOptions.SectionName));
 builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 {
     var opts = sp.GetRequiredService<
@@ -40,6 +42,19 @@ builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 builder.Services.AddHttpClient("Utmfy", client =>
 {
     client.BaseAddress = new Uri("https://api.utmify.com.br/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+builder.Services.AddHttpClient("EvolutionApi", (serviceProvider, client) =>
+{
+    var evolutionOptions = serviceProvider.GetRequiredService<
+        Microsoft.Extensions.Options.IOptions<EvolutionApiOptions>>().Value;
+
+    if (!string.IsNullOrWhiteSpace(evolutionOptions.BaseUrl))
+    {
+        var baseUrl = evolutionOptions.BaseUrl.TrimEnd('/') + "/";
+        client.BaseAddress = new Uri(baseUrl);
+    }
+
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 builder.Services.AddHttpClient("Resend", (serviceProvider, client) =>
@@ -79,6 +94,7 @@ builder.Services.AddScoped<StripeBillingService>();
 builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
 builder.Services.AddScoped<UtmfyService>();
+builder.Services.AddScoped<EvolutionApiService>();
 builder.Services.AddScoped<RequirePremiumAccessEndpointFilter>();
 builder.Services.AddScoped<RequireMasterUserEndpointFilter>();
 

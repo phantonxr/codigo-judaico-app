@@ -23,6 +23,16 @@ public sealed class StripeBillingService(
     IOptions<StripeBillingOptions> options,
     ILogger<StripeBillingService> logger)
 {
+    private static readonly IReadOnlyDictionary<string, string> BookPriceIdAliases =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["identidade-nome-dinheiro"] = "IdentidadeNomeDinheiro",
+            ["metodo-judaico-riqueza"] = "MetodoJudaicoRiqueza",
+            ["prosperidade-geracoes"] = "ProsperidadeGeracoes",
+            ["7-gatilhos-dinheiro-desaparecer"] = "SevenTriggersDisappear",
+            ["7-gatilhos-dinheiro-escapar"] = "SevenTriggersEscape",
+        };
+
     public const string AppKeyMetadataKey = "app_key";
     public const string ConnectedAccountMetadataKey = "connected_account_id";
     public const string CurrencyMetadataKey = "billing_currency";
@@ -172,7 +182,7 @@ public sealed class StripeBillingService(
                 continue;
             }
 
-            _options.BookPriceIds.TryGetValue(normalizedId, out var configuredPriceId);
+            TryGetConfiguredBookPriceId(normalizedId, out var configuredPriceId);
             var priceId = ApiMappers.Clean(configuredPriceId);
 
             if (string.IsNullOrWhiteSpace(priceId) && book.PriceAmountInCents <= 0)
@@ -629,12 +639,38 @@ public sealed class StripeBillingService(
         }
 
         return book.PriceAmountInCents > 0
-            || (_options.BookPriceIds.TryGetValue(book.Id, out var priceId)
+            || (TryGetConfiguredBookPriceId(book.Id, out var priceId)
                 && !string.IsNullOrWhiteSpace(priceId));
     }
 
     private static string BuildBookIdsMetadata(IReadOnlyList<StripeBookLineItem> books) =>
         string.Join(",", BookCatalog.ExpandWithPurchaseBonuses(books.Select(b => b.BookId)));
+
+    private bool TryGetConfiguredBookPriceId(string bookId, out string priceId)
+    {
+        if (TryReadBookPriceIdByKey(bookId, out priceId))
+        {
+            return true;
+        }
+
+        return BookPriceIdAliases.TryGetValue(bookId, out var alias)
+            && TryReadBookPriceIdByKey(alias, out priceId);
+    }
+
+    private bool TryReadBookPriceIdByKey(string key, out string priceId)
+    {
+        foreach (var pair in _options.BookPriceIds)
+        {
+            if (string.Equals(pair.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
+                priceId = pair.Value;
+                return true;
+            }
+        }
+
+        priceId = string.Empty;
+        return false;
+    }
 
     private static string ReadMetadata(Dictionary<string, string>? metadata, string key)
     {

@@ -36,7 +36,7 @@ public static class BookCatalog
             "Aprofunde os padrões emocionais que fazem o dinheiro sumir no automático e aprenda a enxergar o gatilho antes da decisão.",
             "R$ 9,90",
             990,
-            string.Empty,
+            "7-gatilhos-dinheiro-desaparecer.png",
             "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Desaparecer.pdf"),
         new BookDefinition(
             "7-gatilhos-dinheiro-escapar",
@@ -44,7 +44,7 @@ public static class BookCatalog
             "Identifique os impulsos ocultos que drenam seu dinheiro antes que eles conduzam suas decisões financeiras.",
             "R$ 9,90",
             990,
-            string.Empty,
+            "7-gatilhos-dinheiro-escapar.png",
             "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Escapar.pdf"),
         new BookDefinition(
             "identidade-nome-dinheiro",

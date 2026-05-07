@@ -48,8 +48,6 @@ services:
       Stripe__BookPriceIds__IdentidadeNomeDinheiro: ${Stripe__BookPriceIds__IdentidadeNomeDinheiro:-}
       Stripe__BookPriceIds__MetodoJudaicoRiqueza: ${Stripe__BookPriceIds__MetodoJudaicoRiqueza:-}
       Stripe__BookPriceIds__ProsperidadeGeracoes: ${Stripe__BookPriceIds__ProsperidadeGeracoes:-}
-      Stripe__BookPriceIds__SevenTriggersDisappear: ${Stripe__BookPriceIds__SevenTriggersDisappear:-}
-      Stripe__BookPriceIds__SevenTriggersEscape: ${Stripe__BookPriceIds__SevenTriggersEscape:-}
       Resend__Enabled: ${Resend__Enabled:-true}
       Resend__ApiKey: ${Resend__ApiKey}
       Resend__From: ${Resend__From}

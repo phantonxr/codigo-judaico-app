@@ -176,6 +176,12 @@ public sealed class StripeBillingService(
                 continue;
             }
 
+            if (!book.IsVisibleInCatalog)
+            {
+                _logger.LogWarning("Livro '{BookId}' esta oculto no catalogo e nao pode ser comprado agora.", normalizedId);
+                continue;
+            }
+
             if (book.IsAccessBonus)
             {
                 _logger.LogWarning("Livro '{BookId}' e bonus de acesso e nao pode ser comprado separadamente.", normalizedId);
@@ -633,7 +639,7 @@ public sealed class StripeBillingService(
 
     private bool IsBookPurchasable(BookDefinition book)
     {
-        if (book.IsAccessBonus)
+        if (!book.IsVisibleInCatalog || book.IsAccessBonus)
         {
             return false;
         }

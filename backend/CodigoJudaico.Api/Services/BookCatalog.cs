@@ -8,6 +8,7 @@ public sealed record BookDefinition(
     long PriceAmountInCents,
     string CoverImageFileName,
     string PdfFileName,
+    bool IsVisibleInCatalog = true,
     bool IsAccessBonus = false);
 
 public static class BookCatalog
@@ -16,8 +17,8 @@ public static class BookCatalog
 
     public static readonly IReadOnlyList<string> MethodBookLimitedTimeBonusBookIds =
     [
-        "7-gatilhos-dinheiro-desaparecer",
-        "7-gatilhos-dinheiro-escapar",
+        "identidade-nome-dinheiro",
+        "prosperidade-geracoes",
     ];
 
     public static readonly IReadOnlyList<BookDefinition> All =
@@ -37,7 +38,8 @@ public static class BookCatalog
             "R$ 9,90",
             990,
             "7-gatilhos-dinheiro-desaparecer.png",
-            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Desaparecer.pdf"),
+            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Desaparecer.pdf",
+            IsVisibleInCatalog: false),
         new BookDefinition(
             "7-gatilhos-dinheiro-escapar",
             "Os 7 Gatilhos Invisíveis que Fazem Seu Dinheiro Escapar",
@@ -45,7 +47,8 @@ public static class BookCatalog
             "R$ 9,90",
             990,
             "7-gatilhos-dinheiro-escapar.png",
-            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Escapar.pdf"),
+            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Escapar.pdf",
+            IsVisibleInCatalog: false),
         new BookDefinition(
             "identidade-nome-dinheiro",
             "Identidade, Nome e Dinheiro",

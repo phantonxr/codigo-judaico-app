@@ -17,7 +17,9 @@ public static class BookEndpoints
         group.MapGet("/catalog", (IOptions<StripeBillingOptions> options) =>
         {
             var bookPriceIds = options.Value.BookPriceIds;
-            var books = BookCatalog.All.Select(b => new BookCatalogDto(
+            var books = BookCatalog.All
+                .Where(b => b.IsVisibleInCatalog)
+                .Select(b => new BookCatalogDto(
                 b.Id,
                 b.Title,
                 b.Description,
@@ -52,7 +54,9 @@ public static class BookEndpoints
             var hasAccessBonusEntitlement = AppAccessEvaluator.HasAccessBonusEntitlement(user);
             var hasMethodBookPurchase = purchasedBookIds.Contains(BookCatalog.MethodBookId);
 
-            var books = BookCatalog.All.Select(b => new BookLibraryDto(
+            var books = BookCatalog.All
+                .Where(b => b.IsVisibleInCatalog)
+                .Select(b => new BookLibraryDto(
                 b.Id,
                 b.Title,
                 b.Description,
@@ -197,6 +201,7 @@ public static class BookEndpoints
     private static bool IsPurchasable(
         BookDefinition book,
         IReadOnlyDictionary<string, string> bookPriceIds) =>
+        book.IsVisibleInCatalog &&
         !book.IsAccessBonus &&
         (book.PriceAmountInCents > 0 ||
             (bookPriceIds.TryGetValue(book.Id, out var priceId) &&

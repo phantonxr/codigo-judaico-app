@@ -373,7 +373,7 @@ export default function CheckoutPage() {
                     {t('checkout.books_section_title')}
                   </div>
                 </div>
-                <div className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                <div className="muted" style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
                   {t('checkout.books_section_hint')}
                 </div>
 

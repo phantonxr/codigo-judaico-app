@@ -1,6 +1,7 @@
 server {
     listen 80;
     server_name _;
+    server_tokens off;
 
     resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
     resolver_timeout 5s;
@@ -8,6 +9,35 @@ server {
 
     root /usr/share/nginx/html;
     index index.html;
+
+    # Security headers
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "accelerometer=(), autoplay=(), camera=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), web-share=(), xr-spatial-tracking=()" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://checkout.stripe.com; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://erp-saas-codigojudaico.3oyj69.easypanel.host https://api.stripe.com https://checkout.stripe.com; media-src 'self' https://pub-db63d9a903f1418f8d431136b30a5b3b.r2.dev; frame-src https://checkout.stripe.com https://js.stripe.com https://hooks.stripe.com; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header Cross-Origin-Resource-Policy "same-origin" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+
+    # Block access to hidden files and directories (e.g. .env, .git)
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    # Block common sensitive file extensions
+    location ~* \.(env|sql|bak|log|conf|htpasswd)$ {
+        deny all;
+        return 404;
+    }
+
+    # Block common backup/dump file names
+    location ~* ^/(backup\.(zip|sql)|dump\.sql|db\.sql|phpinfo\.php|wp-config\.php|config\.php)$ {
+        deny all;
+        return 404;
+    }
 
     location / {
         try_files $uri $uri/ /index.html;

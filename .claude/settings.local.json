@@ -16,7 +16,8 @@
       "Bash(Get-ChildItem -Path \"d:\\\\Study\\\\codigo-judaico-app\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
       "PowerShell(Get-ChildItem -Path \"d:\\\\Study\\\\codigo-judaico-app\" -Force | Select-Object Name, @{Name='IsFolder'; Expression={$_.PSIsContainer}})",
-      "Bash(find d:\\\\\\\\Study\\\\\\\\codigo-judaico-app\\\\\\\\src -maxdepth 1 -type d)"
+      "Bash(find d:\\\\\\\\Study\\\\\\\\codigo-judaico-app\\\\\\\\src -maxdepth 1 -type d)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Estudo\\\\codigo-judaico-app\" -Force)"
     ]
   }
 }

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c0a06;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1408;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d7b24a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0d27a;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Subtle grid pattern -->
+  <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(215,178,74,0.04)" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="630" fill="url(#grid)" />
+
+  <!-- Gold border accent top -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#gold)" opacity="0.7" />
+
+  <!-- Star of David (simplified) - decorative, right side -->
+  <g transform="translate(960, 315)" opacity="0.06">
+    <polygon points="0,-90 78,45 -78,45" fill="none" stroke="#d7b24a" stroke-width="2"/>
+    <polygon points="0,90 78,-45 -78,-45" fill="none" stroke="#d7b24a" stroke-width="2"/>
+  </g>
+
+  <!-- Badge -->
+  <rect x="100" y="120" width="290" height="34" rx="17" fill="rgba(215,178,74,0.12)" stroke="rgba(215,178,74,0.35)" stroke-width="1"/>
+  <text x="245" y="142" font-family="Georgia, serif" font-size="13" fill="rgba(215,178,74,0.9)" text-anchor="middle" letter-spacing="1">MÉTODO MILENAR JUDAICO</text>
+
+  <!-- Main headline -->
+  <text x="100" y="225" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="bold" fill="#ffffff" filter="url(#glow)">CÓDIGO JUDAICO</text>
+  <text x="100" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="bold" fill="url(#gold)">DA PROSPERIDADE</text>
+
+  <!-- Divider -->
+  <rect x="100" y="318" width="80" height="2" fill="url(#gold)" opacity="0.6"/>
+
+  <!-- Subtitle -->
+  <text x="100" y="362" font-family="Georgia, serif" font-size="22" fill="rgba(255,255,255,0.7)">O método em 4 fases que transforma sua</text>
+  <text x="100" y="394" font-family="Georgia, serif" font-size="22" fill="rgba(255,255,255,0.7)">vida financeira com sabedoria judaica.</text>
+
+  <!-- CTA pill -->
+  <rect x="100" y="440" width="280" height="52" rx="26" fill="url(#gold)" opacity="0.95"/>
+  <text x="240" y="472" font-family="Georgia, serif" font-size="18" font-weight="bold" fill="#0c0a06" text-anchor="middle">Começar a jornada</text>
+
+  <!-- Domain -->
+  <text x="100" y="560" font-family="Georgia, serif" font-size="16" fill="rgba(215,178,74,0.5)" letter-spacing="1">codigomilenarjudaico.com</text>
+
+  <!-- Right side decorative element: menorah lines -->
+  <g transform="translate(1000, 260)" opacity="0.12" stroke="#d7b24a" stroke-width="2" fill="none">
+    <line x1="0" y1="0" x2="0" y2="100"/>
+    <line x1="-60" y1="20" x2="60" y2="20"/>
+    <line x1="-60" y1="20" x2="-60" y2="100"/>
+    <line x1="60" y1="20" x2="60" y2="100"/>
+    <line x1="-30" y1="40" x2="-30" y2="100"/>
+    <line x1="30" y1="40" x2="30" y2="100"/>
+    <line x1="-30" y1="40" x2="30" y2="40"/>
+    <!-- base -->
+    <line x1="-70" y1="100" x2="70" y2="100"/>
+    <rect x="-20" y="100" width="40" height="14" rx="2"/>
+  </g>
+</svg>

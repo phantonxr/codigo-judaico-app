@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import Sidebar from './components/Sidebar.jsx'
 import Topbar from './components/Topbar.jsx'
 import RequiredLegalAcceptanceModal from './components/legal/RequiredLegalAcceptanceModal.jsx'
+import CookieBanner from './components/CookieBanner.jsx'
 
 import LandingPage from './pages/LandingPage.jsx'
 import Login from './pages/Login.jsx'
@@ -25,6 +26,7 @@ import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
 import Calendario from './pages/Calendario.jsx'
 import RelatorioFinal from './pages/RelatorioFinal.jsx'
 import Livros from './pages/Livros.jsx'
+import PoliticaDePrivacidade from './pages/PoliticaDePrivacidade.jsx'
 import { hasAuthToken } from './services/authStorage.js'
 import useCurrentUser from './hooks/useCurrentUser.js'
 
@@ -166,8 +168,11 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <CookieBanner />
+      <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
       <Route path="/login" element={<Login />} />
       <Route path="/esqueci-senha" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -196,5 +201,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }

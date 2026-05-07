@@ -798,6 +798,17 @@
     "6months": "Mahalach HaZera",
     "completed": "Shnat HaKatzir"
   },
+  "cookie_banner": {
+    "aria_label": "Aviso de cookies",
+    "message": "Usamos cookies essenciais para autenticação e preferências. Ao continuar, você concorda com nossa",
+    "policy_link": "Política de Privacidade",
+    "accept": "Aceitar",
+    "reject": "Recusar"
+  },
+  "footer": {
+    "privacy": "Política de Privacidade",
+    "rights": "© 2025 Código Judaico da Prosperidade. Todos os direitos reservados."
+  },
   "floating_proof": {
     "movement_title": "17 pessoas acessaram esta etapa nos últimos minutos",
     "movement_subtitle": "A maioria começou pela fase Seder HaKesef para identificar seus gatilhos financeiros.",

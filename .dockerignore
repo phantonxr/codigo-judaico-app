@@ -13,6 +13,7 @@ coverage
 *.tmp
 *.temp
 .env
+.env.*
 .env.local
 .env.*.local
 backend/**/bin

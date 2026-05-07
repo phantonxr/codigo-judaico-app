@@ -342,6 +342,41 @@ export default function LandingPage() {
         </section>
 
       </div>
+
+      {/* ══════ RODAPÉ ══════ */}
+      <footer
+        style={{
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          padding: '24px 0',
+          textAlign: 'center',
+        }}
+      >
+        <div
+          className="container"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Link
+              to="/politica-de-privacidade"
+              style={{
+                fontSize: 13,
+                color: 'rgba(215, 178, 74, 0.8)',
+                textDecoration: 'none',
+              }}
+            >
+              {t('footer.privacy')}
+            </Link>
+          </div>
+          <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+            {t('footer.rights')}
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

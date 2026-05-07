@@ -798,6 +798,17 @@
     "6months": "Mahalach HaZera",
     "completed": "Shnat HaKatzir"
   },
+  "cookie_banner": {
+    "aria_label": "Cookie notice",
+    "message": "We use essential cookies for authentication and preferences. By continuing, you agree to our",
+    "policy_link": "Privacy Policy",
+    "accept": "Accept",
+    "reject": "Decline"
+  },
+  "footer": {
+    "privacy": "Privacy Policy",
+    "rights": "© 2025 Jewish Code of Prosperity. All rights reserved."
+  },
   "floating_proof": {
     "movement_title": "17 people accessed this stage in the last few minutes",
     "movement_subtitle": "Most started with the Seder HaKesef phase to identify their financial triggers.",

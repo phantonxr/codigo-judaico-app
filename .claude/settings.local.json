@@ -1,23 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git stash *)",
-      "Bash(git pull *)",
-      "Bash(git add *)",
-      "Bash(git commit -m ' *)",
-      "Bash(xargs grep *)",
-      "Bash(dotnet build *)",
-      "Bash(npm run *)",
-      "Bash(cd /d D:\\\\Estudo\\\\codigo-judaico-app)",
-      "Bash(Get-ChildItem -Recurse -Depth 2)",
-      "Bash(Select-Object FullName)",
-      "Bash(npm install *)",
-      "Bash(Get-ChildItem -Path \"d:\\\\Estudo\\\\codigo-judaico-app\\\\src\" -Recurse -Filter \"*.jsx\" -o \"*.js\")",
-      "Bash(Get-ChildItem -Path \"d:\\\\Study\\\\codigo-judaico-app\" -Force)",
-      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(*)",
       "PowerShell(Get-ChildItem -Path \"d:\\\\Study\\\\codigo-judaico-app\" -Force | Select-Object Name, @{Name='IsFolder'; Expression={$_.PSIsContainer}})",
-      "Bash(find d:\\\\\\\\Study\\\\\\\\codigo-judaico-app\\\\\\\\src -maxdepth 1 -type d)",
-      "Bash(Get-ChildItem -Path \"d:\\\\Estudo\\\\codigo-judaico-app\" -Force)"
     ]
   }
 }

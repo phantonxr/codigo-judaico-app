@@ -277,6 +277,8 @@ export default function CheckoutPage() {
 
   return (
     <div className="container" style={{ padding: '40px 0 72px' }}>
+      <title>{`Assinar ${planTitle} — Código Judaico da Prosperidade`}</title>
+      <meta name="robots" content="noindex, nofollow" />
       <FloatingProof />
       <LegalDocumentModal
         document={selectedLegalDocument}

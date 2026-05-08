@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /mentor
+Disallow: /desafios
+Disallow: /biblioteca
+Disallow: /mais
+Disallow: /assinatura
+Disallow: /avaliacao
+Disallow: /calendario
+Disallow: /relatorio-final
+Disallow: /livros
+Disallow: /admin/
+
+Sitemap: https://www.codigomilenarjudaico.com/sitemap.xml

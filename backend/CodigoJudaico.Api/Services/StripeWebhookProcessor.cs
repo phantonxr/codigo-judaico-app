@@ -189,6 +189,7 @@ public sealed class StripeWebhookProcessor(
                     cancellationToken);
 
                 await dbContext.SaveChangesAsync(cancellationToken);
+                await TrackMetaPurchaseAsync(session, user, matchedPlan, cancellationToken);
             }
             else
             {
@@ -246,6 +247,11 @@ public sealed class StripeWebhookProcessor(
             else
             {
                 await GrantBookPurchasesAsync(user.Id, bookIds, session.Id, cancellationToken);
+
+                if (matchedPlan is null)
+                {
+                    await TrackMetaPurchaseAsync(session, user, null, cancellationToken);
+                }
             }
         }
 
@@ -353,7 +359,7 @@ public sealed class StripeWebhookProcessor(
     private async Task TrackMetaPurchaseAsync(
         Session session,
         AppUser user,
-        StripePlanDefinition plan,
+        StripePlanDefinition? plan,
         CancellationToken cancellationToken)
     {
         if (!ReadMarketingConsent(session.Metadata))
@@ -370,8 +376,8 @@ public sealed class StripeWebhookProcessor(
             EventId: session.Id,
             Email: user.Email,
             Name: user.Name,
-            PlanId: plan.Id,
-            PlanName: plan.PlanName,
+            PlanId: plan?.Id ?? "livros",
+            PlanName: plan?.PlanName ?? "Livros",
             AmountInCents: session.AmountTotal ?? 0,
             EventTime: now),
             cancellationToken);

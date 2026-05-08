@@ -36,8 +36,38 @@ export default function LandingPage() {
     return function () { observer.disconnect() }
   }, [])
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        name: 'Código Judaico da Prosperidade',
+        url: 'https://www.codigomilenarjudaico.com',
+        logo: 'https://www.codigomilenarjudaico.com/og-image.svg',
+        contactPoint: { '@type': 'ContactPoint', email: 'privacidade@codigomilenarjudaico.com' },
+      },
+      {
+        '@type': 'Course',
+        name: 'Código Judaico da Prosperidade',
+        description: 'Método milenar judaico de 4 fases e 21 dias para construir prosperidade financeira, disciplina emocional e legado.',
+        provider: { '@type': 'Organization', name: 'Código Judaico da Prosperidade' },
+        url: 'https://www.codigomilenarjudaico.com',
+        offers: [
+          { '@type': 'Offer', name: 'Primeiro Acesso', price: '29.90', priceCurrency: 'BRL', availability: 'https://schema.org/InStock' },
+          { '@type': 'Offer', name: 'Premium Mensal', price: '37.90', priceCurrency: 'BRL', availability: 'https://schema.org/InStock' },
+          { '@type': 'Offer', name: 'Premium Anual', price: '297.90', priceCurrency: 'BRL', availability: 'https://schema.org/InStock' },
+          { '@type': 'Offer', name: 'Acesso Vitalício', price: '497.90', priceCurrency: 'BRL', availability: 'https://schema.org/InStock' },
+        ],
+      },
+    ],
+  }
+
   return (
     <div className="landing-wrapper">
+      <title>Código Judaico da Prosperidade — Método Milenar de 21 Dias</title>
+      <meta name="description" content="Descubra o método milenar judaico de 21 dias para prosperidade financeira. 4 fases práticas, desafios diários, biblioteca e Mentor IA. Transforme sua relação com o dinheiro." />
+      <link rel="canonical" href="https://www.codigomilenarjudaico.com/" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <style>{`
         /* Landing-only overrides (mantém mudanças restritas à home) */
         .landing-wrapper .landing-hero {

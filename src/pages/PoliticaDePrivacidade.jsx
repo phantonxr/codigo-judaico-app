@@ -21,6 +21,9 @@ export default function PoliticaDePrivacidade()
 
   return (
     <div style={{ minHeight: '100vh', padding: '48px 0 100px' }}>
+      <title>Política de Privacidade — Código Judaico da Prosperidade</title>
+      <meta name="description" content="Política de privacidade do Código Judaico da Prosperidade: como coletamos, usamos e protegemos seus dados pessoais, conforme LGPD, GDPR e CCPA." />
+      <meta name="robots" content="index, follow" />
       <div className="container" style={{ maxWidth: 820 }}>
 
         <div style={{ marginBottom: 32 }}>

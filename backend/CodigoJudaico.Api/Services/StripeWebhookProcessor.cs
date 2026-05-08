@@ -13,6 +13,7 @@ public sealed class StripeWebhookProcessor(
     PasswordHashService passwordHashService,
     AccessEmailService accessEmailService,
     UtmfyService utmfyService,
+    MetaConversionsService metaConversionsService,
     EvolutionApiService evolutionApiService,
     ILogger<StripeWebhookProcessor> logger)
 {
@@ -106,7 +107,8 @@ public sealed class StripeWebhookProcessor(
             user?.AccessEnabled ?? false,
             email,
             string.IsNullOrWhiteSpace(planId) ? matchedPlan.Id : planId,
-            string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName);
+            string.IsNullOrWhiteSpace(planName) ? matchedPlan.PlanName : planName,
+            session.AmountTotal ?? 0);
     }
 
     private async Task<bool> TryGrantAccessFromCheckoutSessionAsync(
@@ -231,6 +233,7 @@ public sealed class StripeWebhookProcessor(
                     cancellationToken);
 
                 await TrackUtmfyPurchaseAsync(session, user, matchedPlan, cancellationToken);
+                await TrackMetaPurchaseAsync(session, user, matchedPlan, cancellationToken);
             }
         }
 
@@ -344,6 +347,25 @@ public sealed class StripeWebhookProcessor(
             UtmCampaign: string.IsNullOrWhiteSpace(utmCampaign) ? null : utmCampaign,
             UtmTerm: string.IsNullOrWhiteSpace(utmTerm) ? null : utmTerm,
             UtmContent: string.IsNullOrWhiteSpace(utmContent) ? null : utmContent),
+            cancellationToken);
+    }
+
+    private async Task TrackMetaPurchaseAsync(
+        Session session,
+        AppUser user,
+        StripePlanDefinition plan,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        await metaConversionsService.TrackPurchaseAsync(new MetaPurchaseEvent(
+            EventId: session.Id,
+            Email: user.Email,
+            Name: user.Name,
+            PlanId: plan.Id,
+            PlanName: plan.PlanName,
+            AmountInCents: session.AmountTotal ?? 0,
+            EventTime: now),
             cancellationToken);
     }
 

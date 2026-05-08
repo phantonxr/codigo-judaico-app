@@ -335,7 +335,8 @@ public sealed record CheckoutSessionStatusResponse(
     bool AccessGranted,
     string? Email,
     string? PlanId,
-    string? PlanName);
+    string? PlanName,
+    long AmountInCents = 0);
 
 public sealed record AvailablePlanDto(
     string Id,

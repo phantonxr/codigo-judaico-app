@@ -31,6 +31,8 @@ builder.Services.Configure<UtmfyOptions>(
     builder.Configuration.GetSection(UtmfyOptions.SectionName));
 builder.Services.Configure<EvolutionApiOptions>(
     builder.Configuration.GetSection(EvolutionApiOptions.SectionName));
+builder.Services.Configure<MetaOptions>(
+    builder.Configuration.GetSection(MetaOptions.SectionName));
 builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 {
     var opts = sp.GetRequiredService<
@@ -42,6 +44,11 @@ builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 builder.Services.AddHttpClient("Utmfy", client =>
 {
     client.BaseAddress = new Uri("https://api.utmify.com.br/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+builder.Services.AddHttpClient("MetaConversions", client =>
+{
+    client.BaseAddress = new Uri("https://graph.facebook.com/");
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 builder.Services.AddHttpClient("EvolutionApi", (serviceProvider, client) =>
@@ -94,6 +101,7 @@ builder.Services.AddScoped<StripeBillingService>();
 builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
 builder.Services.AddScoped<UtmfyService>();
+builder.Services.AddScoped<MetaConversionsService>();
 builder.Services.AddScoped<EvolutionApiService>();
 builder.Services.AddScoped<RequirePremiumAccessEndpointFilter>();
 builder.Services.AddScoped<RequireMasterUserEndpointFilter>();

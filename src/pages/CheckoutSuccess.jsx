@@ -31,6 +31,15 @@ export default function CheckoutSuccess() {
         setError('')
 
         if (data?.accessGranted || attempt >= 9) {
+          if (data?.accessGranted && window.fbq) {
+            window.fbq('track', 'Purchase', {
+              value: data.amountInCents ? data.amountInCents / 100 : undefined,
+              currency: 'BRL',
+              content_name: data.planName,
+              content_ids: [data.planId].filter(Boolean),
+              content_type: 'product',
+            }, { eventID: sessionId })
+          }
           setLoading(false)
           return
         }

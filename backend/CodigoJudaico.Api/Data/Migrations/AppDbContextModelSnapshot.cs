@@ -139,6 +139,10 @@ namespace CodigoJudaico.Api.Data.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("FbClickId")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("UtmCampaign")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");

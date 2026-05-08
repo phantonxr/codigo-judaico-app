@@ -132,6 +132,7 @@ public static class PaymentEndpoints
             StripeBillingService stripeBillingService,
             AccessEmailService accessEmailService,
             UtmfyService utmfyService,
+            MetaConversionsService metaConversionsService,
             ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
@@ -311,7 +312,27 @@ public static class PaymentEndpoints
                 user.UtmContent = request.UtmContent;
             }
 
+            // Salva FbClickId (first-touch, segue mesmo critério dos UTMs).
+            var cleanedFbClickId = ApiMappers.Clean(request.FbClickId);
+            if (marketingConsent && string.IsNullOrWhiteSpace(user.FbClickId) && !string.IsNullOrWhiteSpace(cleanedFbClickId))
+            {
+                user.FbClickId = cleanedFbClickId;
+            }
+
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            await metaConversionsService.TrackInitiateCheckoutAsync(new MetaConversionEvent(
+                EventName: "InitiateCheckout",
+                EventId: response.SessionId,
+                Email: email,
+                Name: cleanedName,
+                PlanId: plan.Id,
+                PlanName: plan.PlanName,
+                AmountInCents: response.AmountInCents,
+                EventTime: now,
+                FbClickId: string.IsNullOrWhiteSpace(cleanedFbClickId) ? null : cleanedFbClickId,
+                IncludePii: marketingConsent),
+                cancellationToken);
 
             if (marketingConsent && HasAnyUtm(request))
             {

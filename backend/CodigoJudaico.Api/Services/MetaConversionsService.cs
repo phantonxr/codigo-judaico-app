@@ -5,14 +5,17 @@ using Microsoft.Extensions.Options;
 
 namespace CodigoJudaico.Api.Services;
 
-public sealed record MetaPurchaseEvent(
+public sealed record MetaConversionEvent(
+    string EventName,
     string EventId,
     string Email,
     string? Name,
     string PlanId,
     string PlanName,
     long AmountInCents,
-    DateTimeOffset EventTime);
+    DateTimeOffset EventTime,
+    string? FbClickId = null,
+    bool IncludePii = true);
 
 public sealed class MetaConversionsService(
     IHttpClientFactory httpClientFactory,
@@ -21,7 +24,13 @@ public sealed class MetaConversionsService(
 {
     private readonly MetaOptions _options = options.Value;
 
-    public async Task TrackPurchaseAsync(MetaPurchaseEvent evt, CancellationToken cancellationToken)
+    public Task TrackPurchaseAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
+        => SendAsync(evt, cancellationToken);
+
+    public Task TrackInitiateCheckoutAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
+        => SendAsync(evt, cancellationToken);
+
+    private async Task SendAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
     {
         if (!_options.Enabled
             || string.IsNullOrWhiteSpace(_options.PixelId)
@@ -32,11 +41,13 @@ public sealed class MetaConversionsService(
 
         var (firstName, lastName) = SplitName(evt.Name);
 
-        var userData = BuildUserData(evt.Email, firstName, lastName);
+        var userData = evt.IncludePii
+            ? BuildUserData(evt.Email, firstName, lastName, evt.FbClickId)
+            : BuildAnonymousUserData(evt.FbClickId);
 
         var eventPayload = new
         {
-            event_name = "Purchase",
+            event_name = evt.EventName,
             event_time = evt.EventTime.ToUnixTimeSeconds(),
             event_id = evt.EventId,
             action_source = "website",
@@ -63,23 +74,23 @@ public sealed class MetaConversionsService(
         try
         {
             var client = httpClientFactory.CreateClient("MetaConversions");
-            var url = $"v19.0/{_options.PixelId}/events";
-
-            var response = await client.PostAsJsonAsync(url, body, cancellationToken);
+            var response = await client.PostAsJsonAsync($"v19.0/{_options.PixelId}/events", body, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
                 var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
                 logger.LogWarning(
-                    "Meta Conversions API retornou {StatusCode} para o evento {EventId}. Resposta: {Body}",
+                    "Meta Conversions API retornou {StatusCode} para o evento {EventName} {EventId}. Resposta: {Body}",
                     (int)response.StatusCode,
+                    evt.EventName,
                     evt.EventId,
                     responseBody);
             }
             else
             {
                 logger.LogInformation(
-                    "Meta Conversions API: evento Purchase enviado. EventId: {EventId}.",
+                    "Meta Conversions API: evento {EventName} enviado. EventId: {EventId}.",
+                    evt.EventName,
                     evt.EventId);
             }
         }
@@ -87,12 +98,17 @@ public sealed class MetaConversionsService(
         {
             logger.LogError(
                 ex,
-                "Falha ao enviar evento Purchase para Meta Conversions API. EventId: {EventId}.",
+                "Falha ao enviar evento {EventName} para Meta Conversions API. EventId: {EventId}.",
+                evt.EventName,
                 evt.EventId);
         }
     }
 
-    private static Dictionary<string, object> BuildUserData(string email, string firstName, string lastName)
+    private static Dictionary<string, object> BuildUserData(
+        string email,
+        string firstName,
+        string lastName,
+        string? fbClickId)
     {
         var userData = new Dictionary<string, object>
         {
@@ -100,14 +116,23 @@ public sealed class MetaConversionsService(
         };
 
         if (!string.IsNullOrWhiteSpace(firstName))
-        {
             userData["fn"] = new[] { HashString(firstName.ToLowerInvariant()) };
-        }
 
         if (!string.IsNullOrWhiteSpace(lastName))
-        {
             userData["ln"] = new[] { HashString(lastName.ToLowerInvariant()) };
-        }
+
+        if (!string.IsNullOrWhiteSpace(fbClickId))
+            userData["fbc"] = fbClickId;
+
+        return userData;
+    }
+
+    private static Dictionary<string, object> BuildAnonymousUserData(string? fbClickId)
+    {
+        var userData = new Dictionary<string, object>();
+
+        if (!string.IsNullOrWhiteSpace(fbClickId))
+            userData["fbc"] = fbClickId;
 
         return userData;
     }
@@ -121,9 +146,7 @@ public sealed class MetaConversionsService(
     private static (string firstName, string lastName) SplitName(string? fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName))
-        {
             return (string.Empty, string.Empty);
-        }
 
         var parts = fullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
 

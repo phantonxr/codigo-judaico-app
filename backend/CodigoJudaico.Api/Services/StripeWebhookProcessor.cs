@@ -362,24 +362,21 @@ public sealed class StripeWebhookProcessor(
         StripePlanDefinition? plan,
         CancellationToken cancellationToken)
     {
-        if (!ReadMarketingConsent(session.Metadata))
-        {
-            logger.LogInformation(
-                "Meta CAPI ignorado para o checkout {SessionId}: usuario nao deu consentimento de marketing.",
-                session.Id);
-            return;
-        }
-
+        var hasConsent = ReadMarketingConsent(session.Metadata);
+        var fbClickId = ReadMetadata(session.Metadata, StripeBillingService.FbClickIdMetadataKey);
         var now = DateTimeOffset.UtcNow;
 
-        await metaConversionsService.TrackPurchaseAsync(new MetaPurchaseEvent(
+        await metaConversionsService.TrackPurchaseAsync(new MetaConversionEvent(
+            EventName: "Purchase",
             EventId: session.Id,
             Email: user.Email,
             Name: user.Name,
             PlanId: plan?.Id ?? "livros",
             PlanName: plan?.PlanName ?? "Livros",
             AmountInCents: session.AmountTotal ?? 0,
-            EventTime: now),
+            EventTime: now,
+            FbClickId: string.IsNullOrWhiteSpace(fbClickId) ? null : fbClickId,
+            IncludePii: hasConsent),
             cancellationToken);
     }
 

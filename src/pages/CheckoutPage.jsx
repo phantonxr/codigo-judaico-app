@@ -242,6 +242,11 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
+      const fbclid = searchParams.get('fbclid')
+      const fbClickId = fbclid
+        ? `fb.1.${Math.floor(Date.now() / 1000)}.${fbclid}`
+        : null
+
       const response = await createCheckoutSession({
         name,
         email,
@@ -253,12 +258,24 @@ export default function CheckoutPage() {
         utmTerm: utm.utm_term ?? null,
         utmContent: utm.utm_content ?? null,
         marketingConsent: hasMarketingConsent(),
+        fbClickId,
         bookIds: checkoutBookIds,
         legalAcceptance: buildLegalAcceptancePayload(legalData.activeVersions, legalLanguage),
       })
 
       if (!response?.url) {
         throw new Error(t('checkout.errors.no_url'))
+      }
+
+      if (window.fbq && hasMarketingConsent()) {
+        window.fbq('track', 'InitiateCheckout', {
+          value: response.amountInCents ? response.amountInCents / 100 : undefined,
+          currency: 'BRL',
+          content_name: selectedPlan.title,
+          content_ids: [selectedPlan.id],
+          content_type: 'product',
+          num_items: 1,
+        }, { eventID: response.sessionId })
       }
 
       window.location.href = response.url

@@ -26,6 +26,7 @@ public sealed class AppUser
     public string? UtmCampaign { get; set; }
     public string? UtmTerm { get; set; }
     public string? UtmContent { get; set; }
+    public string? FbClickId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public UserDiagnosis? Diagnosis { get; set; }

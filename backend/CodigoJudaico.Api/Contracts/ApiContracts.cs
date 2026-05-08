@@ -286,6 +286,7 @@ public sealed record CheckoutSessionCreateRequest
     public string? UtmTerm { get; init; }
     public string? UtmContent { get; init; }
     public bool MarketingConsent { get; init; }
+    public string? FbClickId { get; init; }
     public IReadOnlyList<string> BookIds { get; init; } = [];
     public LegalAcceptanceRequest? LegalAcceptance { get; init; }
 }

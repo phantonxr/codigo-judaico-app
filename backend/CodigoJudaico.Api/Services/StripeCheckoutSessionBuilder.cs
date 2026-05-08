@@ -32,7 +32,8 @@ internal static class StripeCheckoutSessionBuilder
         string? utmCampaign = null,
         string? utmTerm = null,
         string? utmContent = null,
-        string? bookIds = null)
+        string? bookIds = null,
+        bool marketingConsent = false)
     {
         EnsureRequiredPaymentCoreMetadata(paymentCoreMetadata);
 
@@ -70,6 +71,8 @@ internal static class StripeCheckoutSessionBuilder
 
         if (!string.IsNullOrWhiteSpace(bookIds))
             metadata[StripeBillingService.BookIdsMetadataKey] = bookIds;
+
+        metadata[StripeBillingService.MarketingConsentMetadataKey] = marketingConsent ? "true" : "false";
 
         return metadata;
     }

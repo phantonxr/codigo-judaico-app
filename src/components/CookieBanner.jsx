@@ -45,26 +45,52 @@ export default function CookieBanner() {
 
   if (!visible) {
     return (
-      <button
-        type="button"
-        onClick={openPreferences}
+      <div
         style={{
           position: 'fixed',
           left: 14,
           bottom: 14,
           zIndex: 9998,
-          border: '1px solid rgba(215, 178, 74, 0.35)',
-          background: 'rgba(12, 10, 6, 0.82)',
-          color: 'rgba(255,255,255,0.76)',
-          borderRadius: 6,
-          padding: '7px 10px',
-          fontSize: 12,
-          cursor: 'pointer',
-          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
         }}
       >
-        {t('cookie_banner.settings')}
-      </button>
+        <button
+          type="button"
+          onClick={openPreferences}
+          style={{
+            border: '1px solid rgba(215, 178, 74, 0.35)',
+            background: 'rgba(12, 10, 6, 0.82)',
+            color: 'rgba(255,255,255,0.76)',
+            borderRadius: 6,
+            padding: '7px 10px',
+            fontSize: 12,
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            textAlign: 'left',
+          }}
+        >
+          {t('cookie_banner.settings')}
+        </button>
+        <button
+          type="button"
+          onClick={openPreferences}
+          style={{
+            border: '1px solid rgba(215, 178, 74, 0.35)',
+            background: 'rgba(12, 10, 6, 0.82)',
+            color: 'rgba(215,178,74,0.72)',
+            borderRadius: 6,
+            padding: '7px 10px',
+            fontSize: 11,
+            cursor: 'pointer',
+            backdropFilter: 'blur(8px)',
+            textAlign: 'left',
+          }}
+        >
+          {t('cookie_banner.do_not_sell')}
+        </button>
+      </div>
     )
   }
 

@@ -844,7 +844,8 @@
     "preferences_description": "Guardam escolhas como idioma e ajustes locais do aplicativo.",
     "marketing_title": "Marketing e atribuição.",
     "marketing_description": "Permitem salvar UTMs e enviar dados de conversão para provedores de atribuição como UTMfy.",
-    "gpc_enabled": "Seu navegador está enviando Global Privacy Control; marketing permanece desativado."
+    "gpc_enabled": "Seu navegador está enviando Global Privacy Control; marketing permanece desativado.",
+    "do_not_sell": "Não venda ou compartilhe meus dados"
   },
   "footer": {
     "privacy": "Política de Privacidade",

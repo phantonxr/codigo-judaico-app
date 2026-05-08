@@ -29,6 +29,7 @@ import Livros from './pages/Livros.jsx'
 import PoliticaDePrivacidade from './pages/PoliticaDePrivacidade.jsx'
 import { hasAuthToken } from './services/authStorage.js'
 import useCurrentUser from './hooks/useCurrentUser.js'
+import { useMetaPixel } from './hooks/useMetaPixel.js'
 
 function RequireAuth() {
   const location = useLocation()
@@ -167,6 +168,8 @@ function AppLayout() {
 }
 
 export default function App() {
+  useMetaPixel()
+
   return (
     <>
       <CookieBanner />

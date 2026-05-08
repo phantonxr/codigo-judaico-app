@@ -844,7 +844,8 @@
     "preferences_description": "Store choices such as language and local app settings.",
     "marketing_title": "Marketing and attribution.",
     "marketing_description": "Allow UTMs to be stored and conversion data to be sent to attribution providers such as UTMfy.",
-    "gpc_enabled": "Your browser is sending Global Privacy Control; marketing stays disabled."
+    "gpc_enabled": "Your browser is sending Global Privacy Control; marketing stays disabled.",
+    "do_not_sell": "Do Not Sell or Share My Personal Information"
   },
   "footer": {
     "privacy": "Privacy Policy",

@@ -356,6 +356,14 @@ public sealed class StripeWebhookProcessor(
         StripePlanDefinition plan,
         CancellationToken cancellationToken)
     {
+        if (!ReadMarketingConsent(session.Metadata))
+        {
+            logger.LogInformation(
+                "Meta CAPI ignorado para o checkout {SessionId}: usuario nao deu consentimento de marketing.",
+                session.Id);
+            return;
+        }
+
         var now = DateTimeOffset.UtcNow;
 
         await metaConversionsService.TrackPurchaseAsync(new MetaPurchaseEvent(
@@ -368,6 +376,12 @@ public sealed class StripeWebhookProcessor(
             EventTime: now),
             cancellationToken);
     }
+
+    private static bool ReadMarketingConsent(Dictionary<string, string>? metadata) =>
+        string.Equals(
+            ReadMetadata(metadata, StripeBillingService.MarketingConsentMetadataKey),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 
     private static bool HasAnyUtm(
         string? utmSource,

@@ -52,6 +52,7 @@ public sealed class StripeBillingService(
     public const string UtmTermMetadataKey = "utm_term";
     public const string UtmContentMetadataKey = "utm_content";
     public const string BookIdsMetadataKey = "book_ids";
+    public const string MarketingConsentMetadataKey = "marketing_consent";
 
     private readonly StripeBillingOptions _options = options.Value;
     private readonly ILogger<StripeBillingService> _logger = logger;
@@ -295,7 +296,8 @@ public sealed class StripeBillingService(
             utmCampaign: ApiMappers.Clean(request.UtmCampaign),
             utmTerm: ApiMappers.Clean(request.UtmTerm),
             utmContent: ApiMappers.Clean(request.UtmContent),
-            bookIds: books is { Count: > 0 } ? BuildBookIdsMetadata(books) : null);
+            bookIds: books is { Count: > 0 } ? BuildBookIdsMetadata(books) : null,
+            marketingConsent: request.MarketingConsent);
         var routing = StripeConnectRouting.Direct;
 
         _logger.LogInformation(

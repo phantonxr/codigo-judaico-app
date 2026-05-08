@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getCheckoutSessionStatus } from '../services/payments.js'
+import { hasMarketingConsent } from '../services/privacyConsent.js'
 
 export default function CheckoutSuccess() {
   const { t } = useTranslation()
@@ -31,7 +32,7 @@ export default function CheckoutSuccess() {
         setError('')
 
         if (data?.accessGranted || attempt >= 9) {
-          if (data?.accessGranted && window.fbq) {
+          if (data?.accessGranted && window.fbq && hasMarketingConsent()) {
             window.fbq('track', 'Purchase', {
               value: data.amountInCents ? data.amountInCents / 100 : undefined,
               currency: 'BRL',

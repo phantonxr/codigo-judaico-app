@@ -38,8 +38,7 @@ public static class BookCatalog
             "R$ 9,90",
             990,
             "7-gatilhos-dinheiro-desaparecer.png",
-            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Desaparecer.pdf",
-            IsVisibleInCatalog: false),
+            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Desaparecer.pdf"),
         new BookDefinition(
             "7-gatilhos-dinheiro-escapar",
             "Os 7 Gatilhos Invisíveis que Fazem Seu Dinheiro Escapar",
@@ -47,8 +46,7 @@ public static class BookCatalog
             "R$ 9,90",
             990,
             "7-gatilhos-dinheiro-escapar.png",
-            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Escapar.pdf",
-            IsVisibleInCatalog: false),
+            "Os-7-Gatilhos-Invisiveis-que-Fazem-Seu-Dinheiro-Escapar.pdf"),
         new BookDefinition(
             "identidade-nome-dinheiro",
             "Identidade, Nome e Dinheiro",

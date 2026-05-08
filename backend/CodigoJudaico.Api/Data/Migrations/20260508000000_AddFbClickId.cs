@@ -1,9 +1,13 @@
+using CodigoJudaico.Api.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace CodigoJudaico.Api.Data.Migrations
 {
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260508000000_AddFbClickId")]
     public partial class AddFbClickId : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

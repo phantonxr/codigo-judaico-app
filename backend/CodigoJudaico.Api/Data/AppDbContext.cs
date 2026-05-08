@@ -45,6 +45,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.UtmCampaign).HasMaxLength(200);
             entity.Property(x => x.UtmTerm).HasMaxLength(200);
             entity.Property(x => x.UtmContent).HasMaxLength(200);
+            entity.Property(x => x.FbClickId).HasMaxLength(500);
         });
 
         modelBuilder.Entity<AppSession>(entity =>

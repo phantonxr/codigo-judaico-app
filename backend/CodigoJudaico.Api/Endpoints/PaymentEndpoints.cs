@@ -235,11 +235,6 @@ public static class PaymentEndpoints
                         Email = email,
                         Name = cleanedName,
                         Password = string.Empty,
-                        UtmSource = marketingConsent ? request.UtmSource : null,
-                        UtmMedium = marketingConsent ? request.UtmMedium : null,
-                        UtmCampaign = marketingConsent ? request.UtmCampaign : null,
-                        UtmTerm = marketingConsent ? request.UtmTerm : null,
-                        UtmContent = marketingConsent ? request.UtmContent : null,
                     },
                     plan,
                     cancellationToken,
@@ -334,9 +329,9 @@ public static class PaymentEndpoints
                 IncludePii: marketingConsent),
                 cancellationToken);
 
-            if (marketingConsent && HasAnyUtm(request))
+            if (HasAnyUtm(request))
             {
-                // Notifica UTMfy que o checkout foi iniciado (waiting_payment).
+                // Notifica UTMfy que o checkout foi iniciado (waiting_payment) — base legal: legítimo interesse.
                 var orderId = response.OrderId;
 
                 await utmfyService.TrackAsync(new UtmfyConversionRequest(

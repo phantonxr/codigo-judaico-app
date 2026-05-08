@@ -36,7 +36,7 @@ export default function PoliticaDePrivacidade()
           Política de Privacidade
         </h1>
         <p style={{ margin: '0 0 48px', fontSize: 13, color: MUTED }}>
-          Última atualização: 7 de maio de 2026
+          Última atualização: 8 de maio de 2026
         </p>
 
         <div style={{ display: 'grid', gap: 40 }}>
@@ -60,7 +60,7 @@ export default function PoliticaDePrivacidade()
               <li><strong style={{ color: 'rgba(255,255,255,0.85)' }}>Progresso e reflexões:</strong> tarefas concluídas, reflexões diárias e registros de gatilhos financeiros dentro da plataforma.</li>
               <li><strong style={{ color: 'rgba(255,255,255,0.85)' }}>Dados de uso:</strong> sessões, acessos, plano, status de assinatura, histórico de login e interações com o Rabino Mentor IA.</li>
               <li><strong style={{ color: 'rgba(255,255,255,0.85)' }}>Armazenamento local:</strong> token de sessão, preferências, progresso local e escolhas de consentimento no navegador.</li>
-              <li><strong style={{ color: 'rgba(255,255,255,0.85)' }}>Atribuição de campanha:</strong> UTMs como origem, mídia e campanha, somente quando você autoriza marketing e atribuição.</li>
+              <li><strong style={{ color: 'rgba(255,255,255,0.85)' }}>Atribuição de campanha:</strong> parâmetros UTM (origem, mídia e campanha) presentes na URL de chegada são sempre coletados para mensurar quais canais geram conversões — base legal: legítimo interesse. Armazenamos esses parâmetros associados ao seu perfil interno somente com sua autorização de marketing.</li>
             </ul>
           </Section>
 
@@ -70,7 +70,7 @@ export default function PoliticaDePrivacidade()
               <li>Processar pagamentos via Stripe e liberar o acesso ao conteúdo.</li>
               <li>Enviar e-mails transacionais (confirmação de acesso, recuperação de senha) via Resend.</li>
               <li>Personalizar sua jornada e as respostas do Rabino Mentor IA (via OpenAI, com seus dados de reflexão).</li>
-              <li>Medir campanhas e conversões quando você permite marketing e atribuição.</li>
+              <li>Medir o desempenho de campanhas e atribuir conversões aos canais de origem — sempre que parâmetros UTM estão presentes, com base em legítimo interesse; dados adicionais de comportamento só são usados com sua autorização.</li>
               <li>Proteger a plataforma, prevenir fraude, cumprir obrigações legais e atender solicitações de titulares.</li>
             </ul>
             <p style={{ marginTop: 14 }}>
@@ -102,7 +102,10 @@ export default function PoliticaDePrivacidade()
               </li>
               <li>
                 <strong style={{ color: 'rgba(255,255,255,0.85)' }}>UTMfy (Brasil):</strong>{' '}
-                atribuição de campanhas e eventos de checkout quando você autoriza marketing e atribuição.
+                plataforma de atribuição de campanhas. Quando sua visita contém parâmetros UTM, enviamos
+                ao UTMfy os dados do pedido (e-mail, plano, valor e UTMs) para identificar quais canais
+                de marketing geraram conversões — base legal: legítimo interesse (LGPD art. 7, VI).
+                Você pode se opor a esse tratamento pelo canal de privacidade indicado na seção 10.
               </li>
               <li>
                 <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Hospedagem, banco de dados e mídia:</strong>{' '}
@@ -153,7 +156,7 @@ export default function PoliticaDePrivacidade()
             </p>
           </Section>
 
-          <Section title="8. Cookies e armazenamento local">
+          <Section title="8. Cookies, armazenamento local e atribuição server-side">
             <p style={{ marginBottom: 12 }}>Usamos cookies e armazenamento local nas seguintes categorias:</p>
             <ul style={{ margin: 0, paddingLeft: 22, display: 'grid', gap: 8 }}>
               <li>
@@ -166,13 +169,20 @@ export default function PoliticaDePrivacidade()
                 armazenam configurações como idioma escolhido.
               </li>
               <li>
-                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Marketing e atribuição:</strong>{' '}
-                armazenam UTMs e permitem mensuração de campanhas somente com sua autorização.
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Marketing e atribuição (consentimento):</strong>{' '}
+                habilitam o pixel do Facebook no navegador e armazenam seu identificador de clique em
+                anúncio (fbclid) associado ao seu perfil. Ativados somente com sua autorização.
               </li>
             </ul>
             <p style={{ marginTop: 14 }}>
-              Você pode aceitar, recusar ou alterar preferências pelo botão "Privacidade" exibido no site.
-              Também pode limpar dados nas configurações do navegador.
+              Independentemente do consentimento, quando sua visita contém parâmetros UTM, nosso servidor
+              envia dados de atribuição (e-mail, plano, valor e UTMs) ao UTMfy com base em legítimo
+              interesse, para mensurar a eficácia dos nossos canais de marketing. Você pode se opor a
+              esse tratamento pelo canal de privacidade indicado na seção 10.
+            </p>
+            <p style={{ marginTop: 10 }}>
+              Você pode aceitar, recusar ou alterar preferências de consentimento pelo botão "Privacidade"
+              exibido no site. Também pode limpar dados de armazenamento local nas configurações do navegador.
             </p>
           </Section>
 

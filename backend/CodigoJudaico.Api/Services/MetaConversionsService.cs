@@ -8,7 +8,7 @@ namespace CodigoJudaico.Api.Services;
 public sealed record MetaConversionEvent(
     string EventName,
     string EventId,
-    string Email,
+    string? Email,
     string? Name,
     string PlanId,
     string PlanName,
@@ -24,10 +24,13 @@ public sealed class MetaConversionsService(
 {
     private readonly MetaOptions _options = options.Value;
 
-    public Task TrackPurchaseAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
+    public Task TrackLeadAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
         => SendAsync(evt, cancellationToken);
 
     public Task TrackInitiateCheckoutAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
+        => SendAsync(evt, cancellationToken);
+
+    public Task TrackPurchaseAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
         => SendAsync(evt, cancellationToken);
 
     private async Task SendAsync(MetaConversionEvent evt, CancellationToken cancellationToken)
@@ -105,15 +108,15 @@ public sealed class MetaConversionsService(
     }
 
     private static Dictionary<string, object> BuildUserData(
-        string email,
+        string? email,
         string firstName,
         string lastName,
         string? fbClickId)
     {
-        var userData = new Dictionary<string, object>
-        {
-            ["em"] = new[] { HashString(email.ToLowerInvariant()) },
-        };
+        var userData = new Dictionary<string, object>();
+
+        if (!string.IsNullOrWhiteSpace(email))
+            userData["em"] = new[] { HashString(email.ToLowerInvariant()) };
 
         if (!string.IsNullOrWhiteSpace(firstName))
             userData["fn"] = new[] { HashString(firstName.ToLowerInvariant()) };

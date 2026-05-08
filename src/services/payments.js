@@ -21,3 +21,10 @@ export function createMentorUnlimitedCheckoutSession() {
     body: JSON.stringify({}),
   })
 }
+
+export function postMetaLeadEvent(payload) {
+  return apiFetch('/api/payments/meta/lead-event', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}

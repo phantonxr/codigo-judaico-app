@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { createCheckoutSession } from '../services/payments.js'
+import { createCheckoutSession, postMetaLeadEvent } from '../services/payments.js'
 import { getBookCatalog } from '../services/books.js'
 import {
   LEGAL_DOCUMENT_TYPES,
@@ -162,6 +162,29 @@ export default function CheckoutPage() {
       window.cancelAnimationFrame(frameId)
     }
   }, [selectedPlan.id])
+
+  useEffect(function () {
+    var fbclid = searchParams.get('fbclid')
+    if (!fbclid) return
+
+    var fbc = 'fb.1.' + Math.floor(Date.now() / 1000) + '.' + fbclid
+    var eventId = 'lead_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9)
+
+    if (window.fbq && hasMarketingConsent()) {
+      window.fbq('track', 'Lead', {
+        content_name: selectedPlan.title,
+        content_ids: [selectedPlan.id],
+        content_type: 'product',
+      }, { eventID: eventId })
+    }
+
+    postMetaLeadEvent({
+      fbClickId: fbc,
+      planId: selectedPlan.id,
+      planName: selectedPlan.title,
+      eventId,
+    }).catch(function () {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(function () {
     let alive = true

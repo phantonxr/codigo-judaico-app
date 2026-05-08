@@ -95,6 +95,39 @@ public static class PaymentEndpoints
         .RequireAuthorization()
         .WithName("CreateMentorUnlimitedCheckoutSession");
 
+        group.MapPost("/meta/lead-event", async (
+            MetaLeadEventRequest request,
+            MetaConversionsService metaConversionsService,
+            CancellationToken cancellationToken) =>
+        {
+            var cleanedFbClickId = ApiMappers.Clean(request.FbClickId);
+
+            if (string.IsNullOrWhiteSpace(cleanedFbClickId))
+            {
+                return Results.NoContent();
+            }
+
+            var cleanedPlanId = ApiMappers.Clean(request.PlanId);
+            var cleanedPlanName = ApiMappers.Clean(request.PlanName);
+            var cleanedEventId = ApiMappers.Clean(request.EventId);
+
+            await metaConversionsService.TrackLeadAsync(new MetaConversionEvent(
+                EventName: "Lead",
+                EventId: string.IsNullOrWhiteSpace(cleanedEventId) ? Guid.NewGuid().ToString() : cleanedEventId,
+                Email: null,
+                Name: null,
+                PlanId: string.IsNullOrWhiteSpace(cleanedPlanId) ? "desconhecido" : cleanedPlanId,
+                PlanName: string.IsNullOrWhiteSpace(cleanedPlanName) ? "Desconhecido" : cleanedPlanName,
+                AmountInCents: 0,
+                EventTime: DateTimeOffset.UtcNow,
+                FbClickId: cleanedFbClickId,
+                IncludePii: false),
+                cancellationToken);
+
+            return Results.NoContent();
+        })
+        .WithName("TrackMetaLeadEvent");
+
         group.MapGet("/available-plans", async (
             ClaimsPrincipal userPrincipal,
             AppDbContext dbContext,

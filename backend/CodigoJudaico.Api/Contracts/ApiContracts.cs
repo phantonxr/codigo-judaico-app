@@ -274,6 +274,14 @@ public sealed record ResetPasswordRequest
     public string NewPassword { get; init; } = string.Empty;
 }
 
+public sealed record MetaLeadEventRequest
+{
+    public string? FbClickId { get; init; }
+    public string? PlanId { get; init; }
+    public string? PlanName { get; init; }
+    public string? EventId { get; init; }
+}
+
 public sealed record CheckoutSessionCreateRequest
 {
     public string Email { get; init; } = string.Empty;

@@ -13,10 +13,9 @@ import {
 } from '../services/legal.js'
 import { useUtmParams } from '../hooks/useUtmParams.js'
 import { hasMarketingConsent } from '../services/privacyConsent.js'
-import FloatingProof from '../components/FloatingProof.jsx'
 import DisclaimerBanner from '../components/legal/DisclaimerBanner.jsx'
 import LegalDocumentModal from '../components/legal/LegalDocumentModal.jsx'
-import { Zap, Clock, BookOpen, Gift } from 'lucide-react'
+import { Clock, BookOpen, Gift, Flame, Sparkles } from 'lucide-react'
 
 const MINIMUM_PASSWORD_LENGTH = 8
 const DEFAULT_PLAN_ID = 'primeiro-acesso'
@@ -128,6 +127,13 @@ export default function CheckoutPage() {
   const phaseLabel = resolvePhaseLabel(planTitle)
   const promise = resolvePromise(selectedPlan.id, t)
   const ctaLabel = resolveCtaLabel(selectedPlan.id, t)
+
+  const isPrimaryOffer = selectedPlan.id === 'primeiro-acesso'
+  const submitLabel = isPrimaryOffer ? 'QUERO MEU ACESSO' : ctaLabel
+
+  const interactUntilRef = useRef(0)
+  const [toast, setToast] = useState(null)
+  const [toastVisible, setToastVisible] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
@@ -238,6 +244,136 @@ export default function CheckoutPage() {
     ? selectedBookIds.filter(function (id) { return !isMethodBonusBook(id) })
     : selectedBookIds
 
+  const toastPool = useMemo(
+    function () {
+      if (!isPrimaryOffer) return []
+
+      return [
+        {
+          type: 'social',
+          icon: <Sparkles size={16} />,
+          title: 'Prova social',
+          message: 'Fernanda M. acabou de garantir o acesso.',
+        },
+        {
+          type: 'social',
+          icon: <Sparkles size={16} />,
+          title: 'Prova social',
+          message: 'Jorge F. iniciou a jornada de 21 dias.',
+        },
+        {
+          type: 'social',
+          icon: <Sparkles size={16} />,
+          title: 'Prova social',
+          message: 'Luciana T. acabou de liberar o acesso.',
+        },
+        {
+          type: 'social',
+          icon: <Sparkles size={16} />,
+          title: 'Prova social',
+          message: 'Paulo D. garantiu o desconto promocional.',
+        },
+        {
+          type: 'social',
+          icon: <Sparkles size={16} />,
+          title: 'Prova social',
+          message: 'Lucas U. começou agora com o Rabino Mentor IA.',
+        },
+        {
+          type: 'scarcity',
+          icon: <Flame size={16} />,
+          title: 'Escassez',
+          message: 'Restam apenas 7 acessos promocionais.',
+        },
+        {
+          type: 'scarcity',
+          icon: <Clock size={16} />,
+          title: 'Escassez',
+          message: 'Desconto reservado por poucos minutos.',
+        },
+        {
+          type: 'scarcity',
+          icon: <Clock size={16} />,
+          title: 'Escassez',
+          message: 'Os acessos promocionais podem encerrar a qualquer momento.',
+        },
+        {
+          type: 'benefit',
+          icon: <Sparkles size={16} />,
+          title: 'Benefício',
+          message: 'Usuários estão identificando seus gatilhos com o Rabino Mentor IA.',
+        },
+        {
+          type: 'benefit',
+          icon: <Sparkles size={16} />,
+          title: 'Benefício',
+          message: 'O método começa pelo domínio do comportamento, não por planilhas.',
+        },
+      ]
+    },
+    [isPrimaryOffer],
+  )
+
+  function markInteracting() {
+    interactUntilRef.current = Date.now() + 1800
+  }
+
+  useEffect(
+    function () {
+      if (!isPrimaryOffer) return
+      if (!toastPool.length) return
+
+      let alive = true
+      let hideTimer = null
+      let showTimer = null
+
+      function pickRandomToast() {
+        return toastPool[Math.floor(Math.random() * toastPool.length)]
+      }
+
+      function attemptShow() {
+        if (!alive) return
+        if (loading) return
+        if (document && document.visibilityState === 'hidden') return
+
+        // Don't pop while user is actively typing.
+        if (Date.now() < interactUntilRef.current) {
+          scheduleNext()
+          return
+        }
+
+        const next = pickRandomToast()
+        setToast(next)
+        setToastVisible(true)
+
+        if (hideTimer) window.clearTimeout(hideTimer)
+        const visibleMs = 4000 + Math.floor(Math.random() * 2000) // 4–6s
+        hideTimer = window.setTimeout(function () {
+          setToastVisible(false)
+        }, visibleMs)
+
+        scheduleNext()
+      }
+
+      function scheduleNext() {
+        if (!alive) return
+        if (showTimer) window.clearTimeout(showTimer)
+        const nextMs = 12000 + Math.floor(Math.random() * 8000) // 12–20s
+        showTimer = window.setTimeout(attemptShow, nextMs)
+      }
+
+      // Start after a short delay so the hero doesn't feel jumpy.
+      showTimer = window.setTimeout(attemptShow, 9000)
+
+      return function () {
+        alive = false
+        if (hideTimer) window.clearTimeout(hideTimer)
+        if (showTimer) window.clearTimeout(showTimer)
+      }
+    },
+    [isPrimaryOffer, toastPool, loading],
+  )
+
   async function onSubmit(event) {
     event.preventDefault()
     setError('')
@@ -317,94 +453,205 @@ export default function CheckoutPage() {
 
   return (
     <div className="container" style={{ padding: '40px 0 72px' }}>
-      <title>{`Assinar ${planTitle} — Código Judaico da Prosperidade`}</title>
+      <title>{`Checkout — Código Judaico da Prosperidade`}</title>
       <meta name="robots" content="noindex, nofollow" />
-      <FloatingProof />
       <LegalDocumentModal
         document={selectedLegalDocument}
         open={Boolean(selectedLegalDocument)}
         onClose={() => setSelectedLegalDocument(null)}
       />
 
+      {isPrimaryOffer && toast ? (
+        <div className={'checkout-toast' + (toastVisible ? ' checkout-toast--visible' : '')} aria-hidden="true">
+          <div className="checkout-toast__inner">
+            <div className="checkout-toast__icon">{toast.icon}</div>
+            <div className="checkout-toast__content">
+              <div className="checkout-toast__title">{toast.title}</div>
+              <div className="checkout-toast__message">{toast.message}</div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 22 }}>
         <DisclaimerBanner compact />
 
         <div className="card">
-          <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-            <span className="badge" style={{ width: 'fit-content' }}>{t('checkout.badge')}</span>
-            <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.05 }}>
-              {t('checkout.title')}
-            </h1>
-            <div style={{ fontWeight: 900, color: 'var(--gold-2)', lineHeight: 1.35 }}>
-              {t('checkout.social_proof')}
-            </div>
-            <div className="muted" style={{ lineHeight: 1.7 }}>
-              {existingAccountFlow ? t('checkout.existing_account') : t('checkout.new_account')}
-            </div>
+          <div className="card-inner checkout-hero">
+            {isPrimaryOffer ? (
+              <>
+                <span className="badge" style={{ width: 'fit-content' }}>
+                  Oferta de acesso inicial
+                </span>
+
+                <h1 className="checkout-hero-title">
+                  21 dias para descobrir o gatilho invisível que faz seu dinheiro desaparecer
+                </h1>
+
+                <div className="checkout-subheadline">
+                  <div className="checkout-subheadline__icon" aria-hidden="true">
+                    <Sparkles size={16} />
+                  </div>
+                  <div className="checkout-subheadline__text">
+                    Com atividades diárias simples e acompanhamento do{' '}
+                    <span className="checkout-emphasis">Rabino Mentor IA</span>, você vai investigar o padrão emocional que faz seu dinheiro escapar — e começar a desenvolver{' '}
+                    <span className="checkout-emphasis">domínio</span> sobre ele.
+                  </div>
+                </div>
+
+                <div className="checkout-hero-quote">
+                  “O problema não é apenas quanto você ganha. É o padrão invisível que decide por você antes mesmo de perceber.”
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="badge" style={{ width: 'fit-content' }}>
+                  Checkout
+                </span>
+
+                <h1 className="checkout-hero-title">{planTitle}</h1>
+
+                <p className="checkout-hero-subtitle">
+                  {promise}
+                </p>
+              </>
+            )}
+
+            {isPrimaryOffer ? (
+              <div className="checkout-offer">
+                <div className="checkout-price">
+                  <div className="checkout-price-from">De R$97,90</div>
+                  <div className="checkout-price-to">
+                    <span className="checkout-price-prefix">por</span>
+                    <strong>R$29,90</strong>
+                  </div>
+                </div>
+
+                <div className="checkout-alert" role="note" aria-label="Urgência">
+                  <div className="checkout-alert__icon" aria-hidden="true">
+                    <Flame size={16} />
+                  </div>
+                  <div className="checkout-alert__body">
+                    <div className="checkout-alert__title">🔥 Desconto liberado por poucos minutos</div>
+                    <div className="checkout-alert__text">
+                      Restam apenas <span className="checkout-emphasis">7</span> acessos promocionais disponíveis hoje.
+                    </div>
+                  </div>
+                </div>
+
+                <div className={'checkout-timer' + (isUrgentWindow ? ' checkout-timer--urgent' : '')}>
+                  <div className="checkout-timer__icon" aria-hidden="true">
+                    <Clock size={16} />
+                  </div>
+                  <div className="checkout-timer__content">
+                    <div className="checkout-timer__label">Desconto reservado por:</div>
+                    <div className="checkout-timer__time" aria-label={`Desconto reservado por ${countdownLabel}`}>{countdownLabel}</div>
+                  </div>
+                </div>
+
+                <div className="checkout-bullets" aria-label="Principais benefícios">
+                  <div className="checkout-bullet">✅ Acesso imediato por 21 dias</div>
+                  <div className="checkout-bullet">✅ Atividades diárias simples (sem burocracia)</div>
+                  <div className="checkout-bullet">✅ Acompanhamento do Rabino Mentor IA</div>
+                </div>
+              </div>
+            ) : (
+              <div className="checkout-offer">
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: 16 }}>{planTitle}</strong>
+                  <span className="badge">{planHighlight}</span>
+                </div>
+                <div className="muted" style={{ lineHeight: 1.6 }}>{planSubtitle}</div>
+                <div style={{ fontWeight: 950, fontSize: 26, color: 'var(--gold-2)' }}>{selectedPlan.price}</div>
+              </div>
+            )}
           </div>
         </div>
 
-        <form onSubmit={onSubmit} style={{ display: 'grid', gap: 22 }}>
-          <div ref={planSectionRef} className="card" style={{ borderColor: 'rgba(215, 178, 74, 0.85)' }}>
-            <div
-              className="card-inner"
-              style={{
-                background: 'linear-gradient(180deg, rgba(215, 178, 74, 0.14), rgba(255,255,255,0.04))',
-                display: 'grid',
-                gap: 12,
-                borderRadius: 'inherit',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <strong style={{ fontSize: 18 }}>{planTitle}</strong>
-                <span className="badge">{planHighlight}</span>
+        {isPrimaryOffer ? (
+          <div className="card">
+            <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
+              <div style={{ fontWeight: 950, fontSize: 16 }}>
+                O que está incluído no seu acesso
               </div>
-
-              <div className="checkout-promise">
-                {promise}
-              </div>
-
-              <div style={{ fontWeight: 900, fontSize: 28, color: 'var(--gold-2)' }}>
-                {selectedPlan.price}
-              </div>
-
-              <div className="checkout-benefits">
-                <div className="checkout-benefit">{t('checkout.benefits.triggers')}</div>
-                <div className="checkout-benefit">{t('checkout.benefits.mentor')}</div>
-                <div className="checkout-benefit">{t('checkout.benefits.journey')}</div>
-              </div>
-
-              <div className="muted" style={{ display: 'grid', gap: 4, lineHeight: 1.5 }}>
-                <div style={{ fontWeight: 900, color: 'rgba(255,255,255,0.85)' }}>{accessLabel}</div>
-                <div dangerouslySetInnerHTML={{ __html: t('checkout.access_period', { phase: `<strong style="color:var(--gold-2)">${phaseLabel}</strong>` }).replace('<gold>', '').replace('</gold>', '') }} />
-                <div style={{ maxWidth: 640 }}>{planSubtitle}</div>
-              </div>
-
-              <div className="checkout-window-alert">
-                <div className="checkout-window-alert__title">
-                  {t('checkout.window_alert_title')}
+              <div className="checkout-includes">
+                <div className="checkout-mini-card">
+                  <div className="checkout-mini-card-title">Jornada de 21 dias</div>
+                  <div className="checkout-mini-card-text">Atividades simples e práticas para observar seus padrões financeiros todos os dias.</div>
                 </div>
-                <div className="checkout-window-alert__sub">
-                  {t('checkout.window_alert_sub')}
+                <div className="checkout-mini-card">
+                  <div className="checkout-mini-card-title">Rabino Mentor IA</div>
+                  <div className="checkout-mini-card-text">Um mentor inteligente que acompanha suas respostas e ajuda a identificar seu principal gatilho.</div>
                 </div>
-              </div>
-
-              <div className={'checkout-timer' + (isUrgentWindow ? ' checkout-timer--urgent' : '')}>
-                <div className="checkout-timer__icon" aria-hidden="true">
-                  {isUrgentWindow ? <Clock size={16} /> : <Zap size={16} />}
+                <div className="checkout-mini-card">
+                  <div className="checkout-mini-card-title">Avaliação e autoavaliação</div>
+                  <div className="checkout-mini-card-text">Você entende como emoções, estresse, medo, comparação ou impulsos afetam seu dinheiro.</div>
                 </div>
-                <div className="checkout-timer__content">
-                  <div className="checkout-timer__title">
-                    {isUrgentWindow ? t('checkout.timer_urgent_title') : t('checkout.timer_normal_title')}
-                  </div>
-                  <div className="checkout-timer__label">
-                    {isUrgentWindow ? t('checkout.timer_urgent_label') : t('checkout.timer_normal_label')}
-                  </div>
-                  <div className="checkout-timer__time" aria-label={t('checkout.timer_aria', { time: countdownLabel })}>{countdownLabel}</div>
+                <div className="checkout-mini-card">
+                  <div className="checkout-mini-card-title">Diagnóstico do gatilho principal</div>
+                  <div className="checkout-mini-card-text">Ao longo da jornada, o sistema ajuda a revelar o padrão que mais faz seu dinheiro desaparecer.</div>
+                </div>
+                <div className="checkout-mini-card">
+                  <div className="checkout-mini-card-title">Domínio dos impulsos</div>
+                  <div className="checkout-mini-card-text">Você aprende a reconhecer o gatilho antes que ele controle suas próximas decisões.</div>
                 </div>
               </div>
             </div>
           </div>
+        ) : null}
+
+        {isPrimaryOffer ? (
+          <div className="card">
+            <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
+              <div style={{ fontWeight: 950, fontSize: 16 }}>
+                O que as pessoas dizem
+              </div>
+              <div className="checkout-testimonials">
+                <div className="checkout-testimonial">
+                  <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
+                  <div className="checkout-testimonial-name">Fernanda M. — Rio de Janeiro</div>
+                  <div className="checkout-testimonial-text">“Nunca imaginei que meus gastos estavam ligados ao estresse do trabalho. O Rabino Mentor IA conseguiu identificar isso e hoje consigo dominar melhor esse padrão.”</div>
+                </div>
+                <div className="checkout-testimonial">
+                  <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
+                  <div className="checkout-testimonial-name">Jorge F. — Bahia</div>
+                  <div className="checkout-testimonial-text">“Estava endividado e preso em empréstimos e juros altos. Com o Rabino Mentor IA, comecei a entender meus hábitos sem precisar viver guardando cada centavo.”</div>
+                </div>
+                <div className="checkout-testimonial">
+                  <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
+                  <div className="checkout-testimonial-name">Lucas U. — Rio Grande do Sul</div>
+                  <div className="checkout-testimonial-text">“Esse app é sensacional. Ele não te faz apenas guardar dinheiro. Ele faz você mudar de vida.”</div>
+                </div>
+                <div className="checkout-testimonial">
+                  <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
+                  <div className="checkout-testimonial-name">Luciana T. — Amapá</div>
+                  <div className="checkout-testimonial-text">“As atividades diárias foram tão naturais que eu nem percebi quando minha rotina começou a mudar. Hoje minha família também usa o método.”</div>
+                </div>
+                <div className="checkout-testimonial">
+                  <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
+                  <div className="checkout-testimonial-name">Paulo D. — Minas Gerais</div>
+                  <div className="checkout-testimonial-text">“Trabalhava de Uber e 99 para complementar renda e vivia no limite. Depois que comecei a aplicar os ensinamentos judaicos, minha família mudou e hoje até consigo investir.”</div>
+                </div>
+                {/* ⭐⭐⭐⭐⭐
+                Sempre guardei dinheiro, mas deixava de viver. Deixei de sair com minha família e de viajar. Hoje aprendi a viver melhor e construir patrimônio ao mesmo tempo. */}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {isPrimaryOffer ? (
+          <div className="card">
+            <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
+              <div style={{ fontWeight: 950, fontSize: 16 }}>Garantia de 7 dias</div>
+              <div className="muted" style={{ lineHeight: 1.7 }}>
+                Você pode acessar, testar e começar sua jornada. Se não fizer sentido para você, pode solicitar reembolso dentro do prazo de garantia.
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <form onSubmit={onSubmit} className="checkout-form" style={{ display: 'grid', gap: 18 }}>
+          <div ref={planSectionRef} />
 
           {availableBooks.length > 0 && (
             <div className="card">
@@ -412,11 +659,14 @@ export default function CheckoutPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={18} style={{ color: 'var(--gold-2)', flexShrink: 0 }} />
                   <div style={{ fontWeight: 900, fontSize: 16 }}>
-                    {t('checkout.books_section_title')}
+                    Tenha uma visão estratégica de construção de bens
                   </div>
                 </div>
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-                  {t('checkout.books_section_hint')}
+                  Adicione os métodos abaixo e aprofunde sua compreensão sobre prosperidade financeira, legado e construção de patrimônio com visão estratégica — seguindo princípios de domínio, consciência e visão de mercado inspirados na tradição judaica.
+                  {'\n'}
+                  {'\n'}
+                  Esses materiais complementares foram criados para ajudar você a enxergar o dinheiro com mais clareza, tomar decisões com mais domínio e construir patrimônio sem viver preso à escassez.
                 </div>
 
                 <div className={'checkout-book-promo' + (hasMethodBookSelected ? ' checkout-book-promo--active' : '')}>
@@ -424,11 +674,11 @@ export default function CheckoutPage() {
                     <Gift size={17} />
                   </div>
                   <div className="checkout-book-promo__copy">
-                    <div className="checkout-book-promo__title">
-                      {t('checkout.method_bonus_title')}
-                    </div>
+                    <div className="checkout-book-promo__title">Desbloqueio inteligente</div>
                     <div className="checkout-book-promo__text">
-                      {hasMethodBookSelected ? t('checkout.method_bonus_active') : t('checkout.method_bonus_sub')}
+                      {hasMethodBookSelected
+                        ? 'Método principal adicionado — os 2 conteúdos especiais sobre gatilhos invisíveis foram desbloqueados sem custo adicional.'
+                        : 'Adicione o método principal e receba 2 materiais complementares desbloqueados sem custo adicional para acelerar sua clareza sobre os gatilhos invisíveis do dinheiro.'}
                     </div>
                   </div>
                 </div>
@@ -478,32 +728,22 @@ export default function CheckoutPage() {
                           style={{ marginTop: 2, accentColor: 'var(--gold-2)', width: 16, height: 16, flexShrink: 0 }}
                         />
                         <div style={{ display: 'flex', gap: 10, flex: 1, alignItems: 'flex-start' }}>
-                          {book.coverImageUrl ? (
-                            <img
-                              src={book.coverImageUrl}
-                              alt={book.title}
-                              style={{ width: 44, height: 60, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
-                            />
-                          ) : (
-                            <div className="checkout-book-cover-fallback" aria-hidden="true">
-                              <BookOpen size={18} />
-                            </div>
-                          )}
+                          <div className="checkout-book-cover-fallback" aria-hidden="true">
+                            <BookOpen size={18} />
+                          </div>
                           <div style={{ display: 'grid', gap: 3 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{book.title}</div>
-                              {isMethodBook ? (
-                                <span className="checkout-book-mini-badge">{t('checkout.method_bonus_badge')}</span>
-                              ) : null}
+                              {isMethodBook ? <span className="checkout-book-mini-badge">Método principal</span> : null}
                               {isFreeWithMethod ? (
-                                <span className="checkout-book-mini-badge checkout-book-mini-badge--free">{t('checkout.method_bonus_free_badge')}</span>
+                                <span className="checkout-book-mini-badge checkout-book-mini-badge--free">Bônus incluído</span>
                               ) : null}
                             </div>
                             <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>{book.description}</div>
                             {isFreeWithMethod ? (
                               <div className="checkout-book-free-price">
                                 <span>{book.priceLabel}</span>
-                                <strong>{t('checkout.method_bonus_free_label')}</strong>
+                                <strong>Desbloqueado sem custo adicional</strong>
                               </div>
                             ) : (
                               <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 14 }}>+ {book.priceLabel}</div>
@@ -520,8 +760,17 @@ export default function CheckoutPage() {
 
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
-              <div style={{ fontWeight: 900, fontSize: 18 }}>
-                {existingAccountFlow ? t('checkout.form_title_existing') : t('checkout.form_title_new')}
+              <div style={{ display: 'grid', gap: 6 }}>
+                <div style={{ fontWeight: 950, fontSize: 18 }}>
+                  {isPrimaryOffer ? 'Crie seu acesso para iniciar sua jornada de 21 dias.' : (existingAccountFlow ? t('checkout.form_title_existing') : t('checkout.form_title_new'))}
+                </div>
+                <div className="muted" style={{ lineHeight: 1.6 }}>
+                  {existingAccountFlow
+                    ? t('checkout.existing_account')
+                    : (isPrimaryOffer
+                      ? 'Leva menos de 1 minuto. Depois você finaliza o pagamento em ambiente seguro do Stripe.'
+                      : t('checkout.new_account'))}
+                </div>
               </div>
 
               {existingAccountFlow ? (
@@ -546,7 +795,11 @@ export default function CheckoutPage() {
                     className="input"
                     type="text"
                     value={name}
-                    onChange={(event) => setName(event.target.value)}
+                    onChange={(event) => {
+                      markInteracting()
+                      setName(event.target.value)
+                    }}
+                    onFocus={markInteracting}
                     placeholder={t('checkout.name_placeholder')}
                   />
                 </div>
@@ -559,7 +812,11 @@ export default function CheckoutPage() {
                   className="input"
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    markInteracting()
+                    setEmail(event.target.value)
+                  }}
+                  onFocus={markInteracting}
                   placeholder={t('checkout.email_placeholder')}
                   readOnly={existingAccountFlow}
                   required
@@ -574,7 +831,11 @@ export default function CheckoutPage() {
                     className="input"
                     type="password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      markInteracting()
+                      setPassword(event.target.value)
+                    }}
+                    onFocus={markInteracting}
                     placeholder={t('checkout.password_placeholder')}
                     autoComplete="new-password"
                     required
@@ -590,7 +851,11 @@ export default function CheckoutPage() {
                     className="input"
                     type="password"
                     value={passwordConfirmation}
-                    onChange={(event) => setPasswordConfirmation(event.target.value)}
+                    onChange={(event) => {
+                      markInteracting()
+                      setPasswordConfirmation(event.target.value)
+                    }}
+                    onFocus={markInteracting}
                     placeholder={t('checkout.confirm_password_placeholder')}
                     autoComplete="new-password"
                     required
@@ -668,18 +933,22 @@ export default function CheckoutPage() {
               ) : null}
 
               <button className="btn btn-primary btn-block btn-mentor-glow" type="submit" disabled={loading} style={{ padding: '14px 16px', fontSize: 16 }}>
-                {loading ? t('checkout.submit_loading') : ctaLabel}
+                {loading ? t('checkout.submit_loading') : submitLabel}
               </button>
 
-              <div className="muted" style={{ textAlign: 'center', fontSize: 12, lineHeight: 1.5 }}>
-                {t('checkout.submit_success_text')}
-              </div>
-
-              <div className="muted" style={{ display: 'grid', gap: 6, lineHeight: 1.6, fontSize: 13 }}>
-                <div>{t('checkout.security_notes.stripe')}</div>
-                <div>{t('checkout.security_notes.immediate')}</div>
-                <div>{t('checkout.security_notes.access')}</div>
-              </div>
+              {isPrimaryOffer ? (
+                <div className="checkout-cta-notes" aria-label="Payment reassurance">
+                  <div>🔒 Pagamento seguro via Stripe</div>
+                  <div>⚡ Acesso imediato</div>
+                  <div>✅ Atividades diárias + Rabino Mentor IA</div>
+                </div>
+              ) : (
+                <div className="checkout-cta-notes" aria-label="Payment reassurance">
+                  <div>{t('checkout.security_notes.stripe')}</div>
+                  <div>{t('checkout.security_notes.immediate')}</div>
+                  <div>{t('checkout.security_notes.access')}</div>
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <Link className="btn" to="/">

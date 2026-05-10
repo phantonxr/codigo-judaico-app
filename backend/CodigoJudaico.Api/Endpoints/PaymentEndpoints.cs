@@ -166,6 +166,7 @@ public static class PaymentEndpoints
             AccessEmailService accessEmailService,
             UtmfyService utmfyService,
             MetaConversionsService metaConversionsService,
+            CheckoutRecoveryService checkoutRecoveryService,
             ILoggerFactory loggerFactory,
             CancellationToken cancellationToken) =>
         {
@@ -345,6 +346,16 @@ public static class PaymentEndpoints
             if (marketingConsent && string.IsNullOrWhiteSpace(user.FbClickId) && !string.IsNullOrWhiteSpace(cleanedFbClickId))
             {
                 user.FbClickId = cleanedFbClickId;
+            }
+
+            if (string.Equals(user.PlanStatus, PendingCheckoutPlanStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                await checkoutRecoveryService.ScheduleForCheckoutAsync(
+                    user,
+                    plan,
+                    response.SessionId,
+                    now,
+                    cancellationToken);
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);

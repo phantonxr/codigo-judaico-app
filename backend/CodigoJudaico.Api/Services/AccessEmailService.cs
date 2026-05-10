@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Net.Mail;
+using System.Text.Json.Serialization;
 using CodigoJudaico.Api.Models;
 using Microsoft.Extensions.Options;
 
@@ -9,10 +10,12 @@ namespace CodigoJudaico.Api.Services;
 public sealed class AccessEmailService(
     IHttpClientFactory httpClientFactory,
     IOptions<ResendOptions> resendOptions,
+    IOptions<CheckoutRecoveryOptions> checkoutRecoveryOptions,
     IOptions<StripeBillingOptions> stripeOptions,
     ILogger<AccessEmailService> logger)
 {
     private readonly ResendOptions _resendOptions = resendOptions.Value;
+    private readonly CheckoutRecoveryOptions _checkoutRecoveryOptions = checkoutRecoveryOptions.Value;
     private readonly StripeBillingOptions _stripeOptions = stripeOptions.Value;
 
     public async Task SendAccountCreatedEmailAsync(
@@ -146,6 +149,125 @@ Se voce nao solicitou isso, ignore este e-mail.
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "recuperacao de senha", cancellationToken);
     }
 
+    public async Task SendCheckoutRecoveryPersuasiveEmailAsync(
+        CheckoutRecovery recovery,
+        string recoveryUrl,
+        string unsubscribeUrl,
+        string? replyTo,
+        CancellationToken cancellationToken)
+    {
+        if (!_resendOptions.Enabled)
+        {
+            logger.LogInformation("Envio de e-mail desabilitado; recuperacao de checkout nao enviada para {Email}.", recovery.Email);
+            return;
+        }
+
+        EnsureConfigured();
+
+        var displayName = string.IsNullOrWhiteSpace(recovery.User?.Name) ? "Aluno" : recovery.User.Name;
+        var planName = string.IsNullOrWhiteSpace(recovery.PlanName) ? "o acesso ao Codigo Judaico" : recovery.PlanName;
+        var subject = "Seu acesso ficou pendente";
+        var footerText = BuildCommercialFooterText(unsubscribeUrl);
+        var footerHtml = BuildCommercialFooterHtml(unsubscribeUrl);
+        var plainTextBody = $"""
+Shalom, {displayName}.
+
+Vi que voce iniciou o checkout para {planName}, mas o pagamento ficou pendente.
+
+Se a decisao ficou para depois, este e o link para continuar com seguranca:
+{recoveryUrl}
+
+O metodo dos 21 dias foi desenhado para comecar simples: uma acao por dia, leitura guiada e acompanhamento para identificar o gatilho que faz o dinheiro escapar.
+
+Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembretes para automaticamente.
+
+{footerText}
+""";
+
+        var htmlBody = $"""
+<p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
+<p>Vi que voce iniciou o checkout para <strong>{WebUtility.HtmlEncode(planName)}</strong>, mas o pagamento ficou pendente.</p>
+<p>Se a decisao ficou para depois, este e o link para continuar com seguranca:</p>
+<p><a href="{WebUtility.HtmlEncode(recoveryUrl)}">Continuar meu acesso</a></p>
+<p>O metodo dos 21 dias foi desenhado para comecar simples: uma acao por dia, leitura guiada e acompanhamento para identificar o gatilho que faz o dinheiro escapar.</p>
+<p>Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembretes para automaticamente.</p>
+{footerHtml}
+""";
+
+        await SendEmailAsync(
+            recovery.Email,
+            subject,
+            htmlBody,
+            plainTextBody,
+            "recuperacao checkout 24h",
+            cancellationToken,
+            replyTo,
+            BuildUnsubscribeHeaders(unsubscribeUrl));
+    }
+
+    public async Task SendCheckoutRecoveryDiscountEmailAsync(
+        CheckoutRecovery recovery,
+        string recoveryUrl,
+        string unsubscribeUrl,
+        string? replyTo,
+        CancellationToken cancellationToken)
+    {
+        if (!_resendOptions.Enabled)
+        {
+            logger.LogInformation("Envio de e-mail desabilitado; cupom de recuperacao nao enviado para {Email}.", recovery.Email);
+            return;
+        }
+
+        EnsureConfigured();
+
+        var displayName = string.IsNullOrWhiteSpace(recovery.User?.Name) ? "Aluno" : recovery.User.Name;
+        var discountLabel = string.IsNullOrWhiteSpace(_checkoutRecoveryOptions.DiscountLabel)
+            ? "uma condicao especial"
+            : _checkoutRecoveryOptions.DiscountLabel;
+        var discountCode = string.IsNullOrWhiteSpace(recovery.DiscountCode)
+            ? "aplicado automaticamente no link"
+            : recovery.DiscountCode;
+        var expiration = recovery.DiscountExpiresAt?.ToLocalTime().ToString("g") ?? "em breve";
+        var subject = "Separei uma condicao para voce concluir hoje";
+        var footerText = BuildCommercialFooterText(unsubscribeUrl);
+        var footerHtml = BuildCommercialFooterHtml(unsubscribeUrl);
+        var plainTextBody = $"""
+Shalom, {displayName}.
+
+Seu checkout ainda esta pendente, entao separei {discountLabel} para voce concluir o acesso.
+
+Cupom: {discountCode}
+Valido ate: {expiration}
+
+Use este link para continuar:
+{recoveryUrl}
+
+Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o link abaixo para parar estes lembretes.
+
+{footerText}
+""";
+
+        var htmlBody = $"""
+<p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
+<p>Seu checkout ainda esta pendente, entao separei <strong>{WebUtility.HtmlEncode(discountLabel)}</strong> para voce concluir o acesso.</p>
+<p><strong>Cupom:</strong> {WebUtility.HtmlEncode(discountCode)}<br />
+<strong>Valido ate:</strong> {WebUtility.HtmlEncode(expiration)}</p>
+<p><a href="{WebUtility.HtmlEncode(recoveryUrl)}">Concluir com a condicao especial</a></p>
+<p>Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o link abaixo para parar estes lembretes.</p>
+{footerHtml}
+""";
+
+        await SendEmailAsync(
+            recovery.Email,
+            subject,
+            htmlBody,
+            plainTextBody,
+            "recuperacao checkout 48h cupom",
+            cancellationToken,
+            replyTo,
+            BuildUnsubscribeHeaders(unsubscribeUrl));
+    }
+
     private string ResolveFrontendBaseUrl()
     {
         var fromEnv = Environment.GetEnvironmentVariable("FRONTEND_URL");
@@ -231,7 +353,9 @@ Se voce nao solicitou isso, ignore este e-mail.
         string htmlBody,
         string plainTextBody,
         string emailType,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? replyTo = null,
+        Dictionary<string, string>? headers = null)
     {
         var client = httpClientFactory.CreateClient("Resend");
         logger.LogInformation("Enviando e-mail via Resend ({EmailType}) para {Email}.", emailType, recipientEmail);
@@ -242,7 +366,9 @@ Se voce nao solicitou isso, ignore este e-mail.
                 [recipientEmail],
                 subject,
                 htmlBody,
-                plainTextBody),
+                plainTextBody,
+                string.IsNullOrWhiteSpace(replyTo) ? null : replyTo,
+                headers),
             cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -267,12 +393,55 @@ Se voce nao solicitou isso, ignore este e-mail.
             resendResponse?.Id ?? "desconhecido");
     }
 
+    private Dictionary<string, string> BuildUnsubscribeHeaders(string unsubscribeUrl) =>
+        new()
+        {
+            ["List-Unsubscribe"] = $"<{unsubscribeUrl}>",
+            ["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click",
+        };
+
+    private string BuildCommercialFooterText(string unsubscribeUrl)
+    {
+        var postalAddress = string.IsNullOrWhiteSpace(_checkoutRecoveryOptions.PublicPostalAddress)
+            ? "Endereco postal nao configurado."
+            : _checkoutRecoveryOptions.PublicPostalAddress;
+
+        return $"""
+Para parar estes lembretes, acesse:
+{unsubscribeUrl}
+
+{_checkoutRecoveryOptions.CompanyName}
+{postalAddress}
+""";
+    }
+
+    private string BuildCommercialFooterHtml(string unsubscribeUrl)
+    {
+        var postalAddress = string.IsNullOrWhiteSpace(_checkoutRecoveryOptions.PublicPostalAddress)
+            ? "Endereco postal nao configurado."
+            : _checkoutRecoveryOptions.PublicPostalAddress;
+
+        return $"""
+<hr />
+<p style="font-size:12px;color:#666">
+  <a href="{WebUtility.HtmlEncode(unsubscribeUrl)}">Parar estes lembretes</a><br />
+  {WebUtility.HtmlEncode(_checkoutRecoveryOptions.CompanyName)}<br />
+  {WebUtility.HtmlEncode(postalAddress)}
+</p>
+""";
+    }
+
     private sealed record ResendSendEmailRequest(
         string From,
         string[] To,
         string Subject,
         string Html,
-        string Text);
+        string Text,
+        [property: JsonPropertyName("reply_to")]
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? ReplyTo = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        Dictionary<string, string>? Headers = null);
 
     private sealed record ResendSendEmailResponse(string? Id);
 }

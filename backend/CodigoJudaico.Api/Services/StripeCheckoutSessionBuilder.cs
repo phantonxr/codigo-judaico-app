@@ -10,6 +10,8 @@ internal sealed record PaymentCoreCheckoutMetadata(
     string SellerName,
     string OrderId);
 
+public sealed record StripeCheckoutDiscount(string? CouponId, string? PromotionCodeId);
+
 internal sealed record StripeConnectRouting(
     string ConnectedAccountCountry,
     bool UseConnectSplit)
@@ -97,7 +99,8 @@ internal static class StripeCheckoutSessionBuilder
             [],
             platformRetentionPercent,
             connectedAccountId,
-            routing);
+            routing,
+            discount: null);
 
     internal static SessionCreateOptions BuildSubscriptionSessionOptions(
         string email,
@@ -107,7 +110,8 @@ internal static class StripeCheckoutSessionBuilder
         IReadOnlyList<StripeBookLineItem> books,
         decimal platformRetentionPercent,
         string connectedAccountId,
-        StripeConnectRouting routing)
+        StripeConnectRouting routing,
+        StripeCheckoutDiscount? discount = null)
     {
         var lineItems = new List<SessionLineItemOptions>
         {
@@ -145,6 +149,11 @@ internal static class StripeCheckoutSessionBuilder
             };
         }
 
+        if (ApplyDiscount(sessionOptions, discount))
+        {
+            return sessionOptions;
+        }
+
         if (!string.IsNullOrWhiteSpace(plan.PromotionCouponId))
         {
             sessionOptions.Discounts =
@@ -179,7 +188,8 @@ internal static class StripeCheckoutSessionBuilder
             [],
             feeAmount,
             connectedAccountId,
-            routing);
+            routing,
+            discount: null);
 
     internal static SessionCreateOptions BuildOneTimePaymentSessionOptions(
         string email,
@@ -189,7 +199,8 @@ internal static class StripeCheckoutSessionBuilder
         IReadOnlyList<StripeBookLineItem> books,
         long feeAmount,
         string connectedAccountId,
-        StripeConnectRouting routing)
+        StripeConnectRouting routing,
+        StripeCheckoutDiscount? discount = null)
     {
         var paymentIntentData = new SessionPaymentIntentDataOptions
         {
@@ -228,6 +239,11 @@ internal static class StripeCheckoutSessionBuilder
             PaymentIntentData = paymentIntentData,
         };
 
+        if (ApplyDiscount(sessionOptions, discount))
+        {
+            return sessionOptions;
+        }
+
         if (!string.IsNullOrWhiteSpace(plan.PromotionCouponId))
         {
             sessionOptions.Discounts =
@@ -244,6 +260,40 @@ internal static class StripeCheckoutSessionBuilder
         }
 
         return sessionOptions;
+    }
+
+    private static bool ApplyDiscount(SessionCreateOptions sessionOptions, StripeCheckoutDiscount? discount)
+    {
+        if (discount is null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(discount.CouponId))
+        {
+            sessionOptions.Discounts =
+            [
+                new SessionDiscountOptions
+                {
+                    Coupon = discount.CouponId,
+                },
+            ];
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(discount.PromotionCodeId))
+        {
+            sessionOptions.Discounts =
+            [
+                new SessionDiscountOptions
+                {
+                    PromotionCode = discount.PromotionCodeId,
+                },
+            ];
+            return true;
+        }
+
+        return false;
     }
 
     internal static SessionLineItemOptions BuildBookLineItemOptions(StripeBookLineItem book)

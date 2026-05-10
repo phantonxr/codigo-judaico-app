@@ -33,6 +33,8 @@ builder.Services.Configure<EvolutionApiOptions>(
     builder.Configuration.GetSection(EvolutionApiOptions.SectionName));
 builder.Services.Configure<MetaOptions>(
     builder.Configuration.GetSection(MetaOptions.SectionName));
+builder.Services.Configure<CheckoutRecoveryOptions>(
+    builder.Configuration.GetSection(CheckoutRecoveryOptions.SectionName));
 builder.Services.AddHttpClient<MentorOpenAiClient>((sp, client) =>
 {
     var opts = sp.GetRequiredService<
@@ -103,8 +105,10 @@ builder.Services.AddScoped<StripeWebhookProcessor>();
 builder.Services.AddScoped<UtmfyService>();
 builder.Services.AddScoped<MetaConversionsService>();
 builder.Services.AddScoped<EvolutionApiService>();
+builder.Services.AddScoped<CheckoutRecoveryService>();
 builder.Services.AddScoped<RequirePremiumAccessEndpointFilter>();
 builder.Services.AddScoped<RequireMasterUserEndpointFilter>();
+builder.Services.AddHostedService<CheckoutRecoveryBackgroundService>();
 
 var app = builder.Build();
 
@@ -136,6 +140,7 @@ app.MapLegalEndpoints();
 app.MapUserStateEndpoints();
 app.MapMentorEndpoints();
 app.MapBookEndpoints();
+app.MapCheckoutRecoveryEndpoints();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {

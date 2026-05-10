@@ -16,6 +16,7 @@ public sealed class StripeWebhookProcessor(
     UtmfyService utmfyService,
     MetaConversionsService metaConversionsService,
     EvolutionApiService evolutionApiService,
+    CheckoutRecoveryService checkoutRecoveryService,
     ILogger<StripeWebhookProcessor> logger)
 {
     private const string MentorUnlimitedPlanId = "mentor-ilimitado";
@@ -258,6 +259,8 @@ public sealed class StripeWebhookProcessor(
 
         if (user is not null)
         {
+            await checkoutRecoveryService.MarkCompletedAsync(user.Id, session.Id, cancellationToken);
+
             var resolvedPlanName = string.IsNullOrWhiteSpace(planName)
                 ? (matchedPlan?.PlanName ?? string.Empty)
                 : planName;

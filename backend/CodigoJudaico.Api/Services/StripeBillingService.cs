@@ -19,6 +19,8 @@ public sealed record StripePlanDefinition(
     string PromotionCouponId,
     bool IsOneTimePayment = false);
 
+public sealed record StripeRecoveryPromotionCode(string PromotionCodeId, string Code);
+
 public sealed class StripeBillingService(
     IOptions<StripeBillingOptions> options,
     ILogger<StripeBillingService> logger)
@@ -60,6 +62,7 @@ public sealed class StripeBillingService(
     private readonly SessionService _checkoutSessions = new();
     private readonly SubscriptionService _subscriptions = new();
     private readonly PriceService _prices = new();
+    private readonly PromotionCodeService _promotionCodes = new();
 
     public StripePlanDefinition GetPlan(string planId)
     {
@@ -276,7 +279,8 @@ public sealed class StripeBillingService(
         CheckoutSessionCreateRequest request,
         StripePlanDefinition plan,
         CancellationToken cancellationToken,
-        IReadOnlyList<StripeBookLineItem>? books = null)
+        IReadOnlyList<StripeBookLineItem>? books = null,
+        StripeCheckoutDiscount? discount = null)
     {
         EnsureConfigured();
 
@@ -323,6 +327,7 @@ public sealed class StripeBillingService(
                 routing,
                 plan,
                 books ?? [],
+                discount,
                 cancellationToken);
         }
         else
@@ -335,6 +340,7 @@ public sealed class StripeBillingService(
                 routing,
                 plan,
                 books ?? [],
+                discount,
                 cancellationToken);
         }
 
@@ -345,6 +351,35 @@ public sealed class StripeBillingService(
             plan.Id);
 
         return new CheckoutSessionCreateResponse(session.Id, session.Url ?? string.Empty, session.AmountTotal ?? 0, paymentCoreMetadata.OrderId);
+    }
+
+    public async Task<StripeRecoveryPromotionCode> CreateRecoveryPromotionCodeAsync(
+        string couponId,
+        string email,
+        DateTimeOffset expiresAt,
+        CancellationToken cancellationToken)
+    {
+        EnsureConfigured();
+
+        var code = $"CJ-{Guid.NewGuid():N}"[..11].ToUpperInvariant();
+        var promotionCode = await _promotionCodes.CreateAsync(
+            new PromotionCodeCreateOptions
+            {
+                Coupon = couponId,
+                Code = code,
+                MaxRedemptions = 1,
+                ExpiresAt = expiresAt.UtcDateTime,
+                Metadata = new Dictionary<string, string>
+                {
+                    ["app_key"] = ApplicationKey,
+                    ["email"] = email,
+                    ["source"] = "checkout_recovery",
+                },
+            },
+            requestOptions: null,
+            cancellationToken: cancellationToken);
+
+        return new StripeRecoveryPromotionCode(promotionCode.Id, promotionCode.Code ?? code);
     }
 
     public async Task<Session> GetCheckoutSessionAsync(string sessionId, CancellationToken cancellationToken)
@@ -394,6 +429,7 @@ public sealed class StripeBillingService(
         StripeConnectRouting routing,
         StripePlanDefinition plan,
         IReadOnlyList<StripeBookLineItem> books,
+        StripeCheckoutDiscount? discount,
         CancellationToken cancellationToken)
     {
         var sessionOptions = StripeCheckoutSessionBuilder.BuildSubscriptionSessionOptions(
@@ -404,7 +440,8 @@ public sealed class StripeBillingService(
             books,
             _options.PlatformRetentionPercent,
             ConnectedAccountId,
-            routing);
+            routing,
+            discount);
 
         return await _checkoutSessions.CreateAsync(
             sessionOptions,
@@ -420,6 +457,7 @@ public sealed class StripeBillingService(
         StripeConnectRouting routing,
         StripePlanDefinition plan,
         IReadOnlyList<StripeBookLineItem> books,
+        StripeCheckoutDiscount? discount,
         CancellationToken cancellationToken)
     {
         var price = await _prices.GetAsync(
@@ -438,7 +476,8 @@ public sealed class StripeBillingService(
             books,
             feeAmount,
             ConnectedAccountId,
-            routing);
+            routing,
+            discount);
 
         return await _checkoutSessions.CreateAsync(
             sessionOptions,

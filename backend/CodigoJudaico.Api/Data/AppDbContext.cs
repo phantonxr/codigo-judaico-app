@@ -24,6 +24,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
     public DbSet<UserLegalAcceptance> UserLegalAcceptances => Set<UserLegalAcceptance>();
     public DbSet<StripeSaleNotification> StripeSaleNotifications => Set<StripeSaleNotification>();
+    public DbSet<CheckoutRecovery> CheckoutRecoveries => Set<CheckoutRecovery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,36 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.UtmTerm).HasMaxLength(200);
             entity.Property(x => x.UtmContent).HasMaxLength(200);
             entity.Property(x => x.FbClickId).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<CheckoutRecovery>(entity =>
+        {
+            entity.ToTable("checkout_recoveries");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.Email);
+            entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.NextSendAt);
+            entity.HasIndex(x => x.RecoveryTokenHash).IsUnique();
+            entity.HasIndex(x => x.UnsubscribeTokenHash).IsUnique();
+            entity.HasIndex(x => x.LastStripeCheckoutSessionId);
+            entity.Property(x => x.Email).HasMaxLength(320);
+            entity.Property(x => x.PlanId).HasMaxLength(120);
+            entity.Property(x => x.PlanName).HasMaxLength(120);
+            entity.Property(x => x.OriginalStripeCheckoutSessionId).HasMaxLength(120);
+            entity.Property(x => x.LastStripeCheckoutSessionId).HasMaxLength(120);
+            entity.Property(x => x.Status).HasMaxLength(40);
+            entity.Property(x => x.NextEmailStep).HasMaxLength(40);
+            entity.Property(x => x.RecoveryTokenHash).HasMaxLength(128);
+            entity.Property(x => x.UnsubscribeTokenHash).HasMaxLength(128);
+            entity.Property(x => x.DiscountCode).HasMaxLength(80);
+            entity.Property(x => x.StripePromotionCodeId).HasMaxLength(120);
+            entity.Property(x => x.StopReason).HasMaxLength(80);
+            entity.Property(x => x.ReplyFrom).HasMaxLength(500);
+            entity.Property(x => x.ReplySubject).HasMaxLength(500);
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AppSession>(entity =>

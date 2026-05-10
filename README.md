@@ -58,7 +58,7 @@ Stripe__Renewal__PlanName=Renovacao Especial
 
 Stripe__Monthly__PriceId=price_...
 Stripe__Monthly__PlanName=Premium Mensal
-Stripe__Monthly__PromotionCouponId=coupon_...
+Stripe__Monthly__PromotionCouponId=COUPON_ID_DO_STRIPE
 
 Stripe__Annual__PriceId=price_...
 Stripe__Annual__PlanName=Premium Anual
@@ -71,6 +71,16 @@ Resend__Enabled=true
 Resend__From=noreply@codigomilenarjudaico.com
 Resend__InboundWebhookSecret=
 Resend__InboundWebhookDisableVerification=false
+
+CheckoutRecovery__Enabled=true
+CheckoutRecovery__BackfillExistingPending=false
+CheckoutRecovery__ApiBaseUrl=https://api.seu-dominio.com
+CheckoutRecovery__ReplyToPattern=recuperacao+{recoveryId}@seu-dominio.com
+CheckoutRecovery__PublicPostalAddress="Seu endereco postal"
+CheckoutRecovery__DiscountLabel="15% de desconto"
+CheckoutRecovery__DiscountCouponId=COUPON_ID_DO_STRIPE
+# opcional, se quiser reutilizar um Promotion Code fixo em vez de gerar codigos unicos:
+# CheckoutRecovery__DiscountPromotionCodeId=promo_...
 
 MasterUser__Email=admin@seu-dominio.com
 MasterUser__Password=senha-forte-com-8-ou-mais-caracteres
@@ -88,14 +98,17 @@ Observacoes:
 - `Stripe__Monthly__PriceId` e `Stripe__Annual__PriceId` sao os `Prices` recorrentes da conta da plataforma Stripe.
 - `Stripe__Lifetime__PriceId` e obrigatorio se voce quiser habilitar o acesso vitalicio.
 - `Stripe__FirstAccess__PlanName`, `Stripe__Renewal__PlanName`, `Stripe__Monthly__PlanName`, `Stripe__Annual__PlanName` e `Stripe__Lifetime__PlanName` sao usados como rotulo interno no app, metadata do checkout e descricao da compra.
-- `Stripe__Monthly__PromotionCouponId` so e aplicado quando estiver preenchido.
+- `Stripe__Monthly__PromotionCouponId` so e aplicado quando estiver preenchido. Use o ID do Coupon exibido em `Details > ID` no Stripe; esse ID pode nao ter prefixo `coupon_`.
 - toda Checkout Session envia tambem `app_id`, `app_name`, `tenant_id`, `seller_id`, `seller_name` e `order_id` na `Session.Metadata`. Quando o modo e `payment`, a API duplica esses mesmos campos em `PaymentIntentData.Metadata`.
 - para `connected accounts` BR, a API nao envia `transfer_data.destination`, `application_fee_amount`, `application_fee_percent`, `on_behalf_of` nem `Stripe-Account`; o pagamento vai 100% para a conta principal e o PaymentCore calcula o repasse.
 - para `connected accounts` de paises suportados como `CA`, o fluxo atual de Stripe Connect split continua usando `transfer_data.destination` e taxa da plataforma.
 - o PaymentCore depende dessa metadata para processar o webhook centralizado corretamente.
 - `Resend__Enabled` deve ficar `true` no ambiente que realmente vai enviar os e-mails.
-- `Resend__InboundWebhookSecret` e `Resend__InboundWebhookDisableVerification` ficam prontos para o momento em que voce adicionar um webhook inbound da Resend. O fluxo atual de liberacao de acesso usa apenas envio.
+- `Resend__InboundWebhookSecret` deve ser configurado no webhook inbound da Resend para capturar respostas dos e-mails de recuperacao.
 - se `Resend` estiver habilitado sem `ApiKey` ou `From`, a API vai liberar o acesso mesmo assim, mas registrara um aviso e nao conseguira enviar o e-mail.
+- `CheckoutRecovery` envia um lembrete persuasivo 24h apos checkout pendente e um cupom 48h apos o checkout, parando automaticamente em compra, resposta ou unsubscribe.
+- `CheckoutRecovery__BackfillExistingPending=true` cria a sequencia para checkouts pendentes que ja existiam antes do deploy; use com cuidado e volte para `false` depois do primeiro ciclo.
+- `CheckoutRecovery__DiscountCouponId` deve apontar para o ID do Coupon exibido em `Details > ID` no Stripe; esse ID pode nao ter prefixo `coupon_`, como `IkIQNnTW`. A API cria Promotion Codes unicos de uso unico para cada abandono. Se preferir reutilizar um Promotion Code fixo, use `CheckoutRecovery__DiscountPromotionCodeId=promo_...`; se preferir apenas mostrar um codigo fixo no e-mail sem aplicar desconto automatico no Checkout, use `CheckoutRecovery__DiscountCode`.
 - `MasterUser__Email` e `MasterUser__Password` criam ou atualizam o primeiro usuario master na inicializacao da API. Esse usuario entra pelo login normal e acessa `/admin/assinantes`.
 
 ## Metadata PaymentCore

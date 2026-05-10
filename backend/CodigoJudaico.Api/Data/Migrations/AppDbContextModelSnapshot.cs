@@ -561,6 +561,33 @@ namespace CodigoJudaico.Api.Data.Migrations
                     b.ToTable("plans", (string)null);
                 });
 
+            modelBuilder.Entity("CodigoJudaico.Api.Models.StripeSaleNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StripeCheckoutSessionId")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StripeCheckoutSessionId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("stripe_sale_notifications", (string)null);
+                });
+
             modelBuilder.Entity("CodigoJudaico.Api.Models.UserBookPurchase", b =>
                 {
                     b.Property<Guid>("Id")
@@ -865,6 +892,17 @@ namespace CodigoJudaico.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("CodigoJudaico.Api.Models.PasswordResetToken", b =>
+                {
+                    b.HasOne("CodigoJudaico.Api.Models.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CodigoJudaico.Api.Models.StripeSaleNotification", b =>
                 {
                     b.HasOne("CodigoJudaico.Api.Models.AppUser", "User")
                         .WithMany()

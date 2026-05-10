@@ -2,6 +2,7 @@ using CodigoJudaico.Api.Data;
 using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Stripe;
 using Stripe.Checkout;
 
@@ -261,17 +262,60 @@ public sealed class StripeWebhookProcessor(
                 ? (matchedPlan?.PlanName ?? string.Empty)
                 : planName;
 
-            await evolutionApiService.NotifySaleAsync(new EvolutionSaleNotification(
-                BuyerName: user.Name,
-                BuyerEmail: user.Email,
-                PlanName: resolvedPlanName,
-                AmountInCents: session.AmountTotal ?? 0,
-                IsFirstPurchase: !accessWasEnabledBefore,
-                HasBooks: bookIds.Count > 0,
-                BookIds: bookIds),
-                cancellationToken);
+            if (await TryReserveSaleNotificationAsync(session.Id, user.Id, cancellationToken))
+            {
+                await evolutionApiService.NotifySaleAsync(new EvolutionSaleNotification(
+                    BuyerName: user.Name,
+                    BuyerEmail: user.Email,
+                    PlanName: resolvedPlanName,
+                    AmountInCents: session.AmountTotal ?? 0,
+                    IsFirstPurchase: !accessWasEnabledBefore,
+                    HasBooks: bookIds.Count > 0,
+                    BookIds: bookIds),
+                    cancellationToken);
+            }
         }
     }
+
+    private async Task<bool> TryReserveSaleNotificationAsync(
+        string? checkoutSessionId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var normalizedCheckoutSessionId = ApiMappers.Clean(checkoutSessionId);
+
+        if (string.IsNullOrWhiteSpace(normalizedCheckoutSessionId))
+        {
+            return true;
+        }
+
+        var notification = new StripeSaleNotification
+        {
+            Id = Guid.NewGuid(),
+            StripeCheckoutSessionId = normalizedCheckoutSessionId,
+            UserId = userId,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        dbContext.StripeSaleNotifications.Add(notification);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            dbContext.Entry(notification).State = EntityState.Detached;
+            logger.LogInformation(
+                "Ignorando notificacao de venda duplicada para checkout Stripe {SessionId}.",
+                normalizedCheckoutSessionId);
+            return false;
+        }
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 
     private async Task GrantBookPurchasesAsync(
         Guid userId,

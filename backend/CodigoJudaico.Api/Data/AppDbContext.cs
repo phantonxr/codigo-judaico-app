@@ -23,6 +23,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<UserBookPurchase> UserBookPurchases => Set<UserBookPurchase>();
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
     public DbSet<UserLegalAcceptance> UserLegalAcceptances => Set<UserLegalAcceptance>();
+    public DbSet<StripeSaleNotification> StripeSaleNotifications => Set<StripeSaleNotification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -237,6 +238,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasIndex(x => new { x.UserId, x.BookId }).IsUnique();
             entity.Property(x => x.BookId).HasMaxLength(120);
             entity.Property(x => x.StripeSessionId).HasMaxLength(120);
+            entity.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<StripeSaleNotification>(entity =>
+        {
+            entity.ToTable("stripe_sale_notifications");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.StripeCheckoutSessionId).IsUnique();
+            entity.HasIndex(x => x.UserId);
+            entity.Property(x => x.StripeCheckoutSessionId).HasMaxLength(120);
             entity.HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserId)

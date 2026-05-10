@@ -8,6 +8,13 @@ using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.SingleLine = true;
+    options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff zzz ";
+    options.UseUtcTimestamp = true;
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
@@ -142,10 +149,16 @@ app.MapMentorEndpoints();
 app.MapBookEndpoints();
 app.MapCheckoutRecoveryEndpoints();
 
-await using (var scope = app.Services.CreateAsyncScope())
+try
 {
+    await using var scope = app.Services.CreateAsyncScope();
     var initializer = scope.ServiceProvider.GetRequiredService<AppDbInitializer>();
     await initializer.InitializeAsync();
+}
+catch (Exception ex)
+{
+    app.Logger.LogCritical(ex, "Falha ao inicializar o banco de dados.");
+    throw;
 }
 
 app.Run();

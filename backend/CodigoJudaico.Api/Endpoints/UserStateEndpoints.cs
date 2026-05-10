@@ -3,12 +3,15 @@ using CodigoJudaico.Api.Data;
 using CodigoJudaico.Api.Models;
 using CodigoJudaico.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Security.Claims;
 
 namespace CodigoJudaico.Api.Endpoints;
 
 public static class UserStateEndpoints
 {
+    private const int ConcurrentStateSaveRetryCount = 3;
+
     public static IEndpointRouteBuilder MapUserStateEndpoints(this IEndpointRouteBuilder app)
     {
         var privacyGroup = app.MapGroup("/api/users")
@@ -376,98 +379,121 @@ public static class UserStateEndpoints
                 return Results.Forbid();
             }
 
-            var user = await dbContext.Users
-                .Include(x => x.Diagnosis)
-                .Include(x => x.JourneyState)
-                .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
-
-            if (user is null)
+            for (var attempt = 0; attempt < ConcurrentStateSaveRetryCount; attempt++)
             {
-                return Results.NotFound();
-            }
+                var user = await dbContext.Users
+                    .Include(x => x.Diagnosis)
+                    .Include(x => x.JourneyState)
+                    .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
-            // Assessment must not be redone once completed.
-            // Keep this endpoint idempotent for the frontend sync: if a diagnosis already exists,
-            // just return it and ensure journey state is consistent.
-            if (user.HasCompletedAssessment && user.Diagnosis is not null)
-            {
-                var nowLocked = DateTimeOffset.UtcNow;
+                if (user is null)
+                {
+                    return Results.NotFound();
+                }
 
-                var journeyLocked = user.JourneyState ?? new UserJourneyState
+                // Assessment must not be redone once completed.
+                // Keep this endpoint idempotent for the frontend sync: if a diagnosis already exists,
+                // just return it and ensure journey state is consistent.
+                if (user.HasCompletedAssessment && user.Diagnosis is not null)
+                {
+                    var nowLocked = DateTimeOffset.UtcNow;
+
+                    var journeyLocked = user.JourneyState ?? new UserJourneyState
+                    {
+                        UserId = userId,
+                        User = user,
+                        ProgressJson = "{}",
+                        CalendarJson = "{\"completedDays\":{}}",
+                        UpdatedAt = nowLocked,
+                    };
+
+                    if (string.IsNullOrWhiteSpace(journeyLocked.AssignedTrack))
+                    {
+                        journeyLocked.AssignedTrack = user.Diagnosis.TrackId;
+                    }
+
+                    journeyLocked.JourneyStartDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
+                    journeyLocked.UpdatedAt = nowLocked;
+
+                    if (user.JourneyState is null)
+                    {
+                        dbContext.UserJourneyStates.Add(journeyLocked);
+                    }
+
+                    user.UpdatedAt = nowLocked;
+
+                    try
+                    {
+                        await dbContext.SaveChangesAsync(cancellationToken);
+                    }
+                    catch (DbUpdateException ex) when (attempt < ConcurrentStateSaveRetryCount - 1 && IsConcurrentStateInsertConflict(ex))
+                    {
+                        dbContext.ChangeTracker.Clear();
+                        continue;
+                    }
+
+                    return Results.Ok(user.Diagnosis.ToDto());
+                }
+
+                var now = DateTimeOffset.UtcNow;
+                var diagnosis = user.Diagnosis ?? new UserDiagnosis
+                {
+                    UserId = userId,
+                    User = user,
+                };
+
+                diagnosis.TrackId = ApiMappers.Clean(request.TrackId);
+                diagnosis.TrackLabel = ApiMappers.Clean(request.TrackLabel);
+                diagnosis.ScoresJson = ApiMappers.Serialize(request.Scores, "{}");
+                diagnosis.Diagnostico = ApiMappers.Clean(request.Diagnostico);
+                diagnosis.Gatilho = ApiMappers.Clean(request.Gatilho);
+                diagnosis.Sabedoria = ApiMappers.Clean(request.Sabedoria);
+                diagnosis.Proverbio = ApiMappers.Clean(request.Proverbio);
+                diagnosis.Metodo = ApiMappers.Clean(request.Metodo);
+                diagnosis.AnsweredAt = ApiMappers.ParseDateTimeOffset(request.AnsweredAt) ?? now;
+                diagnosis.UpdatedAt = now;
+
+                if (user.Diagnosis is null)
+                {
+                    dbContext.UserDiagnoses.Add(diagnosis);
+                }
+
+                var journeyState = user.JourneyState ?? new UserJourneyState
                 {
                     UserId = userId,
                     User = user,
                     ProgressJson = "{}",
                     CalendarJson = "{\"completedDays\":{}}",
-                    UpdatedAt = nowLocked,
+                    UpdatedAt = now,
                 };
 
-                if (string.IsNullOrWhiteSpace(journeyLocked.AssignedTrack))
-                {
-                    journeyLocked.AssignedTrack = user.Diagnosis.TrackId;
-                }
-
-                journeyLocked.JourneyStartDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
-                journeyLocked.UpdatedAt = nowLocked;
+                journeyState.AssignedTrack = diagnosis.TrackId;
+                journeyState.JourneyStartDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
+                journeyState.UpdatedAt = now;
 
                 if (user.JourneyState is null)
                 {
-                    dbContext.UserJourneyStates.Add(journeyLocked);
+                    dbContext.UserJourneyStates.Add(journeyState);
                 }
 
-                user.UpdatedAt = nowLocked;
-                await dbContext.SaveChangesAsync(cancellationToken);
+                user.HasCompletedAssessment = true;
 
-                return Results.Ok(user.Diagnosis.ToDto());
+                user.UpdatedAt = now;
+
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException ex) when (attempt < ConcurrentStateSaveRetryCount - 1 && IsConcurrentStateInsertConflict(ex))
+                {
+                    dbContext.ChangeTracker.Clear();
+                    continue;
+                }
+
+                return Results.Ok(diagnosis.ToDto());
             }
 
-            var now = DateTimeOffset.UtcNow;
-            var diagnosis = user.Diagnosis ?? new UserDiagnosis
-            {
-                UserId = userId,
-                User = user,
-            };
-
-            diagnosis.TrackId = ApiMappers.Clean(request.TrackId);
-            diagnosis.TrackLabel = ApiMappers.Clean(request.TrackLabel);
-            diagnosis.ScoresJson = ApiMappers.Serialize(request.Scores, "{}");
-            diagnosis.Diagnostico = ApiMappers.Clean(request.Diagnostico);
-            diagnosis.Gatilho = ApiMappers.Clean(request.Gatilho);
-            diagnosis.Sabedoria = ApiMappers.Clean(request.Sabedoria);
-            diagnosis.Proverbio = ApiMappers.Clean(request.Proverbio);
-            diagnosis.Metodo = ApiMappers.Clean(request.Metodo);
-            diagnosis.AnsweredAt = ApiMappers.ParseDateTimeOffset(request.AnsweredAt) ?? now;
-            diagnosis.UpdatedAt = now;
-
-            if (user.Diagnosis is null)
-            {
-                dbContext.UserDiagnoses.Add(diagnosis);
-            }
-
-            var journeyState = user.JourneyState ?? new UserJourneyState
-            {
-                UserId = userId,
-                User = user,
-                ProgressJson = "{}",
-                CalendarJson = "{\"completedDays\":{}}",
-                UpdatedAt = now,
-            };
-
-            journeyState.AssignedTrack = diagnosis.TrackId;
-            journeyState.JourneyStartDate ??= DateOnly.FromDateTime(DateTime.UtcNow);
-            journeyState.UpdatedAt = now;
-
-            if (user.JourneyState is null)
-            {
-                dbContext.UserJourneyStates.Add(journeyState);
-            }
-
-            user.HasCompletedAssessment = true;
-
-            user.UpdatedAt = now;
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            return Results.Ok(diagnosis.ToDto());
+            return Results.Problem("Could not save diagnosis because concurrent state updates kept conflicting.");
         });
 
         group.MapPut("/{userId:guid}/journey", async (
@@ -482,39 +508,53 @@ public static class UserStateEndpoints
                 return Results.Forbid();
             }
 
-            var user = await dbContext.Users
-                .Include(x => x.JourneyState)
-                .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
-
-            if (user is null)
+            for (var attempt = 0; attempt < ConcurrentStateSaveRetryCount; attempt++)
             {
-                return Results.NotFound();
+                var user = await dbContext.Users
+                    .Include(x => x.JourneyState)
+                    .SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+                if (user is null)
+                {
+                    return Results.NotFound();
+                }
+
+                var journeyState = user.JourneyState ?? new UserJourneyState
+                {
+                    UserId = userId,
+                    User = user,
+                };
+
+                journeyState.AssignedTrack = string.IsNullOrWhiteSpace(request.AssignedTrack)
+                    ? journeyState.AssignedTrack
+                    : ApiMappers.Clean(request.AssignedTrack);
+
+                journeyState.JourneyStartDate = ApiMappers.ParseDateOnly(request.JourneyStartDate) ?? journeyState.JourneyStartDate;
+                journeyState.ProgressJson = ApiMappers.Serialize(request.Progress, "{}");
+                journeyState.CalendarJson = ApiMappers.Serialize(request.Calendar, "{\"completedDays\":{}}");
+                journeyState.UpdatedAt = DateTimeOffset.UtcNow;
+
+                if (user.JourneyState is null)
+                {
+                    dbContext.UserJourneyStates.Add(journeyState);
+                }
+
+                user.UpdatedAt = DateTimeOffset.UtcNow;
+
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException ex) when (attempt < ConcurrentStateSaveRetryCount - 1 && IsConcurrentStateInsertConflict(ex))
+                {
+                    dbContext.ChangeTracker.Clear();
+                    continue;
+                }
+
+                return Results.Ok(journeyState.ToDto());
             }
 
-            var journeyState = user.JourneyState ?? new UserJourneyState
-            {
-                UserId = userId,
-                User = user,
-            };
-
-            journeyState.AssignedTrack = string.IsNullOrWhiteSpace(request.AssignedTrack)
-                ? journeyState.AssignedTrack
-                : ApiMappers.Clean(request.AssignedTrack);
-
-            journeyState.JourneyStartDate = ApiMappers.ParseDateOnly(request.JourneyStartDate) ?? journeyState.JourneyStartDate;
-            journeyState.ProgressJson = ApiMappers.Serialize(request.Progress, "{}");
-            journeyState.CalendarJson = ApiMappers.Serialize(request.Calendar, "{\"completedDays\":{}}");
-            journeyState.UpdatedAt = DateTimeOffset.UtcNow;
-
-            if (user.JourneyState is null)
-            {
-                dbContext.UserJourneyStates.Add(journeyState);
-            }
-
-            user.UpdatedAt = DateTimeOffset.UtcNow;
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            return Results.Ok(journeyState.ToDto());
+            return Results.Problem("Could not save journey state because concurrent state updates kept conflicting.");
         });
 
         group.MapPut("/{userId:guid}/lessons/progress/{lessonId}", async (
@@ -681,5 +721,14 @@ public static class UserStateEndpoints
         dbContext.MentorUsages.RemoveRange(await dbContext.MentorUsages
             .Where(x => x.UserId == userId)
             .ToListAsync(cancellationToken));
+    }
+
+    private static bool IsConcurrentStateInsertConflict(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "PK_user_diagnoses" or "PK_user_journey_states"
+        };
     }
 }

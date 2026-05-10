@@ -89,17 +89,17 @@ public static class CheckoutRecoveryEndpoints
                     }
                 }
 
-                var stopped = 0;
+                var stoppedForRecipients = 0;
 
                 foreach (var recipient in recipients)
                 {
-                    stopped += await checkoutRecoveryService.StopForRecipientEmailAsync(
+                    stoppedForRecipients += await checkoutRecoveryService.StopForRecipientEmailAsync(
                         recipient,
                         reason,
                         cancellationToken);
                 }
 
-                logger.LogInformation("Webhook Resend {Type} processado. Recoveries paradas: {Count}.", type, stopped);
+                logger.LogInformation("Webhook Resend {Type} processado. Recoveries paradas: {Count}.", type, stoppedForRecipients);
                 return Results.Ok();
             }
 
@@ -111,13 +111,13 @@ public static class CheckoutRecoveryEndpoints
             var from = ReadString(data, "from");
             var subject = ReadString(data, "subject");
             var to = ReadStringArray(data, "to");
-            var stopped = await checkoutRecoveryService.StopForInboundReplyAsync(
+            var stoppedForReply = await checkoutRecoveryService.StopForInboundReplyAsync(
                 from,
                 to,
                 subject,
                 cancellationToken);
 
-            logger.LogInformation("Webhook inbound Resend processado. Recoveries paradas: {Count}.", stopped);
+            logger.LogInformation("Webhook inbound Resend processado. Recoveries paradas: {Count}.", stoppedForReply);
             return Results.Ok();
         })
         .WithName("ResendInboundWebhook");

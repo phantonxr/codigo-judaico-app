@@ -365,10 +365,14 @@ public sealed class StripeBillingService(
         var promotionCode = await _promotionCodes.CreateAsync(
             new PromotionCodeCreateOptions
             {
-                Coupon = couponId,
                 Code = code,
                 MaxRedemptions = 1,
                 ExpiresAt = expiresAt.UtcDateTime,
+                Promotion = new PromotionCodePromotionOptions
+                {
+                    Type = "coupon",
+                    Coupon = couponId,
+                },
                 Metadata = new Dictionary<string, string>
                 {
                     ["app_key"] = ApplicationKey,

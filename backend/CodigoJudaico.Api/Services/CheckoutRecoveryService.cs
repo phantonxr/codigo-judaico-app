@@ -403,6 +403,43 @@ public sealed class CheckoutRecoveryService(
         return recoveries.Count;
     }
 
+    public async Task TrackEmailOpenedAsync(string? messageId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(messageId))
+        {
+            return;
+        }
+
+        var recovery = await dbContext.CheckoutRecoveries
+            .Where(x => x.PersuasiveEmailResendId == messageId || x.DiscountEmailResendId == messageId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (recovery is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var changed = false;
+
+        if (recovery.PersuasiveEmailResendId == messageId && recovery.PersuasiveEmailOpenedAt is null)
+        {
+            recovery.PersuasiveEmailOpenedAt = now;
+            changed = true;
+        }
+        else if (recovery.DiscountEmailResendId == messageId && recovery.DiscountEmailOpenedAt is null)
+        {
+            recovery.DiscountEmailOpenedAt = now;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            recovery.UpdatedAt = now;
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
     private async Task ProcessOneAsync(
         CheckoutRecovery recovery,
         DateTimeOffset now,
@@ -437,7 +474,7 @@ public sealed class CheckoutRecoveryService(
         CancellationToken cancellationToken)
     {
         var tokens = await RefreshTokensAsync(recovery, now, cancellationToken);
-        await accessEmailService.SendCheckoutRecoveryPersuasiveEmailAsync(
+        var resendId = await accessEmailService.SendCheckoutRecoveryPersuasiveEmailAsync(
             recovery,
             tokens.RecoveryUrl,
             tokens.UnsubscribeUrl,
@@ -445,6 +482,7 @@ public sealed class CheckoutRecoveryService(
             cancellationToken);
 
         recovery.PersuasiveEmailSentAt = now;
+        recovery.PersuasiveEmailResendId = resendId;
         recovery.LastSentAt = now;
         recovery.SentCount++;
         recovery.NextEmailStep = CheckoutRecoveryStep.Discount48h;
@@ -464,7 +502,7 @@ public sealed class CheckoutRecoveryService(
         await EnsureDiscountAsync(recovery, now, cancellationToken);
 
         var tokens = await RefreshTokensAsync(recovery, now, cancellationToken);
-        await accessEmailService.SendCheckoutRecoveryDiscountEmailAsync(
+        var resendId = await accessEmailService.SendCheckoutRecoveryDiscountEmailAsync(
             recovery,
             tokens.RecoveryUrl,
             tokens.UnsubscribeUrl,
@@ -472,6 +510,7 @@ public sealed class CheckoutRecoveryService(
             cancellationToken);
 
         recovery.DiscountEmailSentAt = now;
+        recovery.DiscountEmailResendId = resendId;
         recovery.LastSentAt = now;
         recovery.SentCount++;
         recovery.NextEmailStep = CheckoutRecoveryStep.Done;

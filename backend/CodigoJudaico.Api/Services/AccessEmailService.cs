@@ -149,7 +149,7 @@ Se voce nao solicitou isso, ignore este e-mail.
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "recuperacao de senha", cancellationToken);
     }
 
-    public async Task SendCheckoutRecoveryPersuasiveEmailAsync(
+    public async Task<string?> SendCheckoutRecoveryPersuasiveEmailAsync(
         CheckoutRecovery recovery,
         string recoveryUrl,
         string unsubscribeUrl,
@@ -194,7 +194,7 @@ Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembr
 {footerHtml}
 """;
 
-        await SendEmailAsync(
+        return await SendEmailAsync(
             recovery.Email,
             subject,
             htmlBody,
@@ -202,10 +202,11 @@ Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembr
             "recuperacao checkout 24h",
             cancellationToken,
             replyTo,
-            BuildUnsubscribeHeaders(unsubscribeUrl));
+            BuildUnsubscribeHeaders(unsubscribeUrl),
+            openTracking: true);
     }
 
-    public async Task SendCheckoutRecoveryDiscountEmailAsync(
+    public async Task<string?> SendCheckoutRecoveryDiscountEmailAsync(
         CheckoutRecovery recovery,
         string recoveryUrl,
         string unsubscribeUrl,
@@ -257,7 +258,7 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
 {footerHtml}
 """;
 
-        await SendEmailAsync(
+        return await SendEmailAsync(
             recovery.Email,
             subject,
             htmlBody,
@@ -265,7 +266,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
             "recuperacao checkout 48h cupom",
             cancellationToken,
             replyTo,
-            BuildUnsubscribeHeaders(unsubscribeUrl));
+            BuildUnsubscribeHeaders(unsubscribeUrl),
+            openTracking: true);
     }
 
     private string ResolveFrontendBaseUrl()
@@ -347,7 +349,7 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
         }
     }
 
-    private async Task SendEmailAsync(
+    private async Task<string?> SendEmailAsync(
         string recipientEmail,
         string subject,
         string htmlBody,
@@ -355,7 +357,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
         string emailType,
         CancellationToken cancellationToken,
         string? replyTo = null,
-        Dictionary<string, string>? headers = null)
+        Dictionary<string, string>? headers = null,
+        bool openTracking = false)
     {
         var client = httpClientFactory.CreateClient("Resend");
         logger.LogInformation("Enviando e-mail via Resend ({EmailType}) para {Email}.", emailType, recipientEmail);
@@ -368,7 +371,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
                 htmlBody,
                 plainTextBody,
                 string.IsNullOrWhiteSpace(replyTo) ? null : replyTo,
-                headers),
+                headers,
+                openTracking),
             cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -391,6 +395,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
             emailType,
             recipientEmail,
             resendResponse?.Id ?? "desconhecido");
+
+        return resendResponse?.Id;
     }
 
     private Dictionary<string, string> BuildUnsubscribeHeaders(string unsubscribeUrl) =>
@@ -441,7 +447,9 @@ Para parar estes lembretes, acesse:
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         string? ReplyTo = null,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        Dictionary<string, string>? Headers = null);
+        Dictionary<string, string>? Headers = null,
+        [property: JsonPropertyName("open_tracking")]
+        bool OpenTracking = false);
 
     private sealed record ResendSendEmailResponse(string? Id);
 }

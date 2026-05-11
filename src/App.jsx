@@ -22,6 +22,7 @@ import Mais from './pages/Mais.jsx'
 import Assinatura from './pages/Assinatura.jsx'
 import AdminAssinantes from './pages/AdminAssinantes.jsx'
 import AdminLegal from './pages/AdminLegal.jsx'
+import AdminCheckoutRecoveries from './pages/AdminCheckoutRecoveries.jsx'
 import AvaliacaoFinanceira from './pages/AvaliacaoFinanceira.jsx'
 import Calendario from './pages/Calendario.jsx'
 import RelatorioFinal from './pages/RelatorioFinal.jsx'
@@ -139,6 +140,7 @@ function AppLayout() {
     '/assinatura': t('page_titles./assinatura'),
     '/admin/assinantes': t('page_titles./admin/assinantes'),
     '/admin/legal': t('page_titles./admin/legal', 'Legal settings'),
+    '/admin/checkout-recoveries': t('page_titles./admin/checkout-recoveries', 'Recuperações de Checkout'),
     '/avaliacao': t('page_titles./avaliacao'),
     '/calendario': t('page_titles./calendario'),
     '/relatorio-final': t('page_titles./relatorio-final'),
@@ -188,6 +190,7 @@ export default function App() {
           <Route path="/assinatura" element={<Assinatura />} />
           <Route path="/admin/assinantes" element={<AdminAssinantes />} />
           <Route path="/admin/legal" element={<AdminLegal />} />
+          <Route path="/admin/checkout-recoveries" element={<AdminCheckoutRecoveries />} />
           <Route path="/livros" element={<Livros />} />
           <Route element={<RequireSubscriptionAccess />}>
             <Route path="/dashboard" element={<Dashboard />} />

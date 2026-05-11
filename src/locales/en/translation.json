@@ -10,6 +10,7 @@
     "more": "More",
     "subscription": "Subscription",
     "subscribers": "Subscribers",
+    "checkout_recoveries": "Recoveries",
     "legal": "Legal"
   },
   "brand": {
@@ -801,6 +802,45 @@
       "days_expired": "{{count}} days expired",
       "day_remaining": "1 day remaining",
       "days_remaining": "{{count}} days remaining"
+    },
+    "recovery": {
+      "title": "Checkout Recoveries",
+      "description": "Email sequence sent to users with a pending checkout.",
+      "empty": "No recoveries found.",
+      "status_options": {
+        "all": "All",
+        "pending": "Pending",
+        "sequence_completed": "Sequence completed",
+        "completed": "Converted",
+        "stopped": "Stopped"
+      },
+      "table": {
+        "student": "User",
+        "plan": "Plan",
+        "status": "Status",
+        "persuasive": "Persuasive email",
+        "discount": "Discount email",
+        "created_at": "Created at",
+        "stop_reason": "Stop reason"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "sequence_completed": "Sequence completed",
+        "completed": "Converted",
+        "stopped": "Stopped"
+      },
+      "stop_reasons": {
+        "purchased": "Purchased",
+        "replied": "Replied",
+        "unsubscribed": "Unsubscribed",
+        "bounced": "Bounced",
+        "complained": "Spam complaint",
+        "no_longer_pending": "Payment no longer pending"
+      },
+      "email": {
+        "not_sent": "Not sent",
+        "not_opened": "Not opened"
+      }
     }
   },
   "tracks": {

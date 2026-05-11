@@ -15,7 +15,11 @@ public sealed class CheckoutRecovery
     public DateTimeOffset NextSendAt { get; set; }
     public DateTimeOffset? LastSentAt { get; set; }
     public DateTimeOffset? PersuasiveEmailSentAt { get; set; }
+    public string? PersuasiveEmailResendId { get; set; }
+    public DateTimeOffset? PersuasiveEmailOpenedAt { get; set; }
     public DateTimeOffset? DiscountEmailSentAt { get; set; }
+    public string? DiscountEmailResendId { get; set; }
+    public DateTimeOffset? DiscountEmailOpenedAt { get; set; }
     public int SentCount { get; set; }
     public string RecoveryTokenHash { get; set; } = string.Empty;
     public DateTimeOffset? RecoveryTokenExpiresAt { get; set; }

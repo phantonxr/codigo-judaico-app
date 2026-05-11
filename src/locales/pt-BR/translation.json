@@ -10,6 +10,7 @@
     "more": "Mais",
     "subscription": "Assinatura",
     "subscribers": "Assinantes",
+    "checkout_recoveries": "Recuperações",
     "legal": "Legal"
   },
   "brand": {
@@ -801,6 +802,45 @@
       "days_expired": "{{count}} dias vencido",
       "day_remaining": "1 dia restante",
       "days_remaining": "{{count}} dias restantes"
+    },
+    "recovery": {
+      "title": "Recuperações de Checkout",
+      "description": "Sequência de e-mails enviados para usuários com checkout pendente.",
+      "empty": "Nenhuma recuperação encontrada.",
+      "status_options": {
+        "all": "Todos",
+        "pending": "Pendente",
+        "sequence_completed": "Sequência concluída",
+        "completed": "Convertido",
+        "stopped": "Parado"
+      },
+      "table": {
+        "student": "Usuário",
+        "plan": "Plano",
+        "status": "Status",
+        "persuasive": "E-mail persuasivo",
+        "discount": "E-mail com cupom",
+        "created_at": "Criado em",
+        "stop_reason": "Motivo parada"
+      },
+      "statuses": {
+        "pending": "Pendente",
+        "sequence_completed": "Sequência concluída",
+        "completed": "Convertido",
+        "stopped": "Parado"
+      },
+      "stop_reasons": {
+        "purchased": "Comprou",
+        "replied": "Respondeu",
+        "unsubscribed": "Descadastrou",
+        "bounced": "E-mail devolvido",
+        "complained": "Spam",
+        "no_longer_pending": "Pagamento não pendente"
+      },
+      "email": {
+        "not_sent": "Não enviado",
+        "not_opened": "Não aberto"
+      }
     }
   },
   "tracks": {

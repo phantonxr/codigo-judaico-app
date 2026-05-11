@@ -71,6 +71,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.UnsubscribeTokenHash).HasMaxLength(128);
             entity.Property(x => x.DiscountCode).HasMaxLength(80);
             entity.Property(x => x.StripePromotionCodeId).HasMaxLength(120);
+            entity.Property(x => x.PersuasiveEmailResendId).HasMaxLength(128);
+            entity.Property(x => x.DiscountEmailResendId).HasMaxLength(128);
             entity.Property(x => x.StopReason).HasMaxLength(80);
             entity.Property(x => x.ReplyFrom).HasMaxLength(500);
             entity.Property(x => x.ReplySubject).HasMaxLength(500);

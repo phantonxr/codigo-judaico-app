@@ -29,6 +29,7 @@ export default function Sidebar({ open = false, onClose = function () {} }) {
 
   const masterNavItems = [
     { key: 'subscribers', to: '/admin/assinantes' },
+    { key: 'checkout_recoveries', to: '/admin/checkout-recoveries' },
     { key: 'legal', to: '/admin/legal' },
   ]
 

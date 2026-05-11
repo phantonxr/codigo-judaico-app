@@ -103,6 +103,15 @@ public static class CheckoutRecoveryEndpoints
                 return Results.Ok();
             }
 
+            if (string.Equals(type, "email.opened", StringComparison.OrdinalIgnoreCase))
+            {
+                var recipient = ReadString(data, "recipient");
+                var messageId = ReadString(data, "message_id");
+                logger.LogInformation("Email aberto: {Recipient}, MessageId: {MessageId}", recipient, messageId);
+                await checkoutRecoveryService.TrackEmailOpenedAsync(messageId, cancellationToken);
+                return Results.Ok();
+            }
+
             if (!string.Equals(type, "email.received", StringComparison.OrdinalIgnoreCase))
             {
                 return Results.Ok();

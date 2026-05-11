@@ -66,6 +66,59 @@ public static class AdminEndpoints
         })
         .WithName("ListAdminSubscribers");
 
+        group.MapGet("/checkout-recoveries", async (
+            string? search,
+            string? status,
+            AppDbContext dbContext,
+            CancellationToken cancellationToken) =>
+        {
+            var query = dbContext.CheckoutRecoveries
+                .AsNoTracking()
+                .Include(x => x.User)
+                .AsQueryable();
+
+            var normalizedSearch = ApiMappers.Clean(search).ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            {
+                query = query.Where(x =>
+                    x.Email.ToLower().Contains(normalizedSearch)
+                    || x.User.Name.ToLower().Contains(normalizedSearch));
+            }
+
+            var normalizedStatus = ApiMappers.Clean(status).ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(normalizedStatus))
+            {
+                query = query.Where(x => x.Status == normalizedStatus);
+            }
+
+            var items = await query
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(500)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Email,
+                    UserName = x.User.Name,
+                    x.PlanName,
+                    x.Status,
+                    x.NextEmailStep,
+                    x.SentCount,
+                    x.StopReason,
+                    CreatedAt = x.CreatedAt.ToString("O"),
+                    CheckoutCreatedAt = x.CheckoutCreatedAt.ToString("O"),
+                    PersuasiveEmailSentAt = (string?)( x.PersuasiveEmailSentAt != null ? x.PersuasiveEmailSentAt.Value.ToString("O") : null),
+                    PersuasiveEmailOpenedAt = (string?)(x.PersuasiveEmailOpenedAt != null ? x.PersuasiveEmailOpenedAt.Value.ToString("O") : null),
+                    DiscountEmailSentAt = (string?)(x.DiscountEmailSentAt != null ? x.DiscountEmailSentAt.Value.ToString("O") : null),
+                    DiscountEmailOpenedAt = (string?)(x.DiscountEmailOpenedAt != null ? x.DiscountEmailOpenedAt.Value.ToString("O") : null),
+                    CompletedAt = (string?)(x.CompletedAt != null ? x.CompletedAt.Value.ToString("O") : null),
+                    StoppedAt = (string?)(x.StoppedAt != null ? x.StoppedAt.Value.ToString("O") : null),
+                })
+                .ToListAsync(cancellationToken);
+
+            return Results.Ok(new { items });
+        })
+        .WithName("ListAdminCheckoutRecoveries");
+
         return app;
     }
 

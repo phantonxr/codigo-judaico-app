@@ -841,6 +841,13 @@ namespace CodigoJudaico.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("DiscountEmailOpenedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscountEmailResendId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<DateTimeOffset?>("DiscountEmailSentAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -877,6 +884,13 @@ namespace CodigoJudaico.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset?>("PersuasiveEmailOpenedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PersuasiveEmailResendId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset?>("PersuasiveEmailSentAt")
                         .HasColumnType("timestamp with time zone");

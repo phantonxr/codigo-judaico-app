@@ -159,7 +159,7 @@ Se voce nao solicitou isso, ignore este e-mail.
         if (!_resendOptions.Enabled)
         {
             logger.LogInformation("Envio de e-mail desabilitado; recuperacao de checkout nao enviada para {Email}.", recovery.Email);
-            return;
+            return null;
         }
 
         EnsureConfigured();
@@ -216,7 +216,7 @@ Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembr
         if (!_resendOptions.Enabled)
         {
             logger.LogInformation("Envio de e-mail desabilitado; cupom de recuperacao nao enviado para {Email}.", recovery.Email);
-            return;
+            return null;
         }
 
         EnsureConfigured();

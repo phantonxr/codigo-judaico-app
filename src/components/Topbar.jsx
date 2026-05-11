@@ -87,8 +87,8 @@ export default function Topbar({ title, onMenuToggle = function () {} }) {
         </div>
 
         <div className="topbar-actions">
-          <LanguageSwitcher />
-          <button className="icon-btn" type="button" aria-label={t('common.notifications')}>
+          <LanguageSwitcher className="topbar-language" />
+          <button className="icon-btn topbar-notifications" type="button" aria-label={t('common.notifications')}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 22a2.4 2.4 0 0 0 2.4-2.4H9.6A2.4 2.4 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5L3.6 17.4V19h16.8v-1.6L19 16Z"
@@ -103,7 +103,7 @@ export default function Topbar({ title, onMenuToggle = function () {} }) {
               {initials}
             </span>
           </Link>
-          <button className="btn btn-soft" type="button" onClick={onLogout}>
+          <button className="btn btn-soft topbar-logout" type="button" onClick={onLogout}>
             {t('common.logout')}
           </button>
         </div>

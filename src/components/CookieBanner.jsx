@@ -106,7 +106,7 @@ export default function CookieBanner() {
         zIndex: 9999,
         background: 'rgba(12, 10, 6, 0.97)',
         borderTop: '1px solid rgba(215, 178, 74, 0.25)',
-        padding: '16px 24px',
+        padding: '16px clamp(12px, 4vw, 24px)',
         display: 'flex',
         alignItems: 'flex-start',
         flexWrap: 'wrap',
@@ -115,7 +115,7 @@ export default function CookieBanner() {
       }}
     >
       <div style={{ display: 'grid', gap: 10, flex: '1 1 280px' }}>
-        <p style={{ margin: 0, minWidth: 200, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.75)' }}>
+        <p style={{ margin: 0, minWidth: 0, fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.75)' }}>
           {t('cookie_banner.message')}{' '}
           <Link
             to="/politica-de-privacidade"
@@ -165,7 +165,7 @@ export default function CookieBanner() {
         ) : null}
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: 10, flex: '1 1 260px', minWidth: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
         <button
           onClick={handleReject}
           style={{

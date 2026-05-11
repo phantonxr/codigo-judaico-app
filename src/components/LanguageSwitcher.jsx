@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ className = '' }) {
   const { i18n } = useTranslation()
   const currentLang = i18n.language?.startsWith('pt') ? 'pt-BR' : 'en'
 
@@ -12,7 +12,7 @@ export default function LanguageSwitcher() {
   return (
     <button
       type="button"
-      className="btn btn-soft"
+      className={'btn btn-soft' + (className ? ' ' + className : '')}
       onClick={toggle}
       aria-label="Switch language"
       style={{ fontSize: 12, padding: '6px 10px', fontWeight: 700, letterSpacing: '0.02em' }}

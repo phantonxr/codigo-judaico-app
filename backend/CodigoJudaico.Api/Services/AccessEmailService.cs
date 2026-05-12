@@ -203,7 +203,8 @@ Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembr
             cancellationToken,
             replyTo,
             BuildUnsubscribeHeaders(unsubscribeUrl),
-            openTracking: true);
+            openTracking: true,
+            clickTracking: true);
     }
 
     public async Task<string?> SendCheckoutRecoveryDiscountEmailAsync(
@@ -267,7 +268,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
             cancellationToken,
             replyTo,
             BuildUnsubscribeHeaders(unsubscribeUrl),
-            openTracking: true);
+            openTracking: true,
+            clickTracking: true);
     }
 
     private string ResolveFrontendBaseUrl()
@@ -358,7 +360,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
         CancellationToken cancellationToken,
         string? replyTo = null,
         Dictionary<string, string>? headers = null,
-        bool openTracking = false)
+        bool openTracking = false,
+        bool clickTracking = false)
     {
         var client = httpClientFactory.CreateClient("Resend");
         logger.LogInformation("Enviando e-mail via Resend ({EmailType}) para {Email}.", emailType, recipientEmail);
@@ -372,7 +375,8 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
                 plainTextBody,
                 string.IsNullOrWhiteSpace(replyTo) ? null : replyTo,
                 headers,
-                openTracking),
+                openTracking,
+                clickTracking),
             cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -449,7 +453,9 @@ Para parar estes lembretes, acesse:
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         Dictionary<string, string>? Headers = null,
         [property: JsonPropertyName("open_tracking")]
-        bool OpenTracking = false);
+        bool OpenTracking = false,
+        [property: JsonPropertyName("click_tracking")]
+        bool ClickTracking = false);
 
     private sealed record ResendSendEmailResponse(string? Id);
 }

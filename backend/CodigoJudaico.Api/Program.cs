@@ -25,7 +25,8 @@ builder.Logging.AddSimpleConsole(options =>
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
 builder.Services.AddAuthentication(AppSessionAuthenticationHandler.SchemeName)
     .AddScheme<AuthenticationSchemeOptions, AppSessionAuthenticationHandler>(
         AppSessionAuthenticationHandler.SchemeName,
@@ -146,6 +147,11 @@ app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 app.MapHealthChecks("/api/health");
 app.MapCatalogEndpoints();
 app.MapSessionEndpoints();

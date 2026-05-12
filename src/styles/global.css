@@ -3016,6 +3016,10 @@ select {
     padding: 13px 16px;
     font-size: 14px;
   }
+
+  .privacy-float-btns {
+    display: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════

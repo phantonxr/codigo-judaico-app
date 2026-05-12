@@ -46,6 +46,7 @@ export default function CookieBanner() {
   if (!visible) {
     return (
       <div
+        className="privacy-float-btns"
         style={{
           position: 'fixed',
           left: 14,

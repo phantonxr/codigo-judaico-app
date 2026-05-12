@@ -1,11 +1,14 @@
 using System;
+using CodigoJudaico.Api.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace CodigoJudaico.Api.Data.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260510000000_AddStripeSaleNotifications")]
     public partial class AddStripeSaleNotifications : Migration
     {
         /// <inheritdoc />

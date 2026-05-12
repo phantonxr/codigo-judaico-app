@@ -474,6 +474,7 @@ export default function CheckoutPage() {
       ) : null}
 
       <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 22 }}>
+        <div ref={planSectionRef} />
         <DisclaimerBanner compact />
 
         <div className="card">
@@ -651,7 +652,6 @@ export default function CheckoutPage() {
         ) : null}
 
         <form onSubmit={onSubmit} className="checkout-form" style={{ display: 'grid', gap: 18 }}>
-          <div ref={planSectionRef} />
 
           {availableBooks.length > 0 && (
             <div className="card">

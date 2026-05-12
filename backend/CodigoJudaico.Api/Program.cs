@@ -8,6 +8,14 @@ using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseSentry(o =>
+{
+    o.Dsn = builder.Configuration["Sentry:Dsn"];
+    o.SendDefaultPii = false;
+    o.Debug = builder.Environment.IsDevelopment();
+    o.TracesSampleRate = 1.0;
+});
+
 builder.Logging.AddSimpleConsole(options =>
 {
     options.SingleLine = true;

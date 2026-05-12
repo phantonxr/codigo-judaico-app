@@ -101,6 +101,20 @@ export default function PoliticaDePrivacidade()
                 inserir dados sensíveis que não sejam necessários para usar a funcionalidade.
               </li>
               <li>
+                <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Sentry (EUA):</strong>{' '}
+                monitoramento de erros e diagnóstico de desempenho da plataforma. O Sentry registra
+                exceções técnicas e rastreamentos de performance para permitir que identifiquemos e
+                corrijamos falhas. Dados de identificação pessoal (como e-mail ou IP) <em>não</em>{' '}
+                são enviados automaticamente ao Sentry (<code>sendDefaultPii: false</code>). A
+                gravação de sessão (Session Replay) — que captura interações na tela para facilitar
+                o diagnóstico de bugs — é ativada somente quando você autoriza a categoria{' '}
+                <strong>Preferência</strong> no painel de consentimento. Você pode revogar esse
+                consentimento a qualquer momento pelo botão "Privacidade" no site.{' '}
+                <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer" style={{ color: GOLD }}>
+                  Política de privacidade do Sentry
+                </a>.
+              </li>
+              <li>
                 <strong style={{ color: 'rgba(255,255,255,0.85)' }}>UTMfy (Brasil):</strong>{' '}
                 plataforma de atribuição de campanhas. Quando sua visita contém parâmetros UTM, enviamos
                 ao UTMfy os dados do pedido (e-mail, plano, valor e UTMs) para identificar quais canais
@@ -166,7 +180,9 @@ export default function PoliticaDePrivacidade()
               </li>
               <li>
                 <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Preferência:</strong>{' '}
-                armazenam configurações como idioma escolhido.
+                armazenam configurações como idioma escolhido e habilitam a gravação de sessão do
+                Sentry (Session Replay) para diagnóstico de falhas técnicas. O Session Replay mascara
+                todos os textos e bloqueia mídias por padrão, minimizando a exposição de dados pessoais.
               </li>
               <li>
                 <strong style={{ color: 'rgba(255,255,255,0.85)' }}>Marketing e atribuição (consentimento):</strong>{' '}

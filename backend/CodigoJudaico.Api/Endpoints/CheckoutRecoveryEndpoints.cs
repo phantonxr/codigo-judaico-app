@@ -144,7 +144,7 @@ public static class CheckoutRecoveryEndpoints
 <body style="font-family:Arial,sans-serif;background:#111;color:#f5f5f5;padding:32px">
   <main style="max-width:560px;margin:auto">
     <h1>Lembretes pausados</h1>
-    <p>Voce nao recebera novos e-mails desta sequencia de checkout.</p>
+    <p>Você não receberá novos e-mails desta sequência de checkout.</p>
   </main>
 </body>
 </html>

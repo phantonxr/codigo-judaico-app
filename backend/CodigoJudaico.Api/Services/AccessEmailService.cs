@@ -32,7 +32,7 @@ public sealed class AccessEmailService(
 
         var displayName = string.IsNullOrWhiteSpace(user.Name) ? "Aluno" : user.Name;
         var planName = string.IsNullOrWhiteSpace(user.PlanName) ? "seu plano selecionado" : user.PlanName;
-        var subject = "Sua conta no Metodo Judaico foi criada";
+        var subject = "Sua conta no Método Judaico foi criada";
         var plainTextBody = $"""
 Shalom, {displayName}.
 
@@ -42,7 +42,7 @@ E-mail: {user.Email}
 Plano escolhido: {planName}
 
 Agora falta apenas concluir o pagamento para liberar o acesso.
-Assim que o Stripe confirmar, voce recebera outro e-mail informando que a assinatura foi ativada.
+Assim que o Stripe confirmar, você receberá outro e-mail informando que a assinatura foi ativada.
 """;
 
         var htmlBody = $"""
@@ -51,7 +51,7 @@ Assim que o Stripe confirmar, voce recebera outro e-mail informando que a assina
 <p><strong>E-mail:</strong> {WebUtility.HtmlEncode(user.Email)}<br />
 <strong>Plano escolhido:</strong> {WebUtility.HtmlEncode(planName)}</p>
 <p>Agora falta apenas concluir o pagamento para liberar o acesso.</p>
-<p>Assim que o Stripe confirmar, voce recebera outro e-mail informando que a assinatura foi ativada.</p>
+<p>Assim que o Stripe confirmar, você receberá outro e-mail informando que a assinatura foi ativada.</p>
 """;
 
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "conta criada", cancellationToken);
@@ -81,11 +81,11 @@ Assim que o Stripe confirmar, voce recebera outro e-mail informando que a assina
             ? $"<strong>Senha temporaria:</strong> {WebUtility.HtmlEncode(plainPassword)}<br />"
             : "<strong>Senha:</strong> use a senha criada no checkout.<br />";
 
-        var subject = "Pagamento recebido: seu acesso ao Metodo Judaico foi liberado";
+        var subject = "Pagamento recebido: seu acesso ao Método Judaico foi liberado";
         var plainTextBody = $"""
 Shalom, {displayName}.
 
-Recebemos seu pagamento e seu acesso ja esta liberado.
+Recebemos seu pagamento e seu acesso já está liberado.
 
 E-mail: {user.Email}
 {passwordPlainTextBlock}
@@ -94,16 +94,16 @@ Plano: {user.PlanName}
 Entre por aqui:
 {loginUrl}
 
-Se nao encontrar este e-mail depois, confira sua caixa de spam.
+Se não encontrar este e-mail, confira sua caixa de spam.
 """;
 
         var htmlBody = $"""
 <p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
-<p>Recebemos seu pagamento e seu acesso ja esta liberado.</p>
+<p>Recebemos seu pagamento e seu acesso já está liberado.</p>
 <p><strong>E-mail:</strong> {WebUtility.HtmlEncode(user.Email)}<br />
 {passwordHtmlBlock}<strong>Plano:</strong> {WebUtility.HtmlEncode(user.PlanName)}</p>
 <p><a href="{WebUtility.HtmlEncode(loginUrl)}">Clique aqui para entrar no sistema</a>.</p>
-<p>Se nao encontrar este e-mail depois, confira sua caixa de spam.</p>
+<p>Se não encontrar este e-mail, confira sua caixa de spam.</p>
 """;
 
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "acesso liberado", cancellationToken);
@@ -117,20 +117,20 @@ Se nao encontrar este e-mail depois, confira sua caixa de spam.
         var displayName = string.IsNullOrWhiteSpace(user.Name) ? "Aluno" : user.Name;
         var frontendUrl = ResolveFrontendBaseUrl();
         var resetUrl = $"{frontendUrl.TrimEnd('/')}/reset-password?token={WebUtility.UrlEncode(resetToken)}";
-        var subject = "Redefinicao de senha — Codigo Judaico da Prosperidade";
+        var subject = "Redefinição de senha — Código Judaico da Prosperidade";
         var plainTextBody = $"""
-Recebemos uma solicitacao para redefinir sua senha.
+Recebemos uma solicitação para redefinir sua senha.
 
 Clique no link abaixo para criar uma nova senha:
 {resetUrl}
 
-Se voce nao solicitou isso, ignore este e-mail.
+Se você não solicitou isso, ignore este e-mail.
 """;
 
         var htmlBody = $"""
-<p>Recebemos uma solicitacao para redefinir sua senha.</p>
+<p>Recebemos uma solicitação para redefinir sua senha.</p>
 <p><a href="{WebUtility.HtmlEncode(resetUrl)}">Clique no link para criar uma nova senha</a>.</p>
-<p>Se voce nao solicitou isso, ignore este e-mail.</p>
+<p>Se você não solicitou isso, ignore este e-mail.</p>
 """;
 
         if (IsSmtpConfigured())
@@ -165,32 +165,75 @@ Se voce nao solicitou isso, ignore este e-mail.
         EnsureConfigured();
 
         var displayName = string.IsNullOrWhiteSpace(recovery.User?.Name) ? "Aluno" : recovery.User.Name;
-        var planName = string.IsNullOrWhiteSpace(recovery.PlanName) ? "o acesso ao Codigo Judaico" : recovery.PlanName;
-        var subject = "Seu acesso ficou pendente";
+        var planName = string.IsNullOrWhiteSpace(recovery.PlanName) ? "o acesso ao Código Judaico" : recovery.PlanName;
+        var subject = "Você sabe o que faz seu dinheiro escapar?";
         var footerText = BuildCommercialFooterText(unsubscribeUrl);
         var footerHtml = BuildCommercialFooterHtml(unsubscribeUrl);
         var plainTextBody = $"""
 Shalom, {displayName}.
 
-Vi que voce iniciou o checkout para {planName}, mas o pagamento ficou pendente.
+Você iniciou o checkout para {planName}, mas o pagamento ficou pendente.
 
-Se a decisao ficou para depois, este e o link para continuar com seguranca:
+Pode ter sido um impulso de frear. Ansiedade. Comparação. Medo de errar.
+
+Esses são os gatilhos invisíveis que o Método Judaico foi criado para identificar — e quebrar — nos primeiros 21 dias.
+
+O que espera por você:
+- Uma ação por dia, simples e direta
+- Diagnóstico do seu perfil financeiro (impulso, status ou escassez)
+- Leitura guiada com princípios do Talmude
+- Rabino Mentor para acompanhar cada etapa
+
+Mais de 1.200 pessoas já iniciaram essa jornada.
+
+Continue por aqui:
 {recoveryUrl}
 
-O metodo dos 21 dias foi desenhado para comecar simples: uma acao por dia, leitura guiada e acompanhamento para identificar o gatilho que faz o dinheiro escapar.
-
-Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembretes para automaticamente.
+Qualquer dúvida, responda este e-mail. Ao responder, a sequência de lembretes para automaticamente.
 
 {footerText}
 """;
 
         var htmlBody = $"""
-<p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
-<p>Vi que voce iniciou o checkout para <strong>{WebUtility.HtmlEncode(planName)}</strong>, mas o pagamento ficou pendente.</p>
-<p>Se a decisao ficou para depois, este e o link para continuar com seguranca:</p>
-<p><a href="{WebUtility.HtmlEncode(recoveryUrl)}">Continuar meu acesso</a></p>
-<p>O metodo dos 21 dias foi desenhado para comecar simples: uma acao por dia, leitura guiada e acompanhamento para identificar o gatilho que faz o dinheiro escapar.</p>
-<p>Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembretes para automaticamente.</p>
+<div style="font-family: Georgia, 'Times New Roman', serif; max-width: 580px; margin: 0 auto; color: #1a1a1a; line-height: 1.7;">
+
+  <p style="font-size: 16px;">Shalom, <strong>{WebUtility.HtmlEncode(displayName)}</strong>.</p>
+
+  <p style="font-size: 16px;">
+    Você iniciou o checkout para <strong>{WebUtility.HtmlEncode(planName)}</strong>, mas o pagamento ficou pendente.
+  </p>
+
+  <p style="font-size: 16px;">
+    Pode ter sido um impulso de frear. Ansiedade. Comparação. Medo de errar.
+  </p>
+
+  <p style="font-size: 16px;">
+    Esses são os <strong>gatilhos invisíveis</strong> que o Método Judaico foi criado para identificar — e quebrar — nos primeiros 21 dias:
+  </p>
+
+  <ul style="font-size: 15px; padding-left: 20px; color: #333;">
+    <li style="margin-bottom: 6px;">Uma ação por dia, simples e direta</li>
+    <li style="margin-bottom: 6px;">Diagnóstico do seu perfil financeiro (impulso, status ou escassez)</li>
+    <li style="margin-bottom: 6px;">Leitura guiada com princípios do Talmude</li>
+    <li style="margin-bottom: 6px;">Rabino Mentor para acompanhar cada etapa</li>
+  </ul>
+
+  <p style="font-size: 14px; color: #666; font-style: italic; border-left: 3px solid #c9a84c; padding-left: 14px; margin: 24px 0;">
+    Mais de 1.200 pessoas já iniciaram essa jornada.
+  </p>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{WebUtility.HtmlEncode(recoveryUrl)}"
+       style="display: inline-block; background-color: #1a3a2a; color: #c9a84c; padding: 14px 32px; text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 4px; letter-spacing: 0.5px;">
+      Continuar meu acesso
+    </a>
+  </p>
+
+  <p style="font-size: 15px; color: #555;">
+    Qualquer dúvida, responda este e-mail. Ao responder, a sequência de lembretes para automaticamente.
+  </p>
+
+</div>
 {footerHtml}
 """;
 
@@ -224,38 +267,77 @@ Se tiver alguma duvida, responda este e-mail. Ao responder, a sequencia de lembr
 
         var displayName = string.IsNullOrWhiteSpace(recovery.User?.Name) ? "Aluno" : recovery.User.Name;
         var discountLabel = string.IsNullOrWhiteSpace(_checkoutRecoveryOptions.DiscountLabel)
-            ? "uma condicao especial"
+            ? "uma condição especial"
             : _checkoutRecoveryOptions.DiscountLabel;
         var discountCode = string.IsNullOrWhiteSpace(recovery.DiscountCode)
             ? "aplicado automaticamente no link"
             : recovery.DiscountCode;
         var expiration = recovery.DiscountExpiresAt?.ToLocalTime().ToString("g") ?? "em breve";
-        var subject = "Separei uma condicao para voce concluir hoje";
+        var subject = "Condição especial separada — expira em breve";
         var footerText = BuildCommercialFooterText(unsubscribeUrl);
         var footerHtml = BuildCommercialFooterHtml(unsubscribeUrl);
         var plainTextBody = $"""
 Shalom, {displayName}.
 
-Seu checkout ainda esta pendente, entao separei {discountLabel} para voce concluir o acesso.
+Seu checkout ainda está pendente. Por isso separei {discountLabel} para você concluir hoje.
 
 Cupom: {discountCode}
-Valido ate: {expiration}
+Válido até: {expiration}
 
-Use este link para continuar:
+Cada dia sem identificar seus gatilhos financeiros é um dia em que eles continuam no comando.
+
+O Método Judaico dos 21 dias muda isso: diagnóstico do seu perfil, uma ação por dia e o Rabino Mentor para que você pare de perder dinheiro sem saber por quê.
+
+"Quem governa seus impulsos é mais forte do que quem conquista cidades." — Talmude
+
+Use este link com a condição especial aplicada:
 {recoveryUrl}
 
-Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o link abaixo para parar estes lembretes.
+Se você já decidiu que não é o momento, tudo bem. Responda este e-mail ou use o link abaixo para parar estes lembretes.
 
 {footerText}
 """;
 
         var htmlBody = $"""
-<p>Shalom, {WebUtility.HtmlEncode(displayName)}.</p>
-<p>Seu checkout ainda esta pendente, entao separei <strong>{WebUtility.HtmlEncode(discountLabel)}</strong> para voce concluir o acesso.</p>
-<p><strong>Cupom:</strong> {WebUtility.HtmlEncode(discountCode)}<br />
-<strong>Valido ate:</strong> {WebUtility.HtmlEncode(expiration)}</p>
-<p><a href="{WebUtility.HtmlEncode(recoveryUrl)}">Concluir com a condicao especial</a></p>
-<p>Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o link abaixo para parar estes lembretes.</p>
+<div style="font-family: Georgia, 'Times New Roman', serif; max-width: 580px; margin: 0 auto; color: #1a1a1a; line-height: 1.7;">
+
+  <p style="font-size: 16px;">Shalom, <strong>{WebUtility.HtmlEncode(displayName)}</strong>.</p>
+
+  <p style="font-size: 16px;">
+    Seu checkout ainda está pendente. Por isso separei <strong>{WebUtility.HtmlEncode(discountLabel)}</strong> para você concluir hoje.
+  </p>
+
+  <div style="background: #f9f6ef; border: 1px solid #c9a84c; border-radius: 6px; padding: 18px 22px; margin: 24px 0;">
+    <p style="margin: 0 0 4px; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Cupom de desconto</p>
+    <p style="margin: 0 0 10px; font-size: 24px; font-weight: bold; letter-spacing: 3px; color: #1a3a2a;">{WebUtility.HtmlEncode(discountCode)}</p>
+    <p style="margin: 0; font-size: 13px; color: #888;">Válido até: <strong>{WebUtility.HtmlEncode(expiration)}</strong></p>
+  </div>
+
+  <p style="font-size: 16px;">
+    Cada dia sem identificar seus gatilhos financeiros é um dia em que eles continuam no comando.
+  </p>
+
+  <p style="font-size: 16px;">
+    O Método Judaico dos 21 dias muda isso: diagnóstico do seu perfil, uma ação por dia e o Rabino Mentor para que você pare de perder dinheiro sem saber por quê.
+  </p>
+
+  <blockquote style="font-style: italic; color: #555; border-left: 3px solid #c9a84c; padding: 8px 0 8px 16px; margin: 24px 0; font-size: 15px;">
+    "Quem governa seus impulsos é mais forte do que quem conquista cidades."<br />
+    <span style="font-size: 13px; color: #888;">— Talmude</span>
+  </blockquote>
+
+  <p style="text-align: center; margin: 32px 0;">
+    <a href="{WebUtility.HtmlEncode(recoveryUrl)}"
+       style="display: inline-block; background-color: #1a3a2a; color: #c9a84c; padding: 14px 32px; text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 4px; letter-spacing: 0.5px;">
+      Concluir com condição especial
+    </a>
+  </p>
+
+  <p style="font-size: 15px; color: #555;">
+    Se você já decidiu que não é o momento, tudo bem. Responda este e-mail ou use o link abaixo para parar estes lembretes.
+  </p>
+
+</div>
 {footerHtml}
 """;
 
@@ -413,7 +495,7 @@ Se voce ja decidiu que nao e o momento, tudo bem. Responda este e-mail ou use o 
     private string BuildCommercialFooterText(string unsubscribeUrl)
     {
         var postalAddress = string.IsNullOrWhiteSpace(_checkoutRecoveryOptions.PublicPostalAddress)
-            ? "Endereco postal nao configurado."
+            ? "Endereço postal não configurado."
             : _checkoutRecoveryOptions.PublicPostalAddress;
 
         return $"""
@@ -428,7 +510,7 @@ Para parar estes lembretes, acesse:
     private string BuildCommercialFooterHtml(string unsubscribeUrl)
     {
         var postalAddress = string.IsNullOrWhiteSpace(_checkoutRecoveryOptions.PublicPostalAddress)
-            ? "Endereco postal nao configurado."
+            ? "Endereço postal não configurado."
             : _checkoutRecoveryOptions.PublicPostalAddress;
 
         return $"""

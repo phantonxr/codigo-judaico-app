@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(*)",
       "PowerShell(Get-ChildItem -Path \"d:\\\\Study\\\\codigo-judaico-app\" -Force | Select-Object Name, @{Name='IsFolder'; Expression={$_.PSIsContainer}})",
     ]
   }

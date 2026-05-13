@@ -8,12 +8,12 @@ import {
   buildLegalAcceptancePayload,
   findLegalDocument,
   getActiveLegalDocuments,
-  getLegalDocumentLabel,
   normalizeLegalLanguage,
 } from '../services/legal.js'
 import { useUtmParams } from '../hooks/useUtmParams.js'
 import { hasMarketingConsent } from '../services/privacyConsent.js'
 import DisclaimerBanner from '../components/legal/DisclaimerBanner.jsx'
+import LanguageSwitcher from '../components/LanguageSwitcher.jsx'
 import LegalDocumentModal from '../components/legal/LegalDocumentModal.jsx'
 import { Clock, BookOpen, Gift, Flame, Sparkles } from 'lucide-react'
 
@@ -73,17 +73,12 @@ function buildFreshCheckoutPath(planId) {
   return `/checkout?plan=${encodeURIComponent(selectedPlan.id)}`
 }
 
-function resolveAccessLabel(planId, t) {
-  const known = ['mensal', 'anual', 'vitalicio']
-  const pid = String(planId || '')
-  return t('checkout.plans.access_labels.' + (known.includes(pid) ? pid : 'default'))
-}
-
-function resolvePhaseLabel(planTitle) {
-  var title = String(planTitle || '')
-  var parts = title.split('—')
-  var left = String(parts[0] || '').trim()
-  return left || title
+function getLegalLabel(type, t) {
+  const normalized = String(type ?? '').trim().toLowerCase()
+  if (normalized === 'terms') return t('legal.labels.terms')
+  if (normalized === 'privacy') return t('legal.labels.privacy')
+  if (normalized === 'disclaimer') return t('legal.labels.disclaimer')
+  return type
 }
 
 function resolvePromise(planId, t) {
@@ -123,13 +118,11 @@ export default function CheckoutPage() {
   const planTitle = t('checkout.plans.titles.' + selectedPlan.id, { defaultValue: selectedPlan.title })
   const planHighlight = t('checkout.plans.highlights.' + selectedPlan.id, { defaultValue: selectedPlan.highlight })
   const planSubtitle = t('checkout.plans.subtitles.' + selectedPlan.id, { defaultValue: selectedPlan.subtitle })
-  const accessLabel = resolveAccessLabel(selectedPlan.id, t)
-  const phaseLabel = resolvePhaseLabel(planTitle)
   const promise = resolvePromise(selectedPlan.id, t)
   const ctaLabel = resolveCtaLabel(selectedPlan.id, t)
 
   const isPrimaryOffer = selectedPlan.id === 'primeiro-acesso'
-  const submitLabel = isPrimaryOffer ? 'QUERO MEU ACESSO' : ctaLabel
+  const submitLabel = ctaLabel
 
   const interactUntilRef = useRef(0)
   const [toast, setToast] = useState(null)
@@ -205,7 +198,7 @@ export default function CheckoutPage() {
       })
       .catch(function (caught) {
         if (!alive) return
-        setLegalError(String(caught?.message ?? 'Could not load legal documents.').replace(/^API \d+:\s*/u, ''))
+        setLegalError(String(caught?.message ?? t('checkout.legal.loading_error')).replace(/^API \d+:\s*/u, ''))
       })
       .finally(function () {
         if (alive) setLegalLoading(false)
@@ -214,7 +207,7 @@ export default function CheckoutPage() {
     return function () {
       alive = false
     }
-  }, [legalLanguage])
+  }, [legalLanguage, t])
 
   const utm = useUtmParams()
 
@@ -248,70 +241,19 @@ export default function CheckoutPage() {
     function () {
       if (!isPrimaryOffer) return []
 
-      return [
-        {
-          type: 'social',
-          icon: <Sparkles size={16} />,
-          title: 'Prova social',
-          message: 'Fernanda M. acabou de garantir o acesso.',
-        },
-        {
-          type: 'social',
-          icon: <Sparkles size={16} />,
-          title: 'Prova social',
-          message: 'Jorge F. iniciou a jornada de 21 dias.',
-        },
-        {
-          type: 'social',
-          icon: <Sparkles size={16} />,
-          title: 'Prova social',
-          message: 'Luciana T. acabou de liberar o acesso.',
-        },
-        {
-          type: 'social',
-          icon: <Sparkles size={16} />,
-          title: 'Prova social',
-          message: 'Paulo D. garantiu o desconto promocional.',
-        },
-        {
-          type: 'social',
-          icon: <Sparkles size={16} />,
-          title: 'Prova social',
-          message: 'Lucas U. começou agora com o Rabino Mentor IA.',
-        },
-        {
-          type: 'scarcity',
-          icon: <Flame size={16} />,
-          title: 'Escassez',
-          message: 'Restam apenas 7 acessos promocionais.',
-        },
-        {
-          type: 'scarcity',
-          icon: <Clock size={16} />,
-          title: 'Escassez',
-          message: 'Desconto reservado por poucos minutos.',
-        },
-        {
-          type: 'scarcity',
-          icon: <Clock size={16} />,
-          title: 'Escassez',
-          message: 'Os acessos promocionais podem encerrar a qualquer momento.',
-        },
-        {
-          type: 'benefit',
-          icon: <Sparkles size={16} />,
-          title: 'Benefício',
-          message: 'Usuários estão identificando seus gatilhos com o Rabino Mentor IA.',
-        },
-        {
-          type: 'benefit',
-          icon: <Sparkles size={16} />,
-          title: 'Benefício',
-          message: 'O método começa pelo domínio do comportamento, não por planilhas.',
-        },
-      ]
+      const items = t('checkout.primary_offer.toasts', { returnObjects: true })
+
+      return items.map((item) => ({
+        ...item,
+        icon:
+          item.type === 'scarcity' && item.icon === 'flame'
+            ? <Flame size={16} />
+            : item.icon === 'clock'
+              ? <Clock size={16} />
+              : <Sparkles size={16} />,
+      }))
     },
-    [isPrimaryOffer],
+    [isPrimaryOffer, t],
   )
 
   function markInteracting() {
@@ -389,12 +331,12 @@ export default function CheckoutPage() {
     }
 
     if (legalLoading || legalError || !legalData?.activeVersions) {
-      setError(legalError || 'Legal documents are not available yet. Please try again in a moment.')
+      setError(legalError || t('checkout.legal.documents_unavailable'))
       return
     }
 
     if (!acceptedLegal) {
-      setError('Please agree to the Terms of Service, Privacy Policy, and Disclaimer before continuing.')
+      setError(t('checkout.legal.acceptance_required'))
       return
     }
 
@@ -474,6 +416,9 @@ export default function CheckoutPage() {
       ) : null}
 
       <div style={{ maxWidth: 760, marginInline: 'auto', display: 'grid', gap: 22 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <LanguageSwitcher />
+        </div>
         <div ref={planSectionRef} />
         <DisclaimerBanner compact />
 
@@ -482,11 +427,11 @@ export default function CheckoutPage() {
             {isPrimaryOffer ? (
               <>
                 <span className="badge" style={{ width: 'fit-content' }}>
-                  Oferta de acesso inicial
+                  {t('checkout.primary_offer.badge')}
                 </span>
 
                 <h1 className="checkout-hero-title">
-                  21 dias para descobrir o gatilho invisível que faz seu dinheiro desaparecer
+                  {t('checkout.primary_offer.title')}
                 </h1>
 
                 <div className="checkout-subheadline">
@@ -494,14 +439,15 @@ export default function CheckoutPage() {
                     <Sparkles size={16} />
                   </div>
                   <div className="checkout-subheadline__text">
-                    Com atividades diárias simples e acompanhamento do{' '}
-                    <span className="checkout-emphasis">Rabino Mentor IA</span>, você vai investigar o padrão emocional que faz seu dinheiro escapar — e começar a desenvolver{' '}
-                    <span className="checkout-emphasis">domínio</span> sobre ele.
+                    {t('checkout.primary_offer.subheadline_prefix')}{' '}
+                    <span className="checkout-emphasis">{t('checkout.primary_offer.mentor_name')}</span>, {t('checkout.primary_offer.subheadline_suffix_prefix')}{' '}
+                    <span className="checkout-emphasis">{t('checkout.primary_offer.subheadline_emphasis')}</span>{' '}
+                    {t('checkout.primary_offer.subheadline_suffix_end')}
                   </div>
                 </div>
 
                 <div className="checkout-hero-quote">
-                  “O problema não é apenas quanto você ganha. É o padrão invisível que decide por você antes mesmo de perceber.”
+                  {t('checkout.primary_offer.quote')}
                 </div>
               </>
             ) : (
@@ -528,14 +474,14 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <div className="checkout-alert" role="note" aria-label="Urgência">
+                <div className="checkout-alert" role="note" aria-label={t('checkout.primary_offer.urgency_aria')}>
                   <div className="checkout-alert__icon" aria-hidden="true">
                     <Flame size={16} />
                   </div>
                   <div className="checkout-alert__body">
-                    <div className="checkout-alert__title">🔥 Desconto liberado por poucos minutos</div>
+                    <div className="checkout-alert__title">{t('checkout.primary_offer.discount_title')}</div>
                     <div className="checkout-alert__text">
-                      Restam apenas <span className="checkout-emphasis">7</span> acessos promocionais disponíveis hoje.
+                      {t('checkout.primary_offer.discount_text_prefix')} <span className="checkout-emphasis">{t('checkout.primary_offer.discount_remaining_count')}</span> {t('checkout.primary_offer.discount_text_suffix')}
                     </div>
                   </div>
                 </div>
@@ -545,15 +491,15 @@ export default function CheckoutPage() {
                     <Clock size={16} />
                   </div>
                   <div className="checkout-timer__content">
-                    <div className="checkout-timer__label">Desconto reservado por:</div>
-                    <div className="checkout-timer__time" aria-label={`Desconto reservado por ${countdownLabel}`}>{countdownLabel}</div>
+                    <div className="checkout-timer__label">{t('checkout.primary_offer.timer_label')}</div>
+                    <div className="checkout-timer__time" aria-label={t('checkout.primary_offer.timer_aria', { time: countdownLabel })}>{countdownLabel}</div>
                   </div>
                 </div>
 
-                <div className="checkout-bullets" aria-label="Principais benefícios">
-                  <div className="checkout-bullet">✅ Acesso imediato por 21 dias</div>
-                  <div className="checkout-bullet">✅ Atividades diárias simples (sem burocracia)</div>
-                  <div className="checkout-bullet">✅ Acompanhamento do Rabino Mentor IA</div>
+                <div className="checkout-bullets" aria-label={t('checkout.primary_offer.benefits_aria')}>
+                  <div className="checkout-bullet">{t('checkout.primary_offer.benefits.access')}</div>
+                  <div className="checkout-bullet">{t('checkout.primary_offer.benefits.activities')}</div>
+                  <div className="checkout-bullet">{t('checkout.primary_offer.benefits.mentor')}</div>
                 </div>
               </div>
             ) : (
@@ -573,28 +519,28 @@ export default function CheckoutPage() {
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
               <div style={{ fontWeight: 950, fontSize: 16 }}>
-                O que está incluído no seu acesso
+                {t('checkout.primary_offer.includes_title')}
               </div>
               <div className="checkout-includes">
                 <div className="checkout-mini-card">
-                  <div className="checkout-mini-card-title">Jornada de 21 dias</div>
-                  <div className="checkout-mini-card-text">Atividades simples e práticas para observar seus padrões financeiros todos os dias.</div>
+                  <div className="checkout-mini-card-title">{t('checkout.primary_offer.includes.journey.title')}</div>
+                  <div className="checkout-mini-card-text">{t('checkout.primary_offer.includes.journey.text')}</div>
                 </div>
                 <div className="checkout-mini-card">
-                  <div className="checkout-mini-card-title">Rabino Mentor IA</div>
-                  <div className="checkout-mini-card-text">Um mentor inteligente que acompanha suas respostas e ajuda a identificar seu principal gatilho.</div>
+                  <div className="checkout-mini-card-title">{t('checkout.primary_offer.includes.mentor.title')}</div>
+                  <div className="checkout-mini-card-text">{t('checkout.primary_offer.includes.mentor.text')}</div>
                 </div>
                 <div className="checkout-mini-card">
-                  <div className="checkout-mini-card-title">Avaliação e autoavaliação</div>
-                  <div className="checkout-mini-card-text">Você entende como emoções, estresse, medo, comparação ou impulsos afetam seu dinheiro.</div>
+                  <div className="checkout-mini-card-title">{t('checkout.primary_offer.includes.assessment.title')}</div>
+                  <div className="checkout-mini-card-text">{t('checkout.primary_offer.includes.assessment.text')}</div>
                 </div>
                 <div className="checkout-mini-card">
-                  <div className="checkout-mini-card-title">Diagnóstico do gatilho principal</div>
-                  <div className="checkout-mini-card-text">Ao longo da jornada, o sistema ajuda a revelar o padrão que mais faz seu dinheiro desaparecer.</div>
+                  <div className="checkout-mini-card-title">{t('checkout.primary_offer.includes.diagnosis.title')}</div>
+                  <div className="checkout-mini-card-text">{t('checkout.primary_offer.includes.diagnosis.text')}</div>
                 </div>
                 <div className="checkout-mini-card">
-                  <div className="checkout-mini-card-title">Domínio dos impulsos</div>
-                  <div className="checkout-mini-card-text">Você aprende a reconhecer o gatilho antes que ele controle suas próximas decisões.</div>
+                  <div className="checkout-mini-card-title">{t('checkout.primary_offer.includes.mastery.title')}</div>
+                  <div className="checkout-mini-card-text">{t('checkout.primary_offer.includes.mastery.text')}</div>
                 </div>
               </div>
             </div>
@@ -605,33 +551,33 @@ export default function CheckoutPage() {
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 12 }}>
               <div style={{ fontWeight: 950, fontSize: 16 }}>
-                O que as pessoas dizem
+                {t('checkout.primary_offer.testimonials_title')}
               </div>
               <div className="checkout-testimonials">
                 <div className="checkout-testimonial">
                   <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
-                  <div className="checkout-testimonial-name">Fernanda M. — Rio de Janeiro</div>
-                  <div className="checkout-testimonial-text">“Nunca imaginei que meus gastos estavam ligados ao estresse do trabalho. O Rabino Mentor IA conseguiu identificar isso e hoje consigo dominar melhor esse padrão.”</div>
+                  <div className="checkout-testimonial-name">{t('checkout.primary_offer.testimonials.fernanda.name')}</div>
+                  <div className="checkout-testimonial-text">{t('checkout.primary_offer.testimonials.fernanda.text')}</div>
                 </div>
                 <div className="checkout-testimonial">
                   <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
-                  <div className="checkout-testimonial-name">Jorge F. — Bahia</div>
-                  <div className="checkout-testimonial-text">“Estava endividado e preso em empréstimos e juros altos. Com o Rabino Mentor IA, comecei a entender meus hábitos sem precisar viver guardando cada centavo.”</div>
+                  <div className="checkout-testimonial-name">{t('checkout.primary_offer.testimonials.jorge.name')}</div>
+                  <div className="checkout-testimonial-text">{t('checkout.primary_offer.testimonials.jorge.text')}</div>
                 </div>
                 <div className="checkout-testimonial">
                   <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
-                  <div className="checkout-testimonial-name">Lucas U. — Rio Grande do Sul</div>
-                  <div className="checkout-testimonial-text">“Esse app é sensacional. Ele não te faz apenas guardar dinheiro. Ele faz você mudar de vida.”</div>
+                  <div className="checkout-testimonial-name">{t('checkout.primary_offer.testimonials.lucas.name')}</div>
+                  <div className="checkout-testimonial-text">{t('checkout.primary_offer.testimonials.lucas.text')}</div>
                 </div>
                 <div className="checkout-testimonial">
                   <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
-                  <div className="checkout-testimonial-name">Luciana T. — Amapá</div>
-                  <div className="checkout-testimonial-text">“As atividades diárias foram tão naturais que eu nem percebi quando minha rotina começou a mudar. Hoje minha família também usa o método.”</div>
+                  <div className="checkout-testimonial-name">{t('checkout.primary_offer.testimonials.luciana.name')}</div>
+                  <div className="checkout-testimonial-text">{t('checkout.primary_offer.testimonials.luciana.text')}</div>
                 </div>
                 <div className="checkout-testimonial">
                   <div className="checkout-stars">⭐⭐⭐⭐⭐</div>
-                  <div className="checkout-testimonial-name">Paulo D. — Minas Gerais</div>
-                  <div className="checkout-testimonial-text">“Trabalhava de Uber e 99 para complementar renda e vivia no limite. Depois que comecei a aplicar os ensinamentos judaicos, minha família mudou e hoje até consigo investir.”</div>
+                  <div className="checkout-testimonial-name">{t('checkout.primary_offer.testimonials.paulo.name')}</div>
+                  <div className="checkout-testimonial-text">{t('checkout.primary_offer.testimonials.paulo.text')}</div>
                 </div>
                 {/* ⭐⭐⭐⭐⭐
                 Sempre guardei dinheiro, mas deixava de viver. Deixei de sair com minha família e de viajar. Hoje aprendi a viver melhor e construir patrimônio ao mesmo tempo. */}
@@ -643,9 +589,9 @@ export default function CheckoutPage() {
         {isPrimaryOffer ? (
           <div className="card">
             <div className="card-inner" style={{ display: 'grid', gap: 10 }}>
-              <div style={{ fontWeight: 950, fontSize: 16 }}>Garantia de 7 dias</div>
+              <div style={{ fontWeight: 950, fontSize: 16 }}>{t('checkout.primary_offer.guarantee_title')}</div>
               <div className="muted" style={{ lineHeight: 1.7 }}>
-                Você pode acessar, testar e começar sua jornada. Se não fizer sentido para você, pode solicitar reembolso dentro do prazo de garantia.
+                {t('checkout.primary_offer.guarantee_text')}
               </div>
             </div>
           </div>
@@ -659,14 +605,11 @@ export default function CheckoutPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <BookOpen size={18} style={{ color: 'var(--gold-2)', flexShrink: 0 }} />
                   <div style={{ fontWeight: 900, fontSize: 16 }}>
-                    Tenha uma visão estratégica de construção de bens
+                    {t('checkout.books_upsell.title')}
                   </div>
                 </div>
                 <div className="muted" style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-                  Adicione os métodos abaixo e aprofunde sua compreensão sobre prosperidade financeira, legado e construção de patrimônio com visão estratégica — seguindo princípios de domínio, consciência e visão de mercado inspirados na tradição judaica.
-                  {'\n'}
-                  {'\n'}
-                  Esses materiais complementares foram criados para ajudar você a enxergar o dinheiro com mais clareza, tomar decisões com mais domínio e construir patrimônio sem viver preso à escassez.
+                  {t('checkout.books_upsell.description')}
                 </div>
 
                 <div className={'checkout-book-promo' + (hasMethodBookSelected ? ' checkout-book-promo--active' : '')}>
@@ -674,11 +617,11 @@ export default function CheckoutPage() {
                     <Gift size={17} />
                   </div>
                   <div className="checkout-book-promo__copy">
-                    <div className="checkout-book-promo__title">Desbloqueio inteligente</div>
+                    <div className="checkout-book-promo__title">{t('checkout.books_upsell.promo_title')}</div>
                     <div className="checkout-book-promo__text">
                       {hasMethodBookSelected
-                        ? 'Método principal adicionado — os 2 conteúdos especiais sobre gatilhos invisíveis foram desbloqueados sem custo adicional.'
-                        : 'Adicione o método principal e receba 2 materiais complementares desbloqueados sem custo adicional para acelerar sua clareza sobre os gatilhos invisíveis do dinheiro.'}
+                        ? t('checkout.books_upsell.promo_active')
+                        : t('checkout.books_upsell.promo_inactive')}
                     </div>
                   </div>
                 </div>
@@ -734,16 +677,16 @@ export default function CheckoutPage() {
                           <div style={{ display: 'grid', gap: 3 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{book.title}</div>
-                              {isMethodBook ? <span className="checkout-book-mini-badge">Método principal</span> : null}
+                              {isMethodBook ? <span className="checkout-book-mini-badge">{t('checkout.books_upsell.method_badge')}</span> : null}
                               {isFreeWithMethod ? (
-                                <span className="checkout-book-mini-badge checkout-book-mini-badge--free">Bônus incluído</span>
+                                <span className="checkout-book-mini-badge checkout-book-mini-badge--free">{t('checkout.books_upsell.bonus_badge')}</span>
                               ) : null}
                             </div>
                             <div className="muted" style={{ fontSize: 12, lineHeight: 1.5 }}>{book.description}</div>
                             {isFreeWithMethod ? (
                               <div className="checkout-book-free-price">
                                 <span>{book.priceLabel}</span>
-                                <strong>Desbloqueado sem custo adicional</strong>
+                                <strong>{t('checkout.books_upsell.free_label')}</strong>
                               </div>
                             ) : (
                               <div style={{ fontWeight: 900, color: 'var(--gold-2)', fontSize: 14 }}>+ {book.priceLabel}</div>
@@ -762,13 +705,13 @@ export default function CheckoutPage() {
             <div className="card-inner" style={{ display: 'grid', gap: 14 }}>
               <div style={{ display: 'grid', gap: 6 }}>
                 <div style={{ fontWeight: 950, fontSize: 18 }}>
-                  {isPrimaryOffer ? 'Crie seu acesso para iniciar sua jornada de 21 dias.' : (existingAccountFlow ? t('checkout.form_title_existing') : t('checkout.form_title_new'))}
+                  {isPrimaryOffer ? t('checkout.primary_offer.form_title') : (existingAccountFlow ? t('checkout.form_title_existing') : t('checkout.form_title_new'))}
                 </div>
                 <div className="muted" style={{ lineHeight: 1.6 }}>
                   {existingAccountFlow
                     ? t('checkout.existing_account')
                     : (isPrimaryOffer
-                      ? 'Leva menos de 1 minuto. Depois você finaliza o pagamento em ambiente seguro do Stripe.'
+                      ? t('checkout.primary_offer.form_subtitle')
                       : t('checkout.new_account'))}
                 </div>
               </div>
@@ -878,10 +821,10 @@ export default function CheckoutPage() {
                 </div>
               ) : null}
 
-              <div className="legal-consents" aria-label="Legal acknowledgements">
+              <div className="legal-consents" aria-label={t('checkout.legal.acknowledgements_aria')}>
                 {legalLoading ? (
                   <div className="muted" style={{ fontSize: 13 }}>
-                    Loading legal documents...
+                    {t('checkout.legal.loading')}
                   </div>
                 ) : null}
 
@@ -903,7 +846,7 @@ export default function CheckoutPage() {
                           onClick={() => setSelectedLegalDocument(document)}
                           disabled={!document}
                         >
-                          {getLegalDocumentLabel(type)}
+                          {getLegalLabel(type, t)}
                         </button>
                       )
                     })}
@@ -920,7 +863,7 @@ export default function CheckoutPage() {
                   />
                   <div className="legal-consent-copy">
                     <label htmlFor="checkout-legal-terms">
-                      I agree to the Terms of Service, Privacy Policy, and Disclaimer.
+                      {t('checkout.legal.acceptance_label')}
                     </label>
                   </div>
                 </div>
@@ -937,13 +880,13 @@ export default function CheckoutPage() {
               </button>
 
               {isPrimaryOffer ? (
-                <div className="checkout-cta-notes" aria-label="Payment reassurance">
-                  <div>🔒 Pagamento seguro via Stripe</div>
-                  <div>⚡ Acesso imediato</div>
-                  <div>✅ Atividades diárias + Rabino Mentor IA</div>
+                <div className="checkout-cta-notes" aria-label={t('checkout.legal.payment_reassurance_aria')}>
+                  <div>{t('checkout.primary_offer.cta_notes.stripe')}</div>
+                  <div>{t('checkout.primary_offer.cta_notes.immediate')}</div>
+                  <div>{t('checkout.primary_offer.cta_notes.mentor')}</div>
                 </div>
               ) : (
-                <div className="checkout-cta-notes" aria-label="Payment reassurance">
+                <div className="checkout-cta-notes" aria-label={t('checkout.legal.payment_reassurance_aria')}>
                   <div>{t('checkout.security_notes.stripe')}</div>
                   <div>{t('checkout.security_notes.immediate')}</div>
                   <div>{t('checkout.security_notes.access')}</div>

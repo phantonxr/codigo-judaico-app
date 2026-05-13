@@ -38,8 +38,29 @@
     "profile": "Profile",
     "go_to_dashboard": "Go to dashboard",
     "go_to_landing": "Go to landing page",
+    "switch_language": "Switch language",
     "navigation": "Navigation",
     "user_profile": "User profile"
+  },
+  "legal": {
+    "labels": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "disclaimer": "Disclaimer"
+    },
+    "disclaimer_banner": {
+      "warning": "⚠️ This is not financial advice",
+      "summary_short": "Recommendations are provided by Phantom Systems. Wast Systems is not responsible for financial advice or financial outcomes.",
+      "details": "Details",
+      "summary_full": "This application may generate financial insights, recommendations, assessments, reports, or AI outputs. These are informational only and must be independently verified.",
+      "statements": [
+        "This is not financial, investment, tax, legal, accounting, brokerage, fiduciary, or licensed professional advice.",
+        "No profit, savings, investment performance, tax result, debt result, compliance outcome, or financial improvement is guaranteed.",
+        "Users are fully responsible for their own decisions, actions, inaction, losses, tax obligations, and outcomes.",
+        "Users should consult a licensed financial professional, investment advisor, tax professional, accountant, attorney, or other qualified professional before making decisions.",
+        "Wast Systems develops, distributes, publishes, and receives payments for the software. Phantom Systems is responsible for business content, recommendations, AI outputs, guidance, and domain-specific logic."
+      ]
+    }
   },
   "topbar": {
     "greeting": "Shalom, {{name}}",
@@ -246,6 +267,16 @@
     "method_bonus_badge": "2 free bonuses",
     "method_bonus_free_badge": "Free now",
     "method_bonus_free_label": "Free with The Method",
+    "books_upsell": {
+      "title": "Build a strategic view of asset creation",
+      "description": "Add the methods below and deepen your understanding of financial prosperity, legacy, and asset building with strategic vision — following principles of mastery, awareness, and market vision inspired by Jewish tradition.\n\nThese complementary materials were created to help you see money with more clarity, make decisions with more control, and build assets without living trapped in scarcity.",
+      "promo_title": "Smart unlock",
+      "promo_active": "Main method added — the 2 special invisible trigger materials have been unlocked at no additional cost.",
+      "promo_inactive": "Add the main method and receive 2 complementary materials unlocked at no additional cost to accelerate your clarity about money's invisible triggers.",
+      "method_badge": "Main method",
+      "bonus_badge": "Bonus included",
+      "free_label": "Unlocked at no additional cost"
+    },
     "form_title_existing": "Account found",
     "form_title_new": "Details to unlock access",
     "existing_account_note": "We'll continue with <strong>{{email}}</strong> and the password you already registered. Just complete checkout to activate access.",
@@ -273,6 +304,155 @@
     "back_to_login": "Back to sign in",
     "email_placeholder": "you@example.com",
     "timer_aria": "Time remaining {{time}}",
+    "legal": {
+      "loading": "Loading legal documents...",
+      "loading_error": "Could not load legal documents.",
+      "documents_unavailable": "Legal documents are not available yet. Please try again in a moment.",
+      "acceptance_required": "Please agree to the Terms of Service, Privacy Policy, and Disclaimer before continuing.",
+      "acceptance_label": "I agree to the Terms of Service, Privacy Policy, and Disclaimer.",
+      "acknowledgements_aria": "Legal acknowledgements",
+      "payment_reassurance_aria": "Payment reassurance"
+    },
+    "primary_offer": {
+      "badge": "Initial access offer",
+      "title": "21 days to uncover the invisible trigger that makes your money disappear",
+      "subheadline_prefix": "With simple daily activities and guidance from",
+      "mentor_name": "Rabbi Mentor AI",
+      "subheadline_suffix_prefix": "you will investigate the emotional pattern that makes your money slip away — and begin to develop",
+      "subheadline_emphasis": "mastery",
+      "subheadline_suffix_end": "over it.",
+      "quote": "“The problem is not only how much you earn. It is the invisible pattern deciding for you before you even notice.”",
+      "discount_title": "🔥 Discount unlocked for a few minutes",
+      "discount_text_prefix": "Only",
+      "discount_remaining_count": "7",
+      "discount_text_suffix": "promotional spots remain available today.",
+      "timer_label": "Discount reserved for:",
+      "timer_aria": "Discount reserved for {{time}}",
+      "urgency_aria": "Urgency",
+      "benefits_aria": "Main benefits",
+      "benefits": {
+        "access": "✅ Immediate access for 21 days",
+        "activities": "✅ Simple daily activities (no bureaucracy)",
+        "mentor": "✅ Rabbi Mentor AI guidance"
+      },
+      "includes_title": "What is included in your access",
+      "includes": {
+        "journey": {
+          "title": "21-day journey",
+          "text": "Simple, practical activities to observe your financial patterns every day."
+        },
+        "mentor": {
+          "title": "Rabbi Mentor AI",
+          "text": "An intelligent mentor that follows your answers and helps identify your main trigger."
+        },
+        "assessment": {
+          "title": "Assessment and self-assessment",
+          "text": "You understand how emotions, stress, fear, comparison, or impulses affect your money."
+        },
+        "diagnosis": {
+          "title": "Main trigger diagnosis",
+          "text": "Throughout the journey, the system helps reveal the pattern most responsible for making your money disappear."
+        },
+        "mastery": {
+          "title": "Impulse mastery",
+          "text": "You learn to recognize the trigger before it controls your next decisions."
+        }
+      },
+      "testimonials_title": "What people are saying",
+      "testimonials": {
+        "fernanda": {
+          "name": "Fernanda M. — Rio de Janeiro",
+          "text": "“I never imagined my spending was tied to work stress. Rabbi Mentor AI identified it, and now I can manage that pattern much better.”"
+        },
+        "jorge": {
+          "name": "Jorge F. — Bahia",
+          "text": "“I was in debt and trapped in loans and high interest. With Rabbi Mentor AI, I began to understand my habits without living by counting every cent.”"
+        },
+        "lucas": {
+          "name": "Lucas U. — Rio Grande do Sul",
+          "text": "“This app is incredible. It does not just make you save money. It changes your life.”"
+        },
+        "luciana": {
+          "name": "Luciana T. — Amapá",
+          "text": "“The daily activities felt so natural that I barely noticed when my routine started changing. Today my family uses the method too.”"
+        },
+        "paulo": {
+          "name": "Paulo D. — Minas Gerais",
+          "text": "“I drove for Uber and 99 to supplement my income and lived on the edge. After I started applying the Jewish teachings, my family changed and now I can even invest.”"
+        }
+      },
+      "guarantee_title": "7-day guarantee",
+      "guarantee_text": "You can access, test, and begin your journey. If it does not make sense for you, you can request a refund within the guarantee period.",
+      "form_title": "Create your access to begin your 21-day journey.",
+      "form_subtitle": "It takes less than 1 minute. Then you complete payment in Stripe's secure environment.",
+      "cta_notes": {
+        "stripe": "🔒 Secure payment via Stripe",
+        "immediate": "⚡ Immediate access",
+        "mentor": "✅ Daily activities + Rabbi Mentor AI"
+      },
+      "toasts": [
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Social proof",
+          "message": "Fernanda M. just secured access."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Social proof",
+          "message": "Jorge F. started the 21-day journey."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Social proof",
+          "message": "Luciana T. just unlocked access."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Social proof",
+          "message": "Paulo D. secured the promotional discount."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Social proof",
+          "message": "Lucas U. just started with Rabbi Mentor AI."
+        },
+        {
+          "type": "scarcity",
+          "icon": "flame",
+          "title": "Scarcity",
+          "message": "Only 7 promotional spots remain."
+        },
+        {
+          "type": "scarcity",
+          "icon": "clock",
+          "title": "Scarcity",
+          "message": "Discount reserved for only a few minutes."
+        },
+        {
+          "type": "scarcity",
+          "icon": "clock",
+          "title": "Scarcity",
+          "message": "Promotional access can end at any moment."
+        },
+        {
+          "type": "benefit",
+          "icon": "sparkles",
+          "title": "Benefit",
+          "message": "Users are identifying their triggers with Rabbi Mentor AI."
+        },
+        {
+          "type": "benefit",
+          "icon": "sparkles",
+          "title": "Benefit",
+          "message": "The method starts with behavior mastery, not spreadsheets."
+        }
+      ]
+    },
     "errors": {
       "password_too_short": "Create a password with at least {{min}} characters.",
       "password_mismatch": "Password confirmation does not match.",

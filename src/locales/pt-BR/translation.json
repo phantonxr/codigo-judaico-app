@@ -38,8 +38,29 @@
     "profile": "Perfil",
     "go_to_dashboard": "Ir para o dashboard",
     "go_to_landing": "Ir para a landing page",
+    "switch_language": "Trocar idioma",
     "navigation": "Navegação",
     "user_profile": "Perfil do usuário"
+  },
+  "legal": {
+    "labels": {
+      "terms": "Termos de Serviço",
+      "privacy": "Política de Privacidade",
+      "disclaimer": "Aviso Legal"
+    },
+    "disclaimer_banner": {
+      "warning": "⚠️ Isto não é aconselhamento financeiro",
+      "summary_short": "As recomendações são fornecidas pela Phantom Systems. A Wast Systems não se responsabiliza por aconselhamento financeiro nem por resultados financeiros.",
+      "details": "Detalhes",
+      "summary_full": "Este aplicativo pode gerar insights financeiros, recomendações, avaliações, relatórios ou saídas de IA. Tudo isso tem caráter apenas informativo e deve ser verificado de forma independente.",
+      "statements": [
+        "Isto não constitui aconselhamento financeiro, de investimento, tributário, jurídico, contábil, de corretagem, fiduciário nem de qualquer profissional licenciado.",
+        "Não há garantia de lucro, economia, desempenho de investimento, resultado tributário, resultado sobre dívidas, conformidade regulatória ou melhoria financeira.",
+        "Os usuários são integralmente responsáveis por suas próprias decisões, ações, omissões, perdas, obrigações tributárias e resultados.",
+        "Antes de tomar decisões, os usuários devem consultar um profissional financeiro licenciado, assessor de investimentos, contador, advogado ou outro profissional qualificado.",
+        "A Wast Systems desenvolve, distribui, publica e recebe pagamentos pelo software. A Phantom Systems é responsável pelo conteúdo de negócio, recomendações, saídas de IA, orientações e lógica específica do domínio."
+      ]
+    }
   },
   "topbar": {
     "greeting": "Shalom, {{name}}",
@@ -246,6 +267,16 @@
     "method_bonus_badge": "2 bônus grátis",
     "method_bonus_free_badge": "Grátis agora",
     "method_bonus_free_label": "Grátis com O Método",
+    "books_upsell": {
+      "title": "Tenha uma visão estratégica de construção de bens",
+      "description": "Adicione os métodos abaixo e aprofunde sua compreensão sobre prosperidade financeira, legado e construção de patrimônio com visão estratégica — seguindo princípios de domínio, consciência e visão de mercado inspirados na tradição judaica.\n\nEsses materiais complementares foram criados para ajudar você a enxergar o dinheiro com mais clareza, tomar decisões com mais domínio e construir patrimônio sem viver preso à escassez.",
+      "promo_title": "Desbloqueio inteligente",
+      "promo_active": "Método principal adicionado — os 2 conteúdos especiais sobre gatilhos invisíveis foram desbloqueados sem custo adicional.",
+      "promo_inactive": "Adicione o método principal e receba 2 materiais complementares desbloqueados sem custo adicional para acelerar sua clareza sobre os gatilhos invisíveis do dinheiro.",
+      "method_badge": "Método principal",
+      "bonus_badge": "Bônus incluído",
+      "free_label": "Desbloqueado sem custo adicional"
+    },
     "form_title_existing": "Conta encontrada",
     "form_title_new": "Dados para liberar o acesso",
     "existing_account_note": "Vamos continuar com <strong>{{email}}</strong> e com a senha que você já cadastrou. Agora falta só finalizar o checkout para ativar o acesso.",
@@ -273,6 +304,155 @@
     "back_to_login": "Voltar ao login",
     "email_placeholder": "voce@exemplo.com",
     "timer_aria": "Tempo restante {{time}}",
+    "legal": {
+      "loading": "Carregando documentos legais...",
+      "loading_error": "Não foi possível carregar os documentos legais.",
+      "documents_unavailable": "Os documentos legais ainda não estão disponíveis. Tente novamente em instantes.",
+      "acceptance_required": "Você precisa concordar com os Termos de Serviço, a Política de Privacidade e o Aviso Legal antes de continuar.",
+      "acceptance_label": "Concordo com os Termos de Serviço, a Política de Privacidade e o Aviso Legal.",
+      "acknowledgements_aria": "Confirmações legais",
+      "payment_reassurance_aria": "Confirmações de pagamento"
+    },
+    "primary_offer": {
+      "badge": "Oferta de acesso inicial",
+      "title": "21 dias para descobrir o gatilho invisível que faz seu dinheiro desaparecer",
+      "subheadline_prefix": "Com atividades diárias simples e acompanhamento do",
+      "mentor_name": "Rabino Mentor IA",
+      "subheadline_suffix_prefix": "você vai investigar o padrão emocional que faz seu dinheiro escapar — e começar a desenvolver",
+      "subheadline_emphasis": "domínio",
+      "subheadline_suffix_end": "sobre ele.",
+      "quote": "“O problema não é apenas quanto você ganha. É o padrão invisível que decide por você antes mesmo de perceber.”",
+      "discount_title": "🔥 Desconto liberado por poucos minutos",
+      "discount_text_prefix": "Restam apenas",
+      "discount_remaining_count": "7",
+      "discount_text_suffix": "acessos promocionais disponíveis hoje.",
+      "timer_label": "Desconto reservado por:",
+      "timer_aria": "Desconto reservado por {{time}}",
+      "urgency_aria": "Urgência",
+      "benefits_aria": "Principais benefícios",
+      "benefits": {
+        "access": "✅ Acesso imediato por 21 dias",
+        "activities": "✅ Atividades diárias simples (sem burocracia)",
+        "mentor": "✅ Acompanhamento do Rabino Mentor IA"
+      },
+      "includes_title": "O que está incluído no seu acesso",
+      "includes": {
+        "journey": {
+          "title": "Jornada de 21 dias",
+          "text": "Atividades simples e práticas para observar seus padrões financeiros todos os dias."
+        },
+        "mentor": {
+          "title": "Rabino Mentor IA",
+          "text": "Um mentor inteligente que acompanha suas respostas e ajuda a identificar seu principal gatilho."
+        },
+        "assessment": {
+          "title": "Avaliação e autoavaliação",
+          "text": "Você entende como emoções, estresse, medo, comparação ou impulsos afetam seu dinheiro."
+        },
+        "diagnosis": {
+          "title": "Diagnóstico do gatilho principal",
+          "text": "Ao longo da jornada, o sistema ajuda a revelar o padrão que mais faz seu dinheiro desaparecer."
+        },
+        "mastery": {
+          "title": "Domínio dos impulsos",
+          "text": "Você aprende a reconhecer o gatilho antes que ele controle suas próximas decisões."
+        }
+      },
+      "testimonials_title": "O que as pessoas dizem",
+      "testimonials": {
+        "fernanda": {
+          "name": "Fernanda M. — Rio de Janeiro",
+          "text": "“Nunca imaginei que meus gastos estavam ligados ao estresse do trabalho. O Rabino Mentor IA conseguiu identificar isso e hoje consigo dominar melhor esse padrão.”"
+        },
+        "jorge": {
+          "name": "Jorge F. — Bahia",
+          "text": "“Estava endividado e preso em empréstimos e juros altos. Com o Rabino Mentor IA, comecei a entender meus hábitos sem precisar viver guardando cada centavo.”"
+        },
+        "lucas": {
+          "name": "Lucas U. — Rio Grande do Sul",
+          "text": "“Esse app é sensacional. Ele não te faz apenas guardar dinheiro. Ele faz você mudar de vida.”"
+        },
+        "luciana": {
+          "name": "Luciana T. — Amapá",
+          "text": "“As atividades diárias foram tão naturais que eu nem percebi quando minha rotina começou a mudar. Hoje minha família também usa o método.”"
+        },
+        "paulo": {
+          "name": "Paulo D. — Minas Gerais",
+          "text": "“Trabalhava de Uber e 99 para complementar renda e vivia no limite. Depois que comecei a aplicar os ensinamentos judaicos, minha família mudou e hoje até consigo investir.”"
+        }
+      },
+      "guarantee_title": "Garantia de 7 dias",
+      "guarantee_text": "Você pode acessar, testar e começar sua jornada. Se não fizer sentido para você, pode solicitar reembolso dentro do prazo de garantia.",
+      "form_title": "Crie seu acesso para iniciar sua jornada de 21 dias.",
+      "form_subtitle": "Leva menos de 1 minuto. Depois você finaliza o pagamento em ambiente seguro do Stripe.",
+      "cta_notes": {
+        "stripe": "🔒 Pagamento seguro via Stripe",
+        "immediate": "⚡ Acesso imediato",
+        "mentor": "✅ Atividades diárias + Rabino Mentor IA"
+      },
+      "toasts": [
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Prova social",
+          "message": "Fernanda M. acabou de garantir o acesso."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Prova social",
+          "message": "Jorge F. iniciou a jornada de 21 dias."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Prova social",
+          "message": "Luciana T. acabou de liberar o acesso."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Prova social",
+          "message": "Paulo D. garantiu o desconto promocional."
+        },
+        {
+          "type": "social",
+          "icon": "sparkles",
+          "title": "Prova social",
+          "message": "Lucas U. começou agora com o Rabino Mentor IA."
+        },
+        {
+          "type": "scarcity",
+          "icon": "flame",
+          "title": "Escassez",
+          "message": "Restam apenas 7 acessos promocionais."
+        },
+        {
+          "type": "scarcity",
+          "icon": "clock",
+          "title": "Escassez",
+          "message": "Desconto reservado por poucos minutos."
+        },
+        {
+          "type": "scarcity",
+          "icon": "clock",
+          "title": "Escassez",
+          "message": "Os acessos promocionais podem encerrar a qualquer momento."
+        },
+        {
+          "type": "benefit",
+          "icon": "sparkles",
+          "title": "Benefício",
+          "message": "Usuários estão identificando seus gatilhos com o Rabino Mentor IA."
+        },
+        {
+          "type": "benefit",
+          "icon": "sparkles",
+          "title": "Benefício",
+          "message": "O método começa pelo domínio do comportamento, não por planilhas."
+        }
+      ]
+    },
     "errors": {
       "password_too_short": "Crie uma senha com pelo menos {{min}} caracteres.",
       "password_mismatch": "A confirmação da senha não confere.",

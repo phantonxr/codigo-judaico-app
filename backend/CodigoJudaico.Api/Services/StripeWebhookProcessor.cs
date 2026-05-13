@@ -2,7 +2,6 @@ using CodigoJudaico.Api.Data;
 using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Models;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Stripe;
 using Stripe.Checkout;
 
@@ -292,33 +291,22 @@ public sealed class StripeWebhookProcessor(
             return true;
         }
 
-        var notification = new StripeSaleNotification
-        {
-            Id = Guid.NewGuid(),
-            StripeCheckoutSessionId = normalizedCheckoutSessionId,
-            UserId = userId,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
+        var affectedRows = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO stripe_sale_notifications ("Id", "CreatedAt", "StripeCheckoutSessionId", "UserId")
+            VALUES ({Guid.NewGuid()}, {DateTimeOffset.UtcNow}, {normalizedCheckoutSessionId}, {userId})
+            ON CONFLICT ("StripeCheckoutSessionId") DO NOTHING
+            """, cancellationToken);
 
-        dbContext.StripeSaleNotifications.Add(notification);
-
-        try
+        if (affectedRows > 0)
         {
-            await dbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
-        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
-        {
-            dbContext.Entry(notification).State = EntityState.Detached;
-            logger.LogInformation(
-                "Ignorando notificacao de venda duplicada para checkout Stripe {SessionId}.",
-                normalizedCheckoutSessionId);
-            return false;
-        }
-    }
 
-    private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
-        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
+        logger.LogInformation(
+            "Ignorando notificacao de venda duplicada para checkout Stripe {SessionId}.",
+            normalizedCheckoutSessionId);
+        return false;
+    }
 
     private async Task GrantBookPurchasesAsync(
         Guid userId,

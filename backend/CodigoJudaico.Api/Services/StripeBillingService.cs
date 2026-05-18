@@ -97,6 +97,7 @@ public sealed class StripeBillingService(
         }
 
         return string.Equals(ReadMetadata(metadata, AppKeyMetadataKey), ApplicationKey, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(ReadMetadata(metadata, AppIdMetadataKey), ApplicationKey, StringComparison.OrdinalIgnoreCase)
             && string.Equals(ReadMetadata(metadata, ConnectedAccountMetadataKey), ConnectedAccountId, StringComparison.OrdinalIgnoreCase)
             && string.Equals(ReadMetadata(metadata, CurrencyMetadataKey), RequiredCurrency, StringComparison.OrdinalIgnoreCase);
     }

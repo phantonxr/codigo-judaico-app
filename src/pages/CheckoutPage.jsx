@@ -467,7 +467,7 @@ export default function CheckoutPage() {
             {isPrimaryOffer ? (
               <div className="checkout-offer">
                 <div className="checkout-price">
-                  <div className="checkout-price-from">De R$97,90</div>
+                  <div className="checkout-price-from">De R$297,00</div>
                   <div className="checkout-price-to">
                     <span className="checkout-price-prefix">por</span>
                     <strong>R$29,90</strong>

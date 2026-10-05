@@ -21,6 +21,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<WisdomSnippet> WisdomSnippets => Set<WisdomSnippet>();
     public DbSet<UserBookPurchase> UserBookPurchases => Set<UserBookPurchase>();
+    public DbSet<KirvanoSale> KirvanoSales => Set<KirvanoSale>();
+    public DbSet<KirvanoSaleBook> KirvanoSaleBooks => Set<KirvanoSaleBook>();
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
     public DbSet<UserLegalAcceptance> UserLegalAcceptances => Set<UserLegalAcceptance>();
     public DbSet<StripeSaleNotification> StripeSaleNotifications => Set<StripeSaleNotification>();
@@ -39,6 +41,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.PasswordResetTokenHash).HasMaxLength(128);
             entity.Property(x => x.PlanName).HasMaxLength(120);
             entity.Property(x => x.PlanStatus).HasMaxLength(40);
+            entity.Property(x => x.KirvanoPlanName).HasMaxLength(120);
+            entity.Property(x => x.KirvanoPlanStatus).HasMaxLength(40);
             entity.Property(x => x.StripeCustomerId).HasMaxLength(120);
             entity.Property(x => x.StripeSubscriptionId).HasMaxLength(120);
             entity.Property(x => x.LastStripeCheckoutSessionId).HasMaxLength(120);
@@ -262,6 +266,29 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).HasMaxLength(120);
             entity.Property(x => x.Source).HasMaxLength(160);
+        });
+
+        modelBuilder.Entity<KirvanoSale>(entity =>
+        {
+            entity.ToTable("kirvano_sales");
+            entity.HasKey(x => x.SaleId);
+            entity.Property(x => x.SaleId).HasMaxLength(120);
+            entity.Property(x => x.CheckoutId).HasMaxLength(120);
+            entity.Property(x => x.Status).HasMaxLength(40);
+            entity.Property(x => x.AccessPlan).HasMaxLength(40);
+            entity.HasIndex(x => x.UserId);
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<KirvanoSaleBook>(entity =>
+        {
+            entity.ToTable("kirvano_sale_books");
+            entity.HasKey(x => new { x.SaleId, x.BookId });
+            entity.Property(x => x.SaleId).HasMaxLength(120);
+            entity.Property(x => x.BookId).HasMaxLength(120);
+            entity.HasOne(x => x.Sale).WithMany(x => x.Books).HasForeignKey(x => x.SaleId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserBookPurchase>(entity =>

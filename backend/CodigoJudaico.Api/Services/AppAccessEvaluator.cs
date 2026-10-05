@@ -1,5 +1,6 @@
 using CodigoJudaico.Api.Contracts;
 using CodigoJudaico.Api.Models;
+using System.Linq.Expressions;
 
 namespace CodigoJudaico.Api.Services;
 
@@ -14,21 +15,41 @@ public static class AppAccessEvaluator
             return true;
         }
 
-        if (user is null || !user.AccessEnabled)
-        {
-            return false;
-        }
-
-        if (!user.NextChargeDate.HasValue)
-        {
-            return true;
-        }
-
-        return user.NextChargeDate.Value >= DateOnly.FromDateTime(DateTime.UtcNow);
+        return HasStripeAccess(user) || HasKirvanoAccess(user);
     }
+
+    public static bool HasStripeAccess(AppUser? user) => user?.AccessEnabled == true
+        && (!user.NextChargeDate.HasValue || user.NextChargeDate.Value >= DateOnly.FromDateTime(DateTime.UtcNow));
+
+    public static bool HasKirvanoAccess(AppUser? user) => user?.KirvanoAccessEnabled == true
+        && (!user.KirvanoAccessExpiresAt.HasValue || user.KirvanoAccessExpiresAt.Value >= DateOnly.FromDateTime(DateTime.UtcNow));
+
+    public static Expression<Func<AppUser, bool>> ActiveAccessPredicate(DateOnly today) => user =>
+        user.IsMasterUser
+        || (user.AccessEnabled && (!user.NextChargeDate.HasValue || user.NextChargeDate.Value >= today))
+        || (user.KirvanoAccessEnabled && (!user.KirvanoAccessExpiresAt.HasValue || user.KirvanoAccessExpiresAt.Value >= today));
+
+    public static Expression<Func<AppUser, bool>> InactiveAccessPredicate(DateOnly today)
+    {
+        var active = ActiveAccessPredicate(today);
+        return Expression.Lambda<Func<AppUser, bool>>(Expression.Not(active.Body), active.Parameters);
+    }
+
+    private static bool DisplayKirvanoPlan(AppUser user)
+    {
+        if (!HasStripeAccess(user)) return user.KirvanoPlanName.Length > 0;
+        if (!HasKirvanoAccess(user) || user.NextChargeDate is null) return false;
+        return user.KirvanoAccessExpiresAt is null || user.KirvanoAccessExpiresAt > user.NextChargeDate;
+    }
+
+    public static string EffectivePlanName(AppUser user) => DisplayKirvanoPlan(user) ? user.KirvanoPlanName : user.PlanName;
+    public static string EffectivePlanStatus(AppUser user) => DisplayKirvanoPlan(user)
+        ? (user.KirvanoAccessEnabled && !HasKirvanoAccess(user) ? "Expirado" : user.KirvanoPlanStatus) : user.PlanStatus;
+    public static DateOnly? EffectiveExpiry(AppUser user) => DisplayKirvanoPlan(user) ? user.KirvanoAccessExpiresAt : user.NextChargeDate;
 
     public static bool HasAccessBonusEntitlement(AppUser? user) =>
         user?.IsMasterUser == true ||
+        HasKirvanoAccess(user) ||
         user?.AccessEnabled == true ||
         user?.AccessGrantedAt is not null;
 

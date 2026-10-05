@@ -53,8 +53,8 @@ export default function Login() {
     setError('')
 
     try {
-      await signInUser({ email, password })
-      navigate(location.state?.from || '/dashboard', { replace: true })
+      const user = await signInUser({ email, password })
+      navigate(location.state?.from || (user.hasActiveAccess ? '/dashboard' : '/livros'), { replace: true })
     } catch (caught) {
       if (caught?.status === 403 && caught?.data?.code === 'checkout_required') {
         navigate(buildCheckoutRedirect(caught.data, email), { replace: true })

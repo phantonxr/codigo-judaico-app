@@ -28,16 +28,9 @@ public static class AdminEndpoints
             var scopedQuery = ApplySearch(BuildSubscriberQuery(dbContext), search);
 
             var totalSubscribers = await scopedQuery.CountAsync(cancellationToken);
-            var activeSubscribers = await scopedQuery.CountAsync(
-                x => x.AccessEnabled && (!x.NextChargeDate.HasValue || x.NextChargeDate.Value >= today),
-                cancellationToken);
-            var pendingSubscribers = await scopedQuery.CountAsync(
-                x => x.PlanStatus == PendingCheckoutPlanStatus,
-                cancellationToken);
-            var expiredSubscribers = await scopedQuery.CountAsync(
-                x => x.PlanStatus != PendingCheckoutPlanStatus
-                    && (!x.AccessEnabled || (x.NextChargeDate.HasValue && x.NextChargeDate.Value < today)),
-                cancellationToken);
+            var activeSubscribers = await ApplyStatus(scopedQuery, "active", today).CountAsync(cancellationToken);
+            var pendingSubscribers = await ApplyStatus(scopedQuery, "pending", today).CountAsync(cancellationToken);
+            var expiredSubscribers = await ApplyStatus(scopedQuery, "expired", today).CountAsync(cancellationToken);
 
             var subscriberData = await ApplyStatus(scopedQuery, status, today)
                 .OrderByDescending(x => x.UpdatedAt)
@@ -129,6 +122,7 @@ public static class AdminEndpoints
             .Where(x => !x.IsMasterUser)
             .Where(x =>
                 x.AccessGrantedAt != null
+                || x.KirvanoPlanName != string.Empty
                 || x.AccessEnabled
                 || x.NextChargeDate != null
                 || x.PlanName != string.Empty
@@ -149,7 +143,8 @@ public static class AdminEndpoints
         return query.Where(x =>
             x.Email.ToLower().Contains(normalizedSearch)
             || x.Name.ToLower().Contains(normalizedSearch)
-            || x.PlanName.ToLower().Contains(normalizedSearch));
+            || x.PlanName.ToLower().Contains(normalizedSearch)
+            || x.KirvanoPlanName.ToLower().Contains(normalizedSearch));
     }
 
     private static IQueryable<AppUser> ApplyStatus(
@@ -159,12 +154,11 @@ public static class AdminEndpoints
     {
         return ApiMappers.Clean(status).ToLowerInvariant() switch
         {
-            "active" or "ativos" => query.Where(x =>
-                x.AccessEnabled && (!x.NextChargeDate.HasValue || x.NextChargeDate.Value >= today)),
-            "expired" or "vencidos" => query.Where(x =>
-                x.PlanStatus != PendingCheckoutPlanStatus
-                && (!x.AccessEnabled || (x.NextChargeDate.HasValue && x.NextChargeDate.Value < today))),
-            "pending" or "pendentes" => query.Where(x => x.PlanStatus == PendingCheckoutPlanStatus),
+            "active" or "ativos" => query.Where(AppAccessEvaluator.ActiveAccessPredicate(today)),
+            "expired" or "vencidos" => query.Where(AppAccessEvaluator.InactiveAccessPredicate(today))
+                .Where(x => x.PlanStatus != PendingCheckoutPlanStatus || x.KirvanoPlanName != string.Empty),
+            "pending" or "pendentes" => query.Where(AppAccessEvaluator.InactiveAccessPredicate(today))
+                .Where(x => x.PlanStatus == PendingCheckoutPlanStatus && x.KirvanoPlanName == string.Empty),
             _ => query,
         };
     }
@@ -177,19 +171,20 @@ public static class AdminEndpoints
         int lessonsCompleted,
         int mentorMessagesCount)
     {
-        var daysUntilExpiration = user.NextChargeDate.HasValue
-            ? user.NextChargeDate.Value.DayNumber - today.DayNumber
+        var expiresAt = AppAccessEvaluator.EffectiveExpiry(user);
+        var daysUntilExpiration = expiresAt.HasValue
+            ? expiresAt.Value.DayNumber - today.DayNumber
             : (int?)null;
 
         return new AdminSubscriberDto(
             user.Id,
             user.Email,
             user.Name,
-            user.PlanName,
-            user.PlanStatus,
-            user.NextChargeDate?.ToString("yyyy-MM-dd"),
+            AppAccessEvaluator.EffectivePlanName(user),
+            AppAccessEvaluator.EffectivePlanStatus(user),
+            expiresAt?.ToString("yyyy-MM-dd"),
             AppAccessEvaluator.HasPremiumAccess(user),
-            user.AccessEnabled,
+            user.AccessEnabled || user.KirvanoAccessEnabled,
             daysUntilExpiration,
             user.AccessGrantedAt?.ToString("O"),
             user.CreatedAt.ToString("O"),

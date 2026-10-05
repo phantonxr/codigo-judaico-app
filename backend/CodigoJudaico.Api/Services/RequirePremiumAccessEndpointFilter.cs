@@ -31,9 +31,9 @@ public sealed class RequirePremiumAccessEndpointFilter(AppDbContext dbContext) :
                 "subscription_required",
                 "Sua assinatura venceu ou precisa ser reativada. Escolha um plano para continuar sua jornada.",
                 user.Email,
-                AppAccessEvaluator.ResolvePlanId(user.PlanName),
-                user.PlanName,
-                user.PlanStatus),
+                AppAccessEvaluator.ResolvePlanId(AppAccessEvaluator.EffectivePlanName(user)),
+                AppAccessEvaluator.EffectivePlanName(user),
+                AppAccessEvaluator.EffectivePlanStatus(user)),
             statusCode: StatusCodes.Status403Forbidden);
     }
 }

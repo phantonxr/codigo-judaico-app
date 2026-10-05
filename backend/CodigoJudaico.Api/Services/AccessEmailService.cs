@@ -109,6 +109,43 @@ Se não encontrar este e-mail, confira sua caixa de spam.
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "acesso liberado", cancellationToken);
     }
 
+    public async Task SendKirvanoPurchaseEmailAsync(
+        AppUser user, string planName, IReadOnlyList<string> bookIds,
+        string setupToken, string frontendBaseUrl, CancellationToken cancellationToken)
+    {
+        EnsureConfigured();
+        var baseUrl = frontendBaseUrl.TrimEnd('/');
+        var setupUrl = $"{baseUrl}/reset-password?token={WebUtility.UrlEncode(setupToken)}";
+        var destination = $"{baseUrl}/{(string.IsNullOrEmpty(planName) ? "livros" : "dashboard")}";
+        var titles = string.Join(", ", bookIds.Select(id => BookCatalog.FindById(id)?.Title).Where(x => x is not null));
+        var scope = string.IsNullOrEmpty(planName) ? "seus livros" : $"seu acesso ({planName})";
+        var purchase = string.IsNullOrEmpty(titles) ? scope : $"{scope}. Livros: {titles}";
+        var plain = $"""
+Shalom, {user.Name}.
+
+Recebemos seu pagamento pela Kirvano e liberamos {purchase}.
+E-mail: {user.Email}
+
+Para criar ou redefinir sua senha, use este link em ate 2 horas:
+{setupUrl}
+
+Se voce ja tem uma senha, pode continuar usando-a e entrar por aqui:
+{baseUrl}/login
+
+Sua compra esta disponivel em:
+{destination}
+""";
+        var html = $"""
+<p>Shalom, {WebUtility.HtmlEncode(user.Name)}.</p>
+<p>Recebemos seu pagamento pela Kirvano e liberamos {WebUtility.HtmlEncode(purchase)}.</p>
+<p><strong>E-mail:</strong> {WebUtility.HtmlEncode(user.Email)}</p>
+<p><a href="{WebUtility.HtmlEncode(setupUrl)}">Criar ou redefinir sua senha</a> (link valido por 2 horas).</p>
+<p>Se voce ja tem uma senha, continue usando-a: <a href="{WebUtility.HtmlEncode(baseUrl + "/login")}">entrar</a>.</p>
+<p><a href="{WebUtility.HtmlEncode(destination)}">Acessar sua compra</a>.</p>
+""";
+        await SendEmailAsync(user.Email, "Pagamento recebido: sua compra foi liberada", html, plain, "compra Kirvano", cancellationToken);
+    }
+
     public async Task SendPasswordResetEmailAsync(
         AppUser user,
         string resetToken,

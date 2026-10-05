@@ -9,6 +9,10 @@ public sealed class AppUser
     public bool IsMasterUser { get; set; }
     public bool HasCompletedAssessment { get; set; }
     public bool AccessEnabled { get; set; }
+    public bool KirvanoAccessEnabled { get; set; }
+    public DateOnly? KirvanoAccessExpiresAt { get; set; }
+    public string KirvanoPlanName { get; set; } = string.Empty;
+    public string KirvanoPlanStatus { get; set; } = string.Empty;
     public DateTimeOffset? AccountCreatedEmailSentAt { get; set; }
     public DateTimeOffset? AccessGrantedAt { get; set; }
     public DateTimeOffset? AccessEmailSentAt { get; set; }

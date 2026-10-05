@@ -233,7 +233,7 @@ public static class PaymentEndpoints
                 });
             }
 
-            if (user?.AccessEnabled == true
+            if (AppAccessEvaluator.HasPremiumAccess(user)
                 && !string.Equals(plan.Id, "renovacao", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(plan.Id, "vitalicio", StringComparison.OrdinalIgnoreCase)
                 && !string.Equals(plan.Id, "mensal", StringComparison.OrdinalIgnoreCase)

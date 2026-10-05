@@ -71,6 +71,10 @@ public static class UserStateEndpoints
                 .Where(x => x.UserId == userId)
                 .OrderBy(x => x.PurchasedAt)
                 .ToListAsync(cancellationToken);
+            var kirvanoSales = await dbContext.KirvanoSales.AsNoTracking()
+                .Include(x => x.Books)
+                .Where(x => x.UserId == userId)
+                .ToListAsync(cancellationToken);
             var legalAcceptances = await dbContext.UserLegalAcceptances.AsNoTracking()
                 .Where(x => x.UserId == userId)
                 .OrderBy(x => x.AcceptedAt)
@@ -91,6 +95,10 @@ public static class UserStateEndpoints
                     user.IsMasterUser,
                     user.HasCompletedAssessment,
                     user.AccessEnabled,
+                    user.KirvanoAccessEnabled,
+                    user.KirvanoAccessExpiresAt,
+                    user.KirvanoPlanName,
+                    user.KirvanoPlanStatus,
                     user.AccountCreatedEmailSentAt,
                     user.AccessGrantedAt,
                     user.AccessEmailSentAt,
@@ -197,6 +205,12 @@ public static class UserStateEndpoints
                     x.StripeSessionId,
                     x.PurchasedAt,
                 }),
+                KirvanoPurchases = kirvanoSales.Select(x => new
+                {
+                    x.SaleId, x.CheckoutId, x.Status, x.AccessPlan, x.AccessExpiresAt,
+                    x.ApprovedAt, x.LastEventAt, x.EmailSentAt,
+                    BookIds = x.Books.Select(b => b.BookId),
+                }),
                 LegalAcceptances = legalAcceptances.Select(x => new
                 {
                     x.Id,
@@ -277,6 +291,13 @@ public static class UserStateEndpoints
             }
 
             await RemoveUserPersonalStateAsync(dbContext, userId, cancellationToken);
+            // Retain sale IDs for idempotency without retaining the deleted account's entitlements/link.
+            var kirvanoSales = await dbContext.KirvanoSales.Where(x => x.UserId == userId).ToListAsync(cancellationToken);
+            foreach (var sale in kirvanoSales)
+            {
+                sale.UserId = null;
+                sale.Status = "ACCOUNT_DELETED";
+            }
             AnonymizeUser(user);
             await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -675,6 +696,10 @@ public static class UserStateEndpoints
         user.PasswordResetTokenExpiresAt = null;
         user.HasCompletedAssessment = false;
         user.AccessEnabled = false;
+        user.KirvanoAccessEnabled = false;
+        user.KirvanoAccessExpiresAt = null;
+        user.KirvanoPlanName = string.Empty;
+        user.KirvanoPlanStatus = string.Empty;
         user.AccountCreatedEmailSentAt = null;
         user.AccessGrantedAt = null;
         user.AccessEmailSentAt = null;

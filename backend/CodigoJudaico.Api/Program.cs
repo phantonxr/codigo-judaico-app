@@ -39,6 +39,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.Configure<StripeBillingOptions>(
     builder.Configuration.GetSection(StripeBillingOptions.SectionName));
+builder.Services.AddOptions<KirvanoOptions>()
+    .Bind(builder.Configuration.GetSection(KirvanoOptions.SectionName))
+    .Validate(options => options.IsValid(), "Kirvano: configure token, URL, fuso horario e ofertas validas.")
+    .ValidateOnStart();
 builder.Services.Configure<ResendOptions>(
     builder.Configuration.GetSection(ResendOptions.SectionName));
 builder.Services.Configure<OpenAIOptions>(
@@ -118,6 +122,7 @@ builder.Services.AddSingleton<PasswordHashService>();
 builder.Services.AddScoped<StripeBillingService>();
 builder.Services.AddScoped<AccessEmailService>();
 builder.Services.AddScoped<StripeWebhookProcessor>();
+builder.Services.AddScoped<KirvanoWebhookProcessor>();
 builder.Services.AddScoped<UtmfyService>();
 builder.Services.AddScoped<MetaConversionsService>();
 builder.Services.AddScoped<EvolutionApiService>();
@@ -156,6 +161,7 @@ app.MapHealthChecks("/api/health");
 app.MapCatalogEndpoints();
 app.MapSessionEndpoints();
 app.MapPaymentEndpoints();
+app.MapKirvanoEndpoints();
 app.MapAdminEndpoints();
 app.MapLegalEndpoints();
 app.MapUserStateEndpoints();

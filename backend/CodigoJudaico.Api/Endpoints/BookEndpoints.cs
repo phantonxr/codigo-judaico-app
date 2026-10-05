@@ -47,9 +47,7 @@ public static class BookEndpoints
                 return Results.Unauthorized();
             }
 
-            var purchasedBookIds = await dbContext.UserBookPurchases
-                .Where(x => x.UserId == userId)
-                .Select(x => x.BookId)
+            var purchasedBookIds = await BookEntitlements.PurchasedBookIds(dbContext, userId)
                 .ToHashSetAsync(cancellationToken);
             var hasAccessBonusEntitlement = AppAccessEvaluator.HasAccessBonusEntitlement(user);
             var hasMethodBookPurchase = purchasedBookIds.Contains(BookCatalog.MethodBookId);
@@ -165,12 +163,11 @@ public static class BookEndpoints
                 return Results.Unauthorized();
             }
 
-            var hasPurchased = await dbContext.UserBookPurchases
-                .AnyAsync(x => x.UserId == userId && x.BookId == normalizedId, cancellationToken);
+            var purchasedBookIds = BookEntitlements.PurchasedBookIds(dbContext, userId);
+            var hasPurchased = await purchasedBookIds.AnyAsync(x => x == normalizedId, cancellationToken);
             var hasMethodBookPurchase =
                 BookCatalog.IsMethodBookLimitedTimeBonus(normalizedId)
-                && await dbContext.UserBookPurchases
-                    .AnyAsync(x => x.UserId == userId && x.BookId == BookCatalog.MethodBookId, cancellationToken);
+                && await purchasedBookIds.AnyAsync(x => x == BookCatalog.MethodBookId, cancellationToken);
             var hasAccessBonusEntitlement =
                 book.IsAccessBonus && AppAccessEvaluator.HasAccessBonusEntitlement(user);
 

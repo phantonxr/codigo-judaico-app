@@ -11,9 +11,9 @@ public static class ApiMappers
             user.Id,
             user.Email,
             user.Name,
-            user.PlanName,
-            user.PlanStatus,
-            user.NextChargeDate?.ToString("yyyy-MM-dd"),
+            AppAccessEvaluator.EffectivePlanName(user),
+            AppAccessEvaluator.EffectivePlanStatus(user),
+            AppAccessEvaluator.EffectiveExpiry(user)?.ToString("yyyy-MM-dd"),
             AppAccessEvaluator.HasPremiumAccess(user),
             user.IsMasterUser,
             user.HasCompletedAssessment || user.Diagnosis is not null);

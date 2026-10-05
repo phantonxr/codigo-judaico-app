@@ -71,7 +71,8 @@ public static class SessionEndpoints
                     statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            if (!AppAccessEvaluator.HasPremiumAccess(user) && AppAccessEvaluator.HasPendingCheckout(user))
+            if (!AppAccessEvaluator.HasPremiumAccess(user) && AppAccessEvaluator.HasPendingCheckout(user)
+                && !await BookEntitlements.PurchasedBookIds(dbContext, user.Id).AnyAsync(cancellationToken))
             {
                 return Results.Json(
                     new LoginBlockedResponse(

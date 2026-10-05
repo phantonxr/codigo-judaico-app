@@ -126,6 +126,8 @@ Esses campos acompanham tanto pagamentos com split quanto pagamentos sem split.
 
 ## Stripe
 
+O app tambem recebe compras externas da **Kirvano** para acesso unico de 21 dias, acesso full/vitalicio, mensalidade e livros. Consulte [Configuracao do webhook Kirvano](docs/webhook-kirvano.md) para cadastrar produtos/ofertas, token, eventos e aplicar a migration. A integracao fica desabilitada ate ser configurada no backend.
+
 Voce precisa configurar no Stripe:
 
 - um `Price` de pagamento unico para `Primeiro Acesso` no valor de `R$ 29,90`

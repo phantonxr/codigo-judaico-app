@@ -109,8 +109,9 @@ Se não encontrar este e-mail, confira sua caixa de spam.
         await SendEmailAsync(user.Email, subject, htmlBody, plainTextBody, "acesso liberado", cancellationToken);
     }
 
-    public async Task SendKirvanoPurchaseEmailAsync(
-        AppUser user, string planName, IReadOnlyList<string> bookIds,
+    /// <summary>Purchase made on an external checkout (Kirvano, Kiwify): login, password setup link and destination.</summary>
+    public async Task SendExternalPurchaseEmailAsync(
+        AppUser user, string provider, string planName, IReadOnlyList<string> bookIds,
         string setupToken, string frontendBaseUrl, CancellationToken cancellationToken)
     {
         EnsureConfigured();
@@ -123,7 +124,7 @@ Se não encontrar este e-mail, confira sua caixa de spam.
         var plain = $"""
 Shalom, {user.Name}.
 
-Recebemos seu pagamento pela Kirvano e liberamos {purchase}.
+Recebemos seu pagamento pela {provider} e liberamos {purchase}.
 E-mail: {user.Email}
 
 Para criar ou redefinir sua senha, use este link em ate 2 horas:
@@ -137,13 +138,13 @@ Sua compra esta disponivel em:
 """;
         var html = $"""
 <p>Shalom, {WebUtility.HtmlEncode(user.Name)}.</p>
-<p>Recebemos seu pagamento pela Kirvano e liberamos {WebUtility.HtmlEncode(purchase)}.</p>
+<p>Recebemos seu pagamento pela {WebUtility.HtmlEncode(provider)} e liberamos {WebUtility.HtmlEncode(purchase)}.</p>
 <p><strong>E-mail:</strong> {WebUtility.HtmlEncode(user.Email)}</p>
 <p><a href="{WebUtility.HtmlEncode(setupUrl)}">Criar ou redefinir sua senha</a> (link valido por 2 horas).</p>
 <p>Se voce ja tem uma senha, continue usando-a: <a href="{WebUtility.HtmlEncode(baseUrl + "/login")}">entrar</a>.</p>
 <p><a href="{WebUtility.HtmlEncode(destination)}">Acessar sua compra</a>.</p>
 """;
-        await SendEmailAsync(user.Email, "Pagamento recebido: sua compra foi liberada", html, plain, "compra Kirvano", cancellationToken);
+        await SendEmailAsync(user.Email, "Pagamento recebido: sua compra foi liberada", html, plain, $"compra {provider}", cancellationToken);
     }
 
     public async Task SendPasswordResetEmailAsync(

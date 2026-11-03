@@ -474,6 +474,7 @@ public sealed class KirvanoWebhookTests
             builder.Services.AddSingleton<PasswordHashService>();
             builder.Services.AddSingleton<SessionTokenService>();
             builder.Services.AddScoped<AccessEmailService>();
+            builder.Services.AddScoped<ExternalSaleProcessor>();
             builder.Services.AddScoped<KirvanoWebhookProcessor>();
             builder.Services.AddScoped<StripeBillingService>();
             builder.Services.AddScoped<StripeWebhookProcessor>();

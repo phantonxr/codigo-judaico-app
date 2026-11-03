@@ -128,6 +128,8 @@ Esses campos acompanham tanto pagamentos com split quanto pagamentos sem split.
 
 O app tambem recebe compras externas da **Kirvano** para acesso unico de 21 dias, acesso full/vitalicio, mensalidade e livros. Consulte [Configuracao do webhook Kirvano](docs/webhook-kirvano.md) para cadastrar produtos/ofertas, token, eventos e aplicar a migration. A integracao fica desabilitada ate ser configurada no backend.
 
+Da mesma forma, o app recebe compras da **Kiwify** (21 dias, full/vitalicio, mensalidade e livros): o comprador paga no checkout da Kiwify, o webhook confirma o pagamento e a API libera o acesso. Consulte [Configuracao do webhook Kiwify](docs/webhook-kiwify.md). Tambem fica desabilitada ate ser configurada.
+
 Voce precisa configurar no Stripe:
 
 - um `Price` de pagamento unico para `Primeiro Acesso` no valor de `R$ 29,90`
